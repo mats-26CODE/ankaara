@@ -60,7 +60,9 @@ const NavBar = () => {
     <nav className="w-full sticky top-0 z-50 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="container w-full md:max-w-6xl mx-auto flex h-20 items-center justify-between px-4">
         <div className="flex items-center gap-4 md:gap-8">
-          <Logo />
+          <div className="-mt-2">
+            <Logo />
+          </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
@@ -68,7 +70,7 @@ const NavBar = () => {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-sm transition-colors ${
+                className={`text-sm xl:text-base transition-colors ${
                   pathname === link.href
                     ? "text-primary font-semibold"
                     : "text-muted-foreground hover:text-foreground"

@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
-import { Figtree } from "next/font/google";
+import { Figtree, Pacifico } from "next/font/google";
 import "./globals.css";
 import Providers from "@/providers/providers";
 import { APP_NAME } from "@/constants/values";
 
 const figtree = Figtree({
   variable: "--font-figtree",
+  subsets: ["latin"],
+});
+
+const pacifico = Pacifico({
+  variable: "--font-pacifico",
+  weight: "400",
   subsets: ["latin"],
 });
 
@@ -22,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${figtree.variable} antialiased`}>
+      <body className={`${figtree.variable} ${pacifico.variable} antialiased`}>
         <script
           dangerouslySetInnerHTML={{
             __html: `

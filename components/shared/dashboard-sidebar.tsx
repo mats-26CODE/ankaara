@@ -59,7 +59,7 @@ export const DashboardSidebar = () => {
   return (
     <Sidebar variant="floating" collapsible="icon">
       <SidebarHeader className="flex flex-row items-center justify-between border-b border-sidebar-border p-4">
-        <span className="text-lg font-medium truncate group-data-[collapsible=icon]:hidden">
+        <span className="text-lg font-brand truncate group-data-[collapsible=icon]:hidden">
           {APP_NAME}
         </span>
         <SidebarTrigger className="shrink-0 group-data-[collapsible=icon]:-ml-1.5" />
@@ -202,7 +202,7 @@ export const DashboardSidebar = () => {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-2 group-data-[collapsible=icon]:hidden">
-        <p className="text-xs text-sidebar-foreground/50 text-center">{APP_NAME}</p>
+        <p className="text-xs font-brand text-sidebar-foreground/50 text-center">{APP_NAME}</p>
       </SidebarFooter>
     </Sidebar>
   );
