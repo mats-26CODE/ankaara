@@ -9,17 +9,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// verify_jwt is true on this function, so the gateway already validated the JWT.
-function getUserIdFromJwt(authHeader: string): string | null {
-  try {
-    const token = authHeader.replace("Bearer ", "");
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.sub || null;
-  } catch {
-    return null;
-  }
-}
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") {
@@ -28,24 +17,27 @@ Deno.serve(async (req) => {
       { status: 405, headers: corsHeaders }
     );
   }
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
+
+  // Authenticate user via Supabase Auth
+  const authClient = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } } }
+  );
+  const { data: { user }, error: authError } = await authClient.auth.getUser();
+  if (authError || !user?.id) {
     return Response.json(
-      { message: "Missing Authorization header" },
+      { message: "Unauthorized" },
       { status: 401, headers: corsHeaders }
     );
   }
-  const userId = getUserIdFromJwt(authHeader);
-  if (!userId) {
-    return Response.json(
-      { message: "Invalid token" },
-      { status: 401, headers: corsHeaders }
-    );
-  }
+
+  // Service-role client for DB operations
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
+
   let body: { phone?: string; code?: string };
   try {
     body = await req.json();
@@ -67,7 +59,7 @@ Deno.serve(async (req) => {
   const { data: row, error: selectError } = await supabase
     .from("otp_verification")
     .select("id")
-    .eq("user_id", userId)
+    .eq("user_id", user.id)
     .eq("phone", phone)
     .eq("code", code)
     .is("used_at", null)

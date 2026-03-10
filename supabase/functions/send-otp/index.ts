@@ -15,31 +15,18 @@ function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// verify_jwt is true on this function, so the gateway already validated the JWT.
-// We just decode the payload to extract the user ID (sub claim).
-function getUserIdFromJwt(authHeader: string): string | null {
-  try {
-    const token = authHeader.replace("Bearer ", "");
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.sub || null;
-  } catch {
-    return null;
-  }
-}
-
 async function sendSms(phone: string, code: string): Promise<void> {
   const apiKey = Deno.env.get("BEEM_SMS_API_KEY");
   const secretKey = Deno.env.get("BEEM_SMS_SECRET_KEY");
   const sourceAddress = Deno.env.get("BEEM_SMS_APP_ID");
   if (!apiKey || !secretKey) {
-    console.log("[send-otp] BEEM_SMS_* not set; OTP (dev):", code);
     return;
   }
   const message = `Your verification code is ${code}. Valid for ${OTP_EXPIRY_MINUTES} minutes.`;
-  const authHeader = "Basic " + btoa(`${apiKey}:${secretKey}`);
+  const smsAuth = "Basic " + btoa(`${apiKey}:${secretKey}`);
   const response = await fetch("https://apisms.beem.africa/v1/send", {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: authHeader },
+    headers: { "Content-Type": "application/json", Authorization: smsAuth },
     body: JSON.stringify({
       source_addr: sourceAddress,
       schedule_time: "",
@@ -50,7 +37,7 @@ async function sendSms(phone: string, code: string): Promise<void> {
   });
   const data = await response.json();
   if (!response.ok || data.successful === false) {
-    throw new Error(data.message || `SMS failed: ${response.status}`);
+    throw new Error(data?.data?.message || data?.message || `SMS failed: ${response.status}`);
   }
 }
 
@@ -62,24 +49,27 @@ Deno.serve(async (req) => {
       { status: 405, headers: corsHeaders }
     );
   }
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
+
+  // Authenticate user via Supabase Auth (anon key + user's Authorization header)
+  const authClient = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } } }
+  );
+  const { data: { user }, error: authError } = await authClient.auth.getUser();
+  if (authError || !user?.id) {
     return Response.json(
-      { message: "Missing Authorization header" },
+      { message: "Unauthorized" },
       { status: 401, headers: corsHeaders }
     );
   }
-  const userId = getUserIdFromJwt(authHeader);
-  if (!userId) {
-    return Response.json(
-      { message: "Invalid token" },
-      { status: 401, headers: corsHeaders }
-    );
-  }
+
+  // Service-role client for DB operations (bypasses RLS)
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
+
   let body: { phone?: string };
   try {
     body = await req.json();
@@ -110,7 +100,7 @@ Deno.serve(async (req) => {
     );
   }
   const { error: insertError } = await supabase.from("otp_verification").insert({
-    user_id: userId,
+    user_id: user.id,
     phone,
     code,
     expires_at: expiresAt,
