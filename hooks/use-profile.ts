@@ -13,6 +13,7 @@ export type Profile = {
   phone: string | null;
   avatar_url: string | null;
   account_type: "business" | "individual" | null;
+  preferred_currency: string;
   onboarding_completed: boolean;
   created_at: string;
   updated_at: string | null;
@@ -28,6 +29,7 @@ type ProfileRow = {
   avatar_url: string | null;
   image_url?: unknown;
   account_type: "business" | "individual" | null;
+  preferred_currency?: string | null;
   onboarding_completed: boolean;
   created_at: string;
   updated_at: string | null;
@@ -55,6 +57,7 @@ const normalizeRow = (row: ProfileRow): Profile => ({
   phone: row.phone ?? row.phone_number ?? null,
   avatar_url: normalizeAvatarUrl(row.avatar_url ?? null, row.image_url),
   account_type: row.account_type ?? null,
+  preferred_currency: row.preferred_currency ?? "TZS",
   onboarding_completed: row.onboarding_completed ?? false,
   created_at: row.created_at,
   updated_at: row.updated_at ?? null,

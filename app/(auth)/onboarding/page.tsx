@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import Logo from "@/components/shared/logo";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -22,21 +21,29 @@ import { Spinner } from "@/components/ui/spinner";
 import { Building2, User } from "lucide-react";
 import { addCountryCode } from "@/helpers/helpers";
 import { useSendOtpForOnboarding } from "@/hooks/use-auth";
+import { useCurrencies } from "@/hooks/use-currencies";
+import type { Profile } from "@/hooks/use-profile";
 
 const ONBOARDING_PENDING_KEY = "onboarding_pending";
 
-const CURRENCIES = [
-  { value: "TZS", label: "TZS (Tanzanian Shilling)" },
-  { value: "USD", label: "USD" },
-  { value: "KES", label: "KES" },
-  { value: "UGX", label: "UGX" },
-];
+/**
+ * True when the profile has all essential fields filled.
+ * Must match the logic in the dashboard page so we don't loop.
+ */
+const isProfileActuallyComplete = (profile: Profile | null): boolean => {
+  if (!profile) return false;
+  return !!(
+    profile.full_name?.trim() &&
+    profile.account_type
+  );
+};
 
 const OnboardingPage = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const { user, loading: userLoading } = useUser();
   const { profile, loading: profileLoading, refetch } = useProfile();
+  const { currencies, loading: currenciesLoading } = useCurrencies();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,8 +56,22 @@ const OnboardingPage = () => {
     currency: "TZS",
     phone: "",
   });
+  const [prefilled, setPrefilled] = useState(false);
+
+  useEffect(() => {
+    if (prefilled || !profile) return;
+    setForm((prev) => ({
+      ...prev,
+      accountType: profile.account_type || prev.accountType,
+      individualName: profile.full_name?.trim() || prev.individualName,
+      currency: profile.preferred_currency || prev.currency,
+    }));
+    setPrefilled(true);
+  }, [profile, prefilled]);
   const sendOtpMutation = useSendOtpForOnboarding();
   const showOptionalPhone = !profile?.phone;
+
+  const profileComplete = isProfileActuallyComplete(profile);
 
   useEffect(() => {
     if (userLoading || profileLoading) return;
@@ -58,10 +79,10 @@ const OnboardingPage = () => {
       router.replace("/login");
       return;
     }
-    if (profile?.onboarding_completed) {
+    if (profileComplete) {
       router.replace("/dashboard");
     }
-  }, [user, userLoading, profile, profileLoading, router]);
+  }, [user, userLoading, profileComplete, profileLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,6 +138,7 @@ const OnboardingPage = () => {
         .from("profiles")
         .update({
           account_type: form.accountType,
+          preferred_currency: form.currency,
           onboarding_completed: true,
           ...(isBusiness ? {} : { full_name: form.individualName.trim() || profile?.full_name }),
         })
@@ -124,15 +146,35 @@ const OnboardingPage = () => {
 
       if (profileError) throw profileError;
 
-      const { error: businessError } = await supabase.from("businesses").insert({
-        owner_id: userId,
-        name: businessName,
-        address: isBusiness ? (form.location.trim() || null) : null,
-        capacity: isBusiness ? (form.capacity.trim() || null) : null,
-        currency: form.currency,
-      });
+      // Check if business already exists (e.g. from a previous "Skip")
+      const { data: existingBiz } = await supabase
+        .from("businesses")
+        .select("id")
+        .eq("owner_id", userId)
+        .limit(1)
+        .maybeSingle();
 
-      if (businessError) throw businessError;
+      if (existingBiz) {
+        const { error: bizUpdateError } = await supabase
+          .from("businesses")
+          .update({
+            name: businessName,
+            address: isBusiness ? (form.location.trim() || null) : null,
+            capacity: isBusiness ? (form.capacity.trim() || null) : null,
+            currency: form.currency,
+          })
+          .eq("id", existingBiz.id);
+        if (bizUpdateError) throw bizUpdateError;
+      } else {
+        const { error: bizInsertError } = await supabase.from("businesses").insert({
+          owner_id: userId,
+          name: businessName,
+          address: isBusiness ? (form.location.trim() || null) : null,
+          capacity: isBusiness ? (form.capacity.trim() || null) : null,
+          currency: form.currency,
+        });
+        if (bizInsertError) throw bizInsertError;
+      }
 
       await refetch();
       router.replace("/dashboard");
@@ -142,7 +184,7 @@ const OnboardingPage = () => {
     }
   };
 
-  if (userLoading || profileLoading || !user || profile?.onboarding_completed) {
+  if (userLoading || profileLoading || currenciesLoading || !user || profileComplete) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Spinner className="size-8" />
@@ -261,13 +303,13 @@ const OnboardingPage = () => {
                       setForm((p) => ({ ...p, currency: v }))
                     }
                   >
-                    <SelectTrigger className="h-11">
+                    <SelectTrigger className="h-11 w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {CURRENCIES.map((c) => (
-                        <SelectItem key={c.value} value={c.value}>
-                          {c.label}
+                      {currencies.map((c) => (
+                        <SelectItem key={c.code} value={c.code}>
+                          {c.code} — {c.name} ({c.symbol})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -318,13 +360,13 @@ const OnboardingPage = () => {
                       setForm((p) => ({ ...p, currency: v }))
                     }
                   >
-                    <SelectTrigger className="h-11">
+                    <SelectTrigger className="h-11 w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {CURRENCIES.map((c) => (
-                        <SelectItem key={c.value} value={c.value}>
-                          {c.label}
+                      {currencies.map((c) => (
+                        <SelectItem key={c.code} value={c.code}>
+                          {c.code} — {c.name} ({c.symbol})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -396,6 +438,7 @@ const OnboardingPage = () => {
                     .from("profiles")
                     .update({
                       account_type: "individual",
+                      preferred_currency: form.currency,
                       onboarding_completed: true,
                     })
                     .eq("id", user!.id);

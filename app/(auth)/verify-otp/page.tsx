@@ -87,6 +87,7 @@ const VerifyOtpPage = () => {
               .update({
                 phone,
                 account_type: pending.accountType,
+                preferred_currency: pending.currency,
                 onboarding_completed: true,
                 ...(isBusiness
                   ? {}
