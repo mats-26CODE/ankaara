@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Logo from "@/components/shared/logo";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ import { ToastAlert } from "@/config/toast";
 
 const ONBOARDING_PENDING_KEY = "onboarding_pending";
 
-const VerifyOtpPage = () => {
+const VerifyOtpContent = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -250,5 +250,11 @@ const VerifyOtpPage = () => {
     </div>
   );
 };
+
+const VerifyOtpPage = () => (
+  <Suspense>
+    <VerifyOtpContent />
+  </Suspense>
+);
 
 export default VerifyOtpPage;
