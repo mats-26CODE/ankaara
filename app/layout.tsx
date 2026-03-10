@@ -9,9 +9,9 @@ const figtree = Figtree({
 });
 
 export const metadata: Metadata = {
-  title: "Angavu - Fanya Biashara Yako Iwe Angavu",
+  title: "Ankara – Professional Invoicing, Made Simple",
   description:
-    "Record and manage your business sales and expenses with ease and transparency",
+    "Create professional invoices, send via link, track views, and get paid with mobile money. Built for Africa.",
 };
 
 export default function RootLayout({
@@ -28,24 +28,20 @@ export default function RootLayout({
               !(function() {
                 try {
                   const stored = localStorage.getItem('preferences-store');
-                  let theme = 'system';
+                  let theme = 'light';
                   let language = 'sw';
                   
                   if (stored) {
                     const preferences = JSON.parse(stored);
                     if (preferences && preferences.state) {
-                      theme = preferences.state.theme || 'system';
+                      theme = preferences.state.theme || 'light';
                       language = preferences.state.language || 'sw';
                     }
                   }
                   
-                  // Apply theme immediately
-                  let effectiveTheme = theme;
-                  if (theme === 'system') {
-                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                    effectiveTheme = prefersDark ? 'dark' : 'light';
-                  }
-                  document.documentElement.classList.toggle('dark', effectiveTheme === 'dark');
+                  // Apply theme immediately (only light/dark; legacy "system" treated as light)
+                  const resolvedTheme = (theme === 'light' || theme === 'dark') ? theme : 'light';
+                  document.documentElement.classList.toggle('dark', resolvedTheme === 'dark');
                   
                   // Apply language immediately
                   if (language) {
@@ -55,9 +51,8 @@ export default function RootLayout({
                   // Mark as initialized to show content
                   document.documentElement.setAttribute('data-theme-initialized', 'true');
                 } catch (e) {
-                  // Fallback to system theme on error
-                  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  document.documentElement.classList.toggle('dark', prefersDark);
+                  // Fallback to light theme on error
+                  document.documentElement.classList.toggle('dark', false);
                   document.documentElement.lang = 'sw';
                   document.documentElement.setAttribute('data-theme-initialized', 'true');
                 }

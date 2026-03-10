@@ -9,7 +9,7 @@ import {
   t as translate,
 } from "@/lib/i18n/translations";
 
-type Theme = "light" | "dark" | "system";
+type Theme = "light" | "dark";
 type Language = "en" | "sw";
 
 interface PreferencesState {
@@ -17,9 +17,6 @@ interface PreferencesState {
   setTheme: (theme: Theme) => void;
   language: Language;
   setLanguage: (lang: Language) => void;
-  // Helper to get effective theme (resolves "system" to actual theme)
-  getEffectiveTheme: () => "light" | "dark";
-  // Translation function
   t: (key: string, vars?: Record<string, string>) => string;
 }
 
@@ -28,18 +25,12 @@ const createPreferencesStore = () => {
   return create<PreferencesState>()(
     persist(
       (set, get) => ({
-        theme: "system",
+        theme: "light",
         language: defaultLanguage as Language,
         setTheme: (theme: Theme) => {
           set({ theme });
-          // Apply theme immediately
-          const effectiveTheme =
-            theme === "system" ? get().getEffectiveTheme() : theme;
           if (typeof window !== "undefined") {
-            document.documentElement.classList.toggle(
-              "dark",
-              effectiveTheme === "dark"
-            );
+            document.documentElement.classList.toggle("dark", theme === "dark");
           }
         },
         setLanguage: (lang: Language) => {
@@ -47,17 +38,6 @@ const createPreferencesStore = () => {
           if (typeof window !== "undefined") {
             document.documentElement.lang = lang;
           }
-        },
-        getEffectiveTheme: (): "light" | "dark" => {
-          const { theme } = get();
-          if (theme === "system") {
-            if (typeof window === "undefined") return "light";
-            const prefersDark = window.matchMedia(
-              "(prefers-color-scheme: dark)"
-            ).matches;
-            return prefersDark ? "dark" : "light";
-          }
-          return theme;
         },
         t: (key: string, vars?: Record<string, string>) => {
           const { language } = get();
@@ -70,11 +50,8 @@ const createPreferencesStore = () => {
         // Initialize theme and language on load
         onRehydrateStorage: () => (state) => {
           if (state && typeof window !== "undefined") {
-            const effectiveTheme = state.getEffectiveTheme();
-            document.documentElement.classList.toggle(
-              "dark",
-              effectiveTheme === "dark"
-            );
+            const isDark = state.theme === "dark";
+            document.documentElement.classList.toggle("dark", isDark);
             document.documentElement.lang = state.language;
           }
         },
@@ -90,35 +67,16 @@ export const useTheme = () => {
   const theme = useSyncExternalStore(
     usePreferencesStore.subscribe,
     () => usePreferencesStore.getState().theme,
-    () => "system" // SSR value
-  );
-  const setTheme = usePreferencesStore((state) => state.setTheme);
-  const getEffectiveTheme = usePreferencesStore(
-    (state) => state.getEffectiveTheme
-  );
-
-  // Get effective theme reactively
-  const effectiveTheme = useSyncExternalStore(
-    usePreferencesStore.subscribe,
-    () => usePreferencesStore.getState().getEffectiveTheme(),
     () => "light" // SSR value
   );
+  const setTheme = usePreferencesStore((state) => state.setTheme);
 
   return {
     theme,
     setTheme,
-    effectiveTheme,
     toggleTheme: () => {
       const current = usePreferencesStore.getState().theme;
-      if (current === "light") {
-        setTheme("dark");
-      } else if (current === "dark") {
-        setTheme("light");
-      } else {
-        // If system, toggle to opposite of current system preference
-        const effective = getEffectiveTheme();
-        setTheme(effective === "light" ? "dark" : "light");
-      }
+      setTheme(current === "light" ? "dark" : "light");
     },
   };
 };

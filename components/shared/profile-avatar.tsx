@@ -20,7 +20,7 @@ interface ProfileAvatarProps {
    * Size of the avatar
    * @default "default"
    */
-  size?: "sm" | "default" | "lg" | "xl" | number;
+  size?: "xs" | "sm" | "default" | "lg" | "xl" | number;
   /**
    * Additional CSS classes
    */
@@ -62,6 +62,7 @@ const getSizeClass = (
   }
 
   const sizeMap = {
+    xs: "size-6",
     sm: "size-8",
     default: "size-9",
     lg: "size-12",
@@ -110,7 +111,9 @@ export const ProfileAvatar = ({
             ? "text-base"
             : size === "xl" || size === "lg"
             ? "text-base"
-            : "text-xs"
+            : size === "xs"
+            ? "text-xs"
+            : "text-sm"
         }
       >
         {initials}

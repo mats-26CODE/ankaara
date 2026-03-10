@@ -4,74 +4,157 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/use-translation";
 import Link from "next/link";
-import { CheckCircle2, Sparkles } from "lucide-react";
+import { Check, Users, Cloud, Zap, Mail } from "lucide-react";
+import { SUPPORT_EMAIL } from "@/constants/values";
 
-export function PricingSection() {
+const SNIPE_URL = "https://snipe.sh";
+
+const PricingSection = () => {
   const { t } = useTranslation();
+
+  const plans = [
+    {
+      key: "free" as const,
+      popular: false,
+      contact: false,
+      icon: Users,
+    },
+    {
+      key: "pro" as const,
+      popular: true,
+      contact: false,
+      icon: Zap,
+    },
+    {
+      key: "business" as const,
+      popular: false,
+      contact: true,
+      icon: Cloud,
+    },
+  ] as const;
 
   return (
     <section
       id="pricing"
-      className="relative py-20 md:py-32 overflow-hidden bg-gradient-to-br from-background via-primary/5 to-background"
+      className="py-12 md:py-16 px-4 border-t border-border/60 bg-muted/20"
     >
-      <div className="container w-full md:max-w-6xl mx-auto px-4">
-        <div className="max-w-5xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-16 md:mb-20 lg:mb-24 space-y-4 md:space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm md:text-base lg:text-lg font-medium text-primary mb-4">
-              <Sparkles className="h-4 w-4 md:h-5 md:w-5" />
-              <span>Pricing</span>
-            </div>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-bold text-foreground mb-4 text-balance">
-              {t("landing.pricing.title")}
-            </h2>
-          </div>
+      <div className="container w-full md:max-w-6xl mx-auto">
+        <h2 className="capitalize text-2xl md:text-3xl xl:text-5xl font-semibold text-foreground text-center mb-12 md:mb-16">
+          {t("landing.pricing.title")}
+        </h2>
 
-          {/* Pricing Card */}
-          <div className="max-w-2xl mx-auto mb-8">
-            <Card className="group relative bg-gradient-to-br from-primary/10 via-primary/5 to-card/80 backdrop-blur-sm rounded-3xl border-2 border-primary/50 hover:border-primary transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20 hover:-translate-y-2 overflow-hidden">
-              <div className="absolute top-0 right-0 w-40 h-40 bg-primary/20 rounded-full blur-3xl -mr-20 -mt-20" />
-              <CardHeader className="text-center pb-6 md:pb-8 relative z-10">
-                <div className="inline-flex items-center gap-2 rounded-full bg-primary/20 px-4 py-2 text-sm md:text-base font-medium text-primary mb-4">
-                  <Sparkles className="h-4 w-4" />
-                  <span>{t("landing.pricing.freeTrial")}</span>
-                </div>
-                <CardTitle className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl mb-3 md:mb-4 font-bold">
-                  {t("landing.pricing.plan.name")}
-                </CardTitle>
-                <div className="space-y-1 mb-4 md:mb-6">
-                  <div className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-primary">
-                    {t("landing.pricing.plan.price")}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+          {plans.map(({ key, popular, contact, icon: Icon }) => {
+            const name = t(`landing.pricing.${key}.name`);
+            const description = t(`landing.pricing.${key}.description`);
+            const price = t(`landing.pricing.${key}.price`);
+            const period = t(`landing.pricing.${key}.period`);
+            const cta = t(`landing.pricing.${key}.cta`);
+            const features = [
+              t(`landing.pricing.${key}.features.0`),
+              t(`landing.pricing.${key}.features.1`),
+              t(`landing.pricing.${key}.features.2`),
+              t(`landing.pricing.${key}.features.3`),
+            ];
+
+            return (
+              <Card
+                key={key}
+                className={`relative flex flex-col rounded-2xl border-2 overflow-hidden transition-all ${
+                  popular
+                    ? "border-primary bg-primary/5 shadow-lg shadow-primary/10 md:scale-[1.02]"
+                    : "border bg-card shadow-xs hover:border-primary/30"
+                }`}
+              >
+                {popular && (
+                  <div className="absolute top-0 right-0 px-3 py-1.5 rounded-bl-lg bg-primary text-primary-foreground text-xs font-medium">
+                    {t("landing.pricing.mostPopular")}
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4 md:space-y-5 relative z-10 pb-8 md:pb-10">
-                <div className="space-y-3 md:space-y-4">
-                  <div className="flex items-center gap-3 md:gap-4">
-                    <div className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                      <CheckCircle2 className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6 text-primary-foreground" />
-                    </div>
-                    <span className="text-base md:text-lg lg:text-xl xl:text-2xl font-medium text-foreground">
-                      {t("landing.pricing.plan.allFeatures")}
+                )}
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <Icon className="h-5 w-5" />
                     </span>
+                    <CardTitle className="text-xl md:text-2xl font-semibold">
+                      {name}
+                    </CardTitle>
                   </div>
-                </div>
-                <Button
-                  asChild
-                  className="w-full mt-8 md:mt-10 h-12 md:h-14 lg:h-16 text-base md:text-lg lg:text-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all"
-                  size="lg"
-                >
-                  <Link href="/sign-up">{t("landing.cta")}</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+                  <p className="text-sm text-muted-foreground">{description}</p>
+                  {!contact ? (
+                    <div className="flex items-baseline gap-1 pt-2">
+                      <span className="text-3xl md:text-4xl font-bold text-foreground">
+                        {price}
+                      </span>
+                      <span className="text-muted-foreground">{period}</span>
+                    </div>
+                  ) : (
+                    <p className="text-lg font-semibold text-foreground pt-2">
+                      {t("landing.pricing.contactUs")}
+                    </p>
+                  )}
+                </CardHeader>
+                <CardContent className="flex flex-col flex-1 pt-0">
+                  <ul className="space-y-3 flex-1">
+                    {features.map((feature, i) => (
+                      <li
+                        key={i}
+                        className="flex items-start gap-2 text-sm text-muted-foreground"
+                      >
+                        <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    asChild
+                    variant={popular ? "default" : "outline"}
+                    className={`w-full mt-6 rounded-lg py-6 font-medium ${
+                      popular ? "bg-primary" : ""
+                    }`}
+                    size="lg"
+                  >
+                    {contact ? (
+                      <a
+                        href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
+                          `Business plan inquiry`
+                        )}`}
+                        className="inline-flex items-center justify-center gap-2"
+                      >
+                        <Mail className="h-4 w-4" />
+                        {cta}
+                      </a>
+                    ) : (
+                      <Link href="/sign-up">{cta}</Link>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
 
-          <p className="text-center text-muted-foreground text-sm md:text-base lg:text-lg">
-            {t("landing.pricing.noHiddenFees")}
+        <p className="text-center text-muted-foreground text-md mt-10 uppercase">
+          {t("landing.pricing.noHiddenFees")}
+        </p>
+
+        {/* Powered by Snipe */}
+        <div className="mt-5 py-4 flex flex-col items-center gap-2">
+          <p className="text-2xl text-muted-foreground">
+            {t("landing.pricing.poweredBy")}{" "}
+            <a
+              href={SNIPE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-primary hover:underline"
+            >
+              Snipe
+            </a>
           </p>
         </div>
       </div>
     </section>
   );
-}
+};
+
+export { PricingSection };

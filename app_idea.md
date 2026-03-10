@@ -1,194 +1,443 @@
-# Angavu – Product Definition & Scope
+# ANKARA – SaaS Invoicing Platform
 
-## Overview
+## Product Overview
 
-Angavu is a Tanzanian-focused web application designed to help small and medium-sized businesses keep clear, accurate, and organized financial records so they can confidently prepare for TRA-related reporting and compliance needs.
+ANKARA is a modern invoicing platform that allows freelancers, individuals, and businesses to:
 
-Angavu’s core mission is to reduce stress, confusion, and fear around financial record-keeping by giving business owners visibility and clarity over their sales, expenses, and business performance.
+- Create professional invoices
+- Send invoices via link
+- Track invoice views
+- Accept payments through payment links
+- Monitor invoice status (paid, overdue, etc)
 
-**Brand promise:**  
-_Fanya Biashara Yako Iwe Angavu._
+The platform should be:
 
----
+- Minimal
+- Fast
+- Mobile-friendly
+- Built for Africa
+- Integrated with mobile money payment providers
 
-## Problem Statement
-
-Many businesses in Tanzania struggle with:
-
-- Poor or inconsistent financial record-keeping
-- Sales and expenses recorded in notebooks, WhatsApp, or memory
-- Lack of monthly or yearly summaries
-- Fear and uncertainty when asked to provide financial information to TRA
-
-This fear is often not caused by wrongdoing, but by the absence of organized, accessible records.
-
----
-
-## Solution
-
-Angavu provides a simple, digital record-keeping platform that allows businesses to:
-
-- Record daily sales and expenses
-- View summarized financial performance
-- Generate clear monthly and yearly reports
-- Be prepared whenever financial information is required
-
-Angavu focuses on **preparedness, clarity, and confidence**, not tax calculation or payment processing.
+Primary payment integration target:
+Snipe Payment Gateway.
 
 ---
 
-## What Angavu Is
+# Tech Stack
 
-- A financial record-keeping tool
-- A compliance-preparation assistant
-- A business clarity dashboard
-- A reporting and documentation platform
+Frontend (Phase 1)
+- Next.js
+- TypeScript
+- TailwindCSS
+- Shadcn UI
 
----
+Backend
+- Supabase
+- PostgreSQL
+- Supabase Auth
+- Supabase Storage
+- Supabase Edge Functions
 
-## What Angavu Is NOT
+Mobile (Phase 2)
+- Flutter
+- Riverpod
 
-- A payment processor
-- A bank or MNO integration
-- A tax filing system
-- A tool for tax avoidance or evasion
-- A TRA-connected system
+Payments
+- Snipe Payment Gateway
 
-Angavu does not calculate or submit taxes on behalf of users.
-
----
-
-## Target Users
-
-- Small and Medium Enterprises (SMEs)
-- Retail shop owners
-- Restaurant and salon owners
-- Service providers and freelancers
-- Informal businesses transitioning to better record-keeping
-- Businesses seeking readiness for TRA inquiries
+Deployment
+- Vercel (frontend)
+- Supabase (backend)
 
 ---
 
-## Core Features
+# Core Entities
 
-### Business Management
+Main entities required:
 
-- Create and manage one or more businesses
-- Store basic business information
+- Profiles (users)
+- Businesses (business accounts)
+- Clients (customers receiving invoices)
+- Invoices
+- Invoice Items
+- Payments
+- Payment Transactions
+- Invoice Views
+- Invoice Templates
+- Subscriptions
 
-### Sales Recording
-
-- Record daily sales transactions
-- Categorize sales by date and amount
-
-### Expense Tracking
-
-- Record business expenses
-- Categorize expenses (rent, utilities, supplies, etc.)
-
-### Financial Summaries
-
-- Monthly and yearly revenue summaries
-- Expense breakdowns
-- Profit estimation (revenue minus expenses)
-
-### Reports
-
-- Generate clear, readable financial reports
-- Export reports as PDF for sharing or printing
-
-### Dashboard
-
-- High-level overview of business performance
-- Visual indicators of trends and totals
+Cursor should create these tables in Supabase.
 
 ---
 
-## User Flow
+# Database Schema
 
-1. User signs up using phone number OTP
-2. User creates a business profile
-3. User records sales and expenses over time
-4. Angavu automatically generates summaries and reports
-5. User accesses reports whenever needed for review or sharing
+All tables should use UUID primary keys.
 
----
+Enable:
 
-## Compliance & Legal Positioning
-
-Angavu is designed to support lawful business operations.
-
-- It encourages accurate record-keeping
-- It does not assist in hiding or manipulating data
-- It does not integrate with TRA, banks, or MNOs
-- It does not provide tax advice
-
-Angavu’s role is to help businesses maintain clarity and organization, enabling lawful compliance when required.
+- Row Level Security (RLS)
+- Foreign key relationships
+- Created_at timestamps
 
 ---
 
-## Technology Stack
+# 1 Profiles -> Already done
 
-- Frontend: Next.js (App Router)
-- Backend & Database: Supabase (PostgreSQL)
-- Authentication: Phone number OTP via Supabase Auth
-- Security: Row-Level Security (RLS) on all tables
-- Deployment: Web-first, mobile-responsive
+Linked to Supabase auth.users.
 
----
+Table: profiles
 
-## Data Security
+Fields:
 
-- Each user can only access their own data
-- Businesses and records are isolated per user
-- Supabase Row-Level Security enforces strict data access rules
-
----
-
-## Brand Voice & Tone
-
-- Friendly and calm
-- Clear and simple language
-- Local and relatable
-- Confidence-building, not fear-based
-- Professional but approachable
+id (uuid, primary key, references auth.users.id)
+full_name (text)
+email (text)
+phone (text)
+avatar_url (text)
+created_at (timestamp)
+updated_at (timestamp)
 
 ---
 
-## Key Emotional Value
+# 2 businesses
 
-Angavu gives business owners:
+Represents a business account.
 
-- Peace of mind
-- Confidence when dealing with financial questions
-- Visibility into their business
-- Control over their records
+A user can own one or multiple businesses.
 
----
+Table: businesses
 
-## Core Message
+Fields:
 
-**Angavu helps businesses stay ready, organized, and confident — so when questions arise, they are prepared.**
-
----
-
-## Taglines
-
-- Rekodi Sahihi, Amani ya Akili
-- Jiandae kwa TRA Bila Stress
-- Fanya Biashara Yako Iwe Angavu
+id (uuid, primary key)
+owner_id (uuid, foreign key → profiles.id)
+name (text)
+logo_url (text)
+brand_color (text)
+currency (text)
+address (text)
+tax_number (text)
+created_at (timestamp)
 
 ---
 
-## Success Definition
+# 3 Clients
 
-Angavu is successful when:
+Customers receiving invoices.
 
-- Users consistently record sales and expenses
-- Businesses can quickly produce clear financial summaries
-- Users feel confident and stress-free about their records
-- SMEs see Angavu as a trusted business companion
+Table: clients
+
+Fields:
+
+id (uuid, primary key)
+organization_id (uuid, foreign key → businesses.id)
+name (text)
+email (text)
+phone (text)
+address (text)
+created_at (timestamp)
 
 ---
 
-© 2025 Angavu. All rights reserved.
+# 4 Invoices
+
+Main invoice table.
+
+Table: invoices
+
+Fields:
+
+id (uuid, primary key)
+organization_id (uuid, foreign key → businesses.id)
+client_id (uuid, foreign key → clients.id)
+invoice_number (text)
+status (text)
+issue_date (date)
+due_date (date)
+subtotal (numeric)
+tax (numeric)
+total (numeric)
+currency (text)
+payment_link (text)
+notes (text)
+created_at (timestamp)
+
+Allowed status values:
+
+draft
+sent
+viewed
+paid
+overdue
+cancelled
+
+---
+
+# 5 Invoice Items
+
+Each invoice contains multiple items.
+
+Table: invoice_items
+
+Fields:
+
+id (uuid, primary key)
+invoice_id (uuid, foreign key → invoices.id)
+description (text)
+quantity (numeric)
+unit_price (numeric)
+total (numeric)
+
+---
+
+# 6 Payments
+
+Stores payment records.
+
+Table: payments
+
+Fields:
+
+id (uuid, primary key)
+invoice_id (uuid, foreign key → invoices.id)
+payment_provider (text)
+amount (numeric)
+currency (text)
+status (text)
+paid_at (timestamp)
+reference (text)
+
+Allowed status values:
+
+pending
+success
+failed
+
+---
+
+# 7 Payment Transactions
+
+Stores raw payment gateway responses.
+
+Table: payment_transactions
+
+Fields:
+
+id (uuid, primary key)
+payment_id (uuid, foreign key → payments.id)
+provider_transaction_id (text)
+raw_payload (jsonb)
+created_at (timestamp)
+
+---
+
+# 8 Invoice Views
+
+Tracks when an invoice link is opened.
+
+Table: invoice_views
+
+Fields:
+
+id (uuid, primary key)
+invoice_id (uuid, foreign key → invoices.id)
+ip_address (text)
+user_agent (text)
+viewed_at (timestamp)
+
+---
+
+# 9 Invoice Templates
+
+Allows invoice customization.
+
+Table: invoice_templates
+
+Fields:
+
+id (uuid, primary key)
+organization_id (uuid, foreign key → businesses.id)
+name (text)
+layout (jsonb)
+is_default (boolean)
+
+---
+
+# 10 Subscriptions
+
+Stores SaaS subscription status.
+
+Table: subscriptions
+
+Fields:
+
+id (uuid, primary key)
+organization_id (uuid, foreign key → businesses.id)
+plan (text)
+status (text)
+start_date (timestamp)
+end_date (timestamp)
+
+Allowed plan values:
+
+free
+pro
+business
+
+Allowed status values:
+
+active
+cancelled
+expired
+
+---
+
+# Storage Buckets
+
+Create Supabase storage buckets:
+
+logos
+invoice_pdfs
+
+---
+
+# Core Backend Logic
+
+Edge functions required:
+
+create_invoice
+generate_payment_link
+handle_payment_webhook
+mark_invoice_paid
+send_invoice_notification
+
+---
+
+# Invoice Payment Flow
+
+1 User creates invoice
+
+2 System generates payment link
+
+3 Invoice link shared with customer
+
+4 Customer opens invoice page
+
+5 Customer clicks pay
+
+6 Payment gateway processes payment
+
+7 Gateway sends webhook
+
+8 Webhook updates invoice status to PAID
+
+---
+
+# Public Invoice Page
+
+A public route must exist:
+
+/invoice/{invoice_id}
+
+/pay/{invoice_id}
+
+Customer can:
+
+- View invoice
+- See items
+- See total
+- Click pay button
+
+---
+
+# MVP Features
+
+Must build first:
+
+Authentication
+Create Business
+Create Client
+Create Invoice
+Add Invoice Items
+Share Invoice Link
+Invoice View Tracking
+Payment Link Integration (We will use https://snipe.sh)
+Dashboard
+
+---
+
+# Dashboard Metrics
+
+Display:
+
+Total Revenue
+Paid Invoices
+Outstanding Invoices
+Overdue Invoices
+Recent Activity
+
+---
+
+# UI Design Philosophy
+
+Minimal SaaS style.
+
+Inspired by:
+
+Stripe
+Linear
+Notion
+
+Use:
+
+Large whitespace
+Rounded cards
+Clean typography
+Soft shadows
+
+Primary color:
+
+#4F64F1 or variations of it
+
+Secondary color
+#FFFDFF (this is for backgrounds)
+
+---
+
+# Development Roadmap
+
+Phase 1
+Database setup
+Authentication
+businesses
+Clients
+
+Phase 2
+Invoice creation
+Invoice items
+Invoice preview
+
+Phase 3
+Invoice sharing
+Public invoice page
+
+Phase 4
+Payment integration
+
+Phase 5
+Dashboard analytics
+
+Phase 6
+Mobile app (Flutter)
+
+---
+
+# End Goal
+
+Ankara becomes a financial platform that helps businesses:
+
+Create invoices
+Track revenue
+Get paid faster
+Understand cash flow
