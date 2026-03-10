@@ -15,6 +15,15 @@ export const translations = {
       dashboard: "Dashibodi",
       logout: "Toka",
     },
+    dashboard: {
+      home: {
+        greetingSubtitle: "Tayari kutungia ankara na kupokea malipo.",
+        completeProfileTitle: "Kamilisha wasifu wako",
+        completeProfileDescription:
+          "Ongeza aina ya akaunti, jina na maelezo ili kuanza kutumia ankara na kudhibiti biashara yako.",
+        completeProfileCta: "Kamilisha wasifu",
+      },
+    },
     footer: {
       tagline: `${APP_NAME} · Invoicing Sahihi, Rahisi`,
       description:
@@ -257,6 +266,8 @@ export const translations = {
         individual: "Mtu Binafsi",
         businessName: "Jina la Biashara",
         businessNamePlaceholder: "Jina la biashara yako",
+        yourName: "Jina lako",
+        yourNamePlaceholder: "Jina lako kamili",
         location: "Mahali / Anwani",
         locationPlaceholder: "Mji, mtaa au anwani kamili",
         capacity: "Uwezo (hiari)",
@@ -265,6 +276,8 @@ export const translations = {
         next: "Endelea",
         finish: "Kamilisha",
         creating: "Inatengeneza...",
+        phoneOptional: "Nambari ya simu (hiari)",
+        phonePlaceholder: "0767 XXX XXX",
       },
       login: {
         welcome: "Karibu tena",
@@ -338,6 +351,15 @@ export const translations = {
       signup: "Sign Up",
       dashboard: "Dashboard",
       logout: "Logout",
+    },
+    dashboard: {
+      home: {
+        greetingSubtitle: "Ready to create invoices and get paid.",
+        completeProfileTitle: "Complete your profile",
+        completeProfileDescription:
+          "Add your account type, name and details to start using invoices and manage your business.",
+        completeProfileCta: "Complete profile",
+      },
     },
     footer: {
       tagline: `${APP_NAME} · Professional Invoicing, Made Simple`,
@@ -580,6 +602,8 @@ export const translations = {
         individual: "Individual",
         businessName: "Business name",
         businessNamePlaceholder: "Your business or trading name",
+        yourName: "Your name",
+        yourNamePlaceholder: "Your full name",
         location: "Location / Address",
         locationPlaceholder: "City, area or full address",
         capacity: "Capacity (optional)",
@@ -588,6 +612,8 @@ export const translations = {
         next: "Continue",
         finish: "Finish",
         creating: "Setting up...",
+        phoneOptional: "Phone number (optional)",
+        phonePlaceholder: "0767 XXX XXX",
       },
       login: {
         welcome: "Welcome back",

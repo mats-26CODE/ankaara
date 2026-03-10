@@ -6,11 +6,13 @@ Based on [APP_IDEA.md](./APP_IDEA.md), aligned with **kazy_web** dashboard struc
 
 ## Tech Stack
 
-| Layer      | Choice |
-|-----------|--------|
-| Frontend  | Next.js, TypeScript, TailwindCSS, Shadcn UI |
-| Backend   | Supabase (PostgreSQL, Auth, Storage, Edge Functions) |
-| Payments  | [Snippe](https://www.snippe.sh/) – integrated last ([docs](https://docs.snippe.sh/docs/2026-01-25)) |
+
+| Layer    | Choice                                                                                              |
+| -------- | --------------------------------------------------------------------------------------------------- |
+| Frontend | Next.js, TypeScript, TailwindCSS, Shadcn UI                                                         |
+| Backend  | Supabase (PostgreSQL, Auth, Storage, Edge Functions)                                                |
+| Payments | [Snippe](https://www.snippe.sh/) – integrated last ([docs](https://docs.snippe.sh/docs/2026-01-25)) |
+
 
 ---
 
@@ -79,7 +81,7 @@ Schema support (already in migration `20260310130000`):
 ### 3.2 Invoice preview & sharing
 
 - Preview before send (same layout as public page).
-- “Share” = copy link to **public invoice page** ` /invoice/[id]` (or `/i/[id]`).
+- “Share” = copy link to **public invoice page**  `/invoice/[id]` (or `/i/[id]`).
 - **View tracking:** on load of public invoice page, insert into `invoice_views` (ip_address, user_agent, viewed_at); optionally set invoice status to `viewed` if currently `sent`.
 
 ### 3.3 Public invoice page
@@ -125,3 +127,4 @@ Schema support (already in migration `20260310130000`):
 - kazy_web – `(dashboard)/layout.tsx`, `DashboardSidebar`, `components/ui/sidebar`, dashboard page cards/styling.
 - [Snippe](https://www.snippe.sh/) – payment provider.
 - [Snippe API docs](https://docs.snippe.sh/docs/2026-01-25) – Payment Sessions, webhooks, auth.
+

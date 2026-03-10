@@ -87,6 +87,79 @@ export const useVerifyOtp = () => {
 };
 
 /**
+ * Send OTP for onboarding (authenticated user, e.g. after Google sign-up).
+ * Uses send-otp edge function; phone should be with country code (e.g. 2557XXXXXXXX).
+ */
+export const useSendOtpForOnboarding = () => {
+  return useMutation({
+    mutationFn: async (payload: { phone: string }) => {
+      const supabase = createClient();
+      const { data, error } = await supabase.functions.invoke("send-otp", {
+        body: { phone: payload.phone },
+      });
+      let errMessage = "";
+      if (error instanceof FunctionsHttpError) {
+        try {
+          const errData = await error.context.json();
+          errMessage = (errData as { message?: string })?.message ?? error.message;
+        } catch {
+          errMessage = error.message;
+        }
+      } else if (error) {
+        errMessage = error.message;
+      }
+      if (errMessage) throw new Error(errMessage);
+      const errMsg = (data as { message?: string })?.message;
+      if (errMsg && (data as { success?: boolean })?.success !== true)
+        throw new Error(errMsg);
+      return data;
+    },
+    onSuccess: () => {
+      ToastAlert.success("OTP sent to your phone!");
+    },
+    onError: (error: AuthError) => {
+      ToastAlert.error(error.message || "Failed to send OTP. Please try again.");
+    },
+  });
+};
+
+/**
+ * Verify OTP for onboarding (authenticated user).
+ * Uses verify-otp edge function; on success does not redirect — caller should finalize profile and redirect.
+ */
+export const useVerifyOtpForOnboarding = () => {
+  return useMutation({
+    mutationFn: async (payload: { phone: string; code: string }) => {
+      const supabase = createClient();
+      const { data, error } = await supabase.functions.invoke("verify-otp", {
+        body: { phone: payload.phone, code: payload.code },
+      });
+      let errMessage = "";
+      if (error instanceof FunctionsHttpError) {
+        try {
+          const errData = await error.context.json();
+          errMessage = (errData as { message?: string })?.message ?? error.message;
+        } catch {
+          errMessage = error.message;
+        }
+      } else if (error) {
+        errMessage = error.message;
+      }
+      if (errMessage) throw new Error(errMessage);
+      const errMsg = (data as { message?: string })?.message;
+      if (errMsg && (data as { success?: boolean })?.success !== true)
+        throw new Error(errMsg);
+      return data;
+    },
+    onError: (error: AuthError) => {
+      ToastAlert.error(
+        error.message || "Invalid OTP. Please try again."
+      );
+    },
+  });
+};
+
+/**
  * Hook to login/signup with Google OAuth
  */
 export const useGoogleOAuth = () => {

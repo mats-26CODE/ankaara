@@ -20,6 +20,10 @@ import { useTranslation } from "@/hooks/use-translation";
 import { createClient } from "@/lib/supabase/client";
 import { Spinner } from "@/components/ui/spinner";
 import { Building2, User } from "lucide-react";
+import { addCountryCode } from "@/helpers/helpers";
+import { useSendOtpForOnboarding } from "@/hooks/use-auth";
+
+const ONBOARDING_PENDING_KEY = "onboarding_pending";
 
 const CURRENCIES = [
   { value: "TZS", label: "TZS (Tanzanian Shilling)" },
@@ -39,10 +43,14 @@ const OnboardingPage = () => {
   const [form, setForm] = useState({
     accountType: "" as "" | "business" | "individual",
     businessName: "",
+    individualName: "",
     location: "",
     capacity: "",
     currency: "TZS",
+    phone: "",
   });
+  const sendOtpMutation = useSendOtpForOnboarding();
+  const showOptionalPhone = !profile?.phone;
 
   useEffect(() => {
     if (userLoading || profileLoading) return;
@@ -67,8 +75,32 @@ const OnboardingPage = () => {
       return;
     }
 
-    if (!form.businessName.trim()) {
+    const isBusiness = form.accountType === "business";
+    if (isBusiness && !form.businessName.trim()) {
       setError("Business name is required");
+      return;
+    }
+    if (!isBusiness && !form.individualName.trim()) {
+      setError("Your name is required");
+      return;
+    }
+
+    const phoneTrimmed = form.phone.trim();
+    if (showOptionalPhone && phoneTrimmed) {
+      setSubmitting(true);
+      setError(null);
+      try {
+        sessionStorage.setItem(ONBOARDING_PENDING_KEY, JSON.stringify(form));
+        await sendOtpMutation.mutateAsync({
+          phone: addCountryCode(phoneTrimmed),
+        });
+        router.push(
+          `/verify-otp?phone=${encodeURIComponent(addCountryCode(phoneTrimmed))}&intent=onboarding`
+        );
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to send OTP");
+        setSubmitting(false);
+      }
       return;
     }
 
@@ -76,12 +108,17 @@ const OnboardingPage = () => {
     const supabase = createClient();
     const userId = user!.id;
 
+    const businessName = isBusiness
+      ? form.businessName.trim()
+      : form.individualName.trim() || profile?.full_name || "My Business";
+
     try {
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
           account_type: form.accountType,
           onboarding_completed: true,
+          ...(isBusiness ? {} : { full_name: form.individualName.trim() || profile?.full_name }),
         })
         .eq("id", userId);
 
@@ -89,9 +126,9 @@ const OnboardingPage = () => {
 
       const { error: businessError } = await supabase.from("businesses").insert({
         owner_id: userId,
-        name: form.businessName.trim(),
-        address: form.location.trim() || null,
-        capacity: form.capacity.trim() || null,
+        name: businessName,
+        address: isBusiness ? (form.location.trim() || null) : null,
+        capacity: isBusiness ? (form.capacity.trim() || null) : null,
         currency: form.currency,
       });
 
@@ -171,7 +208,7 @@ const OnboardingPage = () => {
               </div>
             )}
 
-            {step === 2 && (
+            {step === 2 && form.accountType === "business" && (
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="businessName">
@@ -236,6 +273,80 @@ const OnboardingPage = () => {
                     </SelectContent>
                   </Select>
                 </div>
+                {showOptionalPhone && (
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">
+                      {t("auth.onboarding.phoneOptional")}
+                    </Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={form.phone}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, phone: e.target.value }))
+                      }
+                      placeholder={t("auth.onboarding.phonePlaceholder")}
+                      className="h-11"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {step === 2 && form.accountType === "individual" && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="individualName">
+                    {t("auth.onboarding.yourName")}
+                  </Label>
+                  <Input
+                    id="individualName"
+                    value={form.individualName}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, individualName: e.target.value }))
+                    }
+                    placeholder={t("auth.onboarding.yourNamePlaceholder")}
+                    required
+                    className="h-11"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t("auth.onboarding.currency")}</Label>
+                  <Select
+                    value={form.currency}
+                    onValueChange={(v) =>
+                      setForm((p) => ({ ...p, currency: v }))
+                    }
+                  >
+                    <SelectTrigger className="h-11">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CURRENCIES.map((c) => (
+                        <SelectItem key={c.value} value={c.value}>
+                          {c.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {showOptionalPhone && (
+                  <div className="space-y-2">
+                    <Label htmlFor="phoneIndividual">
+                      {t("auth.onboarding.phoneOptional")}
+                    </Label>
+                    <Input
+                      id="phoneIndividual"
+                      type="tel"
+                      value={form.phone}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, phone: e.target.value }))
+                      }
+                      placeholder={t("auth.onboarding.phonePlaceholder")}
+                      className="h-11"
+                    />
+                  </div>
+                )}
               </div>
             )}
 
@@ -259,10 +370,10 @@ const OnboardingPage = () => {
               )}
               <Button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || sendOtpMutation.isPending}
                 className={step === 1 ? "w-full" : "flex-1"}
               >
-                {submitting ? (
+                {submitting || sendOtpMutation.isPending ? (
                   <Spinner className="size-4" />
                 ) : step === 1 ? (
                   t("auth.onboarding.next")
@@ -281,18 +392,30 @@ const OnboardingPage = () => {
                 setError(null);
                 const supabase = createClient();
                 try {
-                  await supabase.from("profiles").update({
-                    account_type: "individual",
-                    onboarding_completed: true,
-                  }).eq("id", user!.id);
-                  await supabase.from("businesses").insert({
-                    owner_id: user!.id,
-                    name: profile?.full_name || "My Business",
-                    currency: "TZS",
-                  });
+                  const { error: profileError } = await supabase
+                    .from("profiles")
+                    .update({
+                      account_type: "individual",
+                      onboarding_completed: true,
+                    })
+                    .eq("id", user!.id);
+                  if (profileError) throw profileError;
+
+                  const { error: businessError } = await supabase
+                    .from("businesses")
+                    .insert({
+                      owner_id: user!.id,
+                      name: profile?.full_name || "My Business",
+                      currency: "TZS",
+                    });
+                  if (businessError) throw businessError;
+
                   await refetch();
                   router.replace("/dashboard");
-                } catch {
+                } catch (err) {
+                  setError(
+                    err instanceof Error ? err.message : "Something went wrong"
+                  );
                   setSubmitting(false);
                 }
               }}
