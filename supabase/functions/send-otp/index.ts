@@ -15,6 +15,18 @@ function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+// verify_jwt is true on this function, so the gateway already validated the JWT.
+// We just decode the payload to extract the user ID (sub claim).
+function getUserIdFromJwt(authHeader: string): string | null {
+  try {
+    const token = authHeader.replace("Bearer ", "");
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.sub || null;
+  } catch {
+    return null;
+  }
+}
+
 async function sendSms(phone: string, code: string): Promise<void> {
   const apiKey = Deno.env.get("BEEM_SMS_API_KEY");
   const secretKey = Deno.env.get("BEEM_SMS_SECRET_KEY");
@@ -57,21 +69,17 @@ Deno.serve(async (req) => {
       { status: 401, headers: corsHeaders }
     );
   }
-  const token = authHeader.replace("Bearer ", "");
+  const userId = getUserIdFromJwt(authHeader);
+  if (!userId) {
+    return Response.json(
+      { message: "Invalid token" },
+      { status: 401, headers: corsHeaders }
+    );
+  }
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser(token);
-  if (error || !user?.id) {
-    return Response.json(
-      { message: "Invalid or expired token" },
-      { status: 401, headers: corsHeaders }
-    );
-  }
   let body: { phone?: string };
   try {
     body = await req.json();
@@ -102,7 +110,7 @@ Deno.serve(async (req) => {
     );
   }
   const { error: insertError } = await supabase.from("otp_verification").insert({
-    user_id: user.id,
+    user_id: userId,
     phone,
     code,
     expires_at: expiresAt,

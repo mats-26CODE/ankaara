@@ -13,9 +13,9 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
-import { useTranslation } from "@/hooks/use-translation";
-import { validatePhoneNumber } from "@/helpers/helpers";
 import { APP_NAME } from "@/constants/values";
+import { useTranslation } from "@/hooks/use-translation";
+import { validatePhoneNumber } from "@/helpers/helpers"; 
 import { Spinner } from "@/components/ui/spinner";
 
 const LoginPage = () => {
@@ -70,8 +70,8 @@ const LoginPage = () => {
 
   const testimonial = {
     quote:
-      "Ankara has made getting paid on time a breeze. Professional invoices, payment links, and mobile money—everything I need in one place.",
-    author: "@ankara_user",
+      `${APP_NAME} has made getting paid on time a breeze. Professional invoices, payment links, and mobile money—everything I need in one place.`,
+    author: `@${APP_NAME.toLowerCase()}_user`,
   };
 
   return (

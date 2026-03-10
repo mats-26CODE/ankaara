@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { APP_NAME } from "@/constants/values";
 import { usePathname } from "next/navigation";
 import { Collapsible } from "radix-ui";
 import {
@@ -59,7 +60,7 @@ export const DashboardSidebar = () => {
     <Sidebar variant="floating" collapsible="icon">
       <SidebarHeader className="flex flex-row items-center justify-between border-b border-sidebar-border p-4">
         <span className="text-lg font-medium truncate group-data-[collapsible=icon]:hidden">
-          Ankara
+          {APP_NAME}
         </span>
         <SidebarTrigger className="shrink-0 group-data-[collapsible=icon]:-ml-1.5" />
       </SidebarHeader>
@@ -201,7 +202,7 @@ export const DashboardSidebar = () => {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-2 group-data-[collapsible=icon]:hidden">
-        <p className="text-xs text-sidebar-foreground/50 text-center">Ankara</p>
+        <p className="text-xs text-sidebar-foreground/50 text-center">{APP_NAME}</p>
       </SidebarFooter>
     </Sidebar>
   );

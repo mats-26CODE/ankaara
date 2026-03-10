@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
   Card,
@@ -16,9 +15,9 @@ import { ProfileAvatar } from "@/components/shared/profile-avatar";
 import { useProfile } from "@/hooks/use-profile";
 import { useUser } from "@/hooks/use-user";
 import { useTranslation } from "@/hooks/use-translation";
-import { createClient } from "@/lib/supabase/client";
 import { getCasualGreeting } from "@/helpers/helpers";
 import { useFormatAmount } from "@/hooks/use-format-amount";
+import { useDashboardStats } from "@/hooks/use-dashboard-stats";
 import {
   UserRound,
   ChevronRight,
@@ -31,18 +30,6 @@ import {
   AlertTriangle,
   Send,
 } from "lucide-react";
-
-type InvoiceStats = {
-  total: number;
-  draft: number;
-  sent: number;
-  paid: number;
-  overdue: number;
-  totalRevenue: number;
-  currency: string;
-};
-
-type ClientCount = number;
 
 /**
  * Check whether the profile has the essential fields filled in.
@@ -67,79 +54,11 @@ const DashboardPage = () => {
   const { user } = useUser();
   const { profile, loading: profileLoading } = useProfile();
   const { format: formatAmount } = useFormatAmount();
-  const [invoiceStats, setInvoiceStats] = useState<InvoiceStats>({
-    total: 0,
-    draft: 0,
-    sent: 0,
-    paid: 0,
-    overdue: 0,
-    totalRevenue: 0,
-    currency: "TZS",
-  });
-  const [clientCount, setClientCount] = useState<ClientCount>(0);
-  const [statsLoading, setStatsLoading] = useState(true);
-
-  const fetchStats = useCallback(async () => {
-    if (!user?.id) return;
-    const supabase = createClient();
-
-    // Get user's business ids
-    const { data: businesses } = await supabase
-      .from("businesses")
-      .select("id, currency")
-      .eq("owner_id", user.id);
-
-    if (!businesses || businesses.length === 0) {
-      setStatsLoading(false);
-      return;
-    }
-
-    const bizIds = businesses.map((b: { id: string }) => b.id);
-    const currency = businesses[0]?.currency || "TZS";
-
-    // Invoices
-    const { data: invoices } = await supabase
-      .from("invoices")
-      .select("status, total")
-      .in("organization_id", bizIds);
-
-    const stats: InvoiceStats = {
-      total: 0,
-      draft: 0,
-      sent: 0,
-      paid: 0,
-      overdue: 0,
-      totalRevenue: 0,
-      currency,
-    };
-
-    if (invoices) {
-      stats.total = invoices.length;
-      for (const inv of invoices) {
-        const s = inv.status as string;
-        if (s === "draft") stats.draft++;
-        else if (s === "sent" || s === "viewed") stats.sent++;
-        else if (s === "paid") {
-          stats.paid++;
-          stats.totalRevenue += Number(inv.total) || 0;
-        } else if (s === "overdue") stats.overdue++;
-      }
-    }
-    setInvoiceStats(stats);
-
-    // Clients
-    const { count } = await supabase
-      .from("clients")
-      .select("id", { count: "exact", head: true })
-      .in("organization_id", bizIds);
-
-    setClientCount(count || 0);
-    setStatsLoading(false);
-  }, [user?.id]);
-
-  useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+  const {
+    invoiceStats,
+    clientCount,
+    loading: statsLoading,
+  } = useDashboardStats(user?.id);
 
   const { complete: isProfileComplete, missing } =
     checkProfileCompleteness(profile);

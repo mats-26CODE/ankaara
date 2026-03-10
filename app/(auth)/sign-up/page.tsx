@@ -13,9 +13,9 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
+import { APP_NAME } from "@/constants/values";
 import { useTranslation } from "@/hooks/use-translation";
 import { validatePhoneNumber } from "@/helpers/helpers";
-import { APP_NAME } from "@/constants/values";
 import { Spinner } from "@/components/ui/spinner";
 
 const SignUpPage = () => {
@@ -70,8 +70,8 @@ const SignUpPage = () => {
 
   const testimonial = {
     quote:
-      "Ankara makes invoicing and getting paid so much simpler. I create invoices in minutes, share a link, and get paid via mobile money. Perfect for freelancers and small businesses.",
-    author: "@ankara_user",
+      `${APP_NAME} makes invoicing and getting paid so much simpler. I create invoices in minutes, share a link, and get paid via mobile money. Perfect for freelancers and small businesses.`,
+    author: `@${APP_NAME.toLowerCase()}_user`,
   };
 
   return (

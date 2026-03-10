@@ -42,11 +42,11 @@ export const translations = {
     },
     landing: {
       tagline: `Fanya Biashara Yako Iwe ${APP_NAME}`,
-      headline: "Ankara – Invoicing Sahihi, Rahisi",
+      headline: `${APP_NAME} – Invoicing Sahihi, Rahisi`,
       subheadline:
         "Tengeneza ankara za kibiashara, tuma kwa kiungo, fuatia maoni, na upoke malipo kwa pesa za simu. Imejengwa kwa Afrika.",
       supportingText:
-        "Ankara ni jukwaa la invoicing linalokuruhusu kuunda, kutuma na kufuatilia ankara kwa urahisi.",
+        `${APP_NAME} ni jukwaa la invoicing linalokuruhusu kuunda, kutuma na kufuatilia ankara kwa urahisi.`,
       cta: "Anza Bure",
       heroLabel: "Invoicing ya Kibiashara kwa Afrika",
       noCreditCard: "Hakuna kadi ya kredi inayohitajika",
@@ -383,7 +383,7 @@ export const translations = {
       subheadline:
         "Create professional invoices, send via link, track views, and get paid with mobile money. Built for Africa.",
       supportingText: `${APP_NAME} helps freelancers and businesses create, send, and track invoices with payment links.`,
-      cta: "Try Ankara free",
+      cta: `Try ${APP_NAME} free`,
       heroLabel: "Professional invoicing for Africa",
       noCreditCard: "No credit card required",
       socialProof: "Rated 5.0 by freelancers & businesses",

@@ -16,12 +16,12 @@ import {
 import { useUser } from "@/hooks/use-user";
 import { useProfile } from "@/hooks/use-profile";
 import { useTranslation } from "@/hooks/use-translation";
-import { createClient } from "@/lib/supabase/client";
 import { Spinner } from "@/components/ui/spinner";
 import { Building2, User } from "lucide-react";
 import { addCountryCode } from "@/helpers/helpers";
 import { useSendOtpForOnboarding } from "@/hooks/use-auth";
 import { useCurrencies } from "@/hooks/use-currencies";
+import { useCompleteOnboarding, useSkipOnboarding } from "@/hooks/use-onboarding";
 import type { Profile } from "@/hooks/use-profile";
 
 const ONBOARDING_PENDING_KEY = "onboarding_pending";
@@ -69,6 +69,8 @@ const OnboardingPage = () => {
     setPrefilled(true);
   }, [profile, prefilled]);
   const sendOtpMutation = useSendOtpForOnboarding();
+  const completeOnboarding = useCompleteOnboarding();
+  const skipOnboarding = useSkipOnboarding();
   const showOptionalPhone = !profile?.phone;
 
   const profileComplete = isProfileActuallyComplete(profile);
@@ -125,63 +127,32 @@ const OnboardingPage = () => {
       return;
     }
 
-    setSubmitting(true);
-    const supabase = createClient();
-    const userId = user!.id;
-
     const businessName = isBusiness
       ? form.businessName.trim()
       : form.individualName.trim() || profile?.full_name || "My Business";
 
-    try {
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({
-          account_type: form.accountType,
-          preferred_currency: form.currency,
-          onboarding_completed: true,
-          ...(isBusiness ? {} : { full_name: form.individualName.trim() || profile?.full_name }),
-        })
-        .eq("id", userId);
-
-      if (profileError) throw profileError;
-
-      // Check if business already exists (e.g. from a previous "Skip")
-      const { data: existingBiz } = await supabase
-        .from("businesses")
-        .select("id")
-        .eq("owner_id", userId)
-        .limit(1)
-        .maybeSingle();
-
-      if (existingBiz) {
-        const { error: bizUpdateError } = await supabase
-          .from("businesses")
-          .update({
-            name: businessName,
-            address: isBusiness ? (form.location.trim() || null) : null,
-            capacity: isBusiness ? (form.capacity.trim() || null) : null,
-            currency: form.currency,
-          })
-          .eq("id", existingBiz.id);
-        if (bizUpdateError) throw bizUpdateError;
-      } else {
-        const { error: bizInsertError } = await supabase.from("businesses").insert({
-          owner_id: userId,
-          name: businessName,
-          address: isBusiness ? (form.location.trim() || null) : null,
-          capacity: isBusiness ? (form.capacity.trim() || null) : null,
-          currency: form.currency,
-        });
-        if (bizInsertError) throw bizInsertError;
+    setSubmitting(true);
+    completeOnboarding.mutate(
+      {
+        userId: user!.id,
+        accountType: form.accountType as "business" | "individual",
+        currency: form.currency,
+        businessName,
+        location: form.location,
+        capacity: form.capacity,
+        fullName: isBusiness ? undefined : (form.individualName.trim() || profile?.full_name || undefined),
+      },
+      {
+        onSuccess: async () => {
+          await refetch();
+          router.replace("/dashboard");
+        },
+        onError: (err) => {
+          setError(err.message);
+          setSubmitting(false);
+        },
       }
-
-      await refetch();
-      router.replace("/dashboard");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-      setSubmitting(false);
-    }
+    );
   };
 
   if (userLoading || profileLoading || currenciesLoading || !user || profileComplete) {
@@ -429,40 +400,28 @@ const OnboardingPage = () => {
           <p className="text-center text-xs text-muted-foreground">
             <button
               type="button"
-              onClick={async () => {
+              onClick={() => {
                 setSubmitting(true);
                 setError(null);
-                const supabase = createClient();
-                try {
-                  const { error: profileError } = await supabase
-                    .from("profiles")
-                    .update({
-                      account_type: "individual",
-                      preferred_currency: form.currency,
-                      onboarding_completed: true,
-                    })
-                    .eq("id", user!.id);
-                  if (profileError) throw profileError;
-
-                  const { error: businessError } = await supabase
-                    .from("businesses")
-                    .insert({
-                      owner_id: user!.id,
-                      name: profile?.full_name || "My Business",
-                      currency: "TZS",
-                    });
-                  if (businessError) throw businessError;
-
-                  await refetch();
-                  router.replace("/dashboard");
-                } catch (err) {
-                  setError(
-                    err instanceof Error ? err.message : "Something went wrong"
-                  );
-                  setSubmitting(false);
-                }
+                skipOnboarding.mutate(
+                  {
+                    userId: user!.id,
+                    currency: form.currency,
+                    fullName: profile?.full_name || undefined,
+                  },
+                  {
+                    onSuccess: async () => {
+                      await refetch();
+                      router.replace("/dashboard");
+                    },
+                    onError: (err) => {
+                      setError(err.message);
+                      setSubmitting(false);
+                    },
+                  }
+                );
               }}
-              disabled={submitting}
+              disabled={submitting || skipOnboarding.isPending}
               className="hover:underline text-muted-foreground"
             >
               Skip for now

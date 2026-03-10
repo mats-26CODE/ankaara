@@ -15,8 +15,7 @@ import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
 import { useTranslation } from "@/hooks/use-translation";
 import { useUser } from "@/hooks/use-user";
 import { useProfile } from "@/hooks/use-profile";
-import { createClient } from "@/lib/supabase/client";
-import { ToastAlert } from "@/config/toast";
+import { useCompleteOnboarding } from "@/hooks/use-onboarding";
 
 const ONBOARDING_PENDING_KEY = "onboarding_pending";
 
@@ -36,6 +35,7 @@ const VerifyOtpContent = () => {
   const sendOtpMutation = useSendOtp(true);
   const verifyOtpForOnboardingMutation = useVerifyOtpForOnboarding();
   const sendOtpForOnboardingMutation = useSendOtpForOnboarding();
+  const completeOnboarding = useCompleteOnboarding();
   const { countdown, canResend, startCountdown } = useOtpCountdown(60);
 
   useEffect(() => {
@@ -60,7 +60,7 @@ const VerifyOtpContent = () => {
       verifyOtpForOnboardingMutation.mutate(
         { phone, code: otp },
         {
-          onSuccess: async () => {
+          onSuccess: () => {
             const pendingRaw =
               typeof window !== "undefined"
                 ? sessionStorage.getItem(ONBOARDING_PENDING_KEY)
@@ -81,43 +81,28 @@ const VerifyOtpContent = () => {
             const businessName = isBusiness
               ? pending.businessName.trim()
               : pending.individualName.trim() || profile?.full_name || "My Business";
-            const supabase = createClient();
-            const { error: profileError } = await supabase
-              .from("profiles")
-              .update({
-                phone,
-                account_type: pending.accountType,
-                preferred_currency: pending.currency,
-                onboarding_completed: true,
-                ...(isBusiness
-                  ? {}
-                  : {
-                      full_name:
-                        pending.individualName.trim() || profile?.full_name,
-                    }),
-              })
-              .eq("id", user.id);
-            if (profileError) {
-              ToastAlert.error(profileError.message);
-              return;
-            }
-            const { error: businessError } = await supabase
-              .from("businesses")
-              .insert({
-                owner_id: user.id,
-                name: businessName,
-                address: isBusiness ? (pending.location.trim() || null) : null,
-                capacity: isBusiness ? (pending.capacity.trim() || null) : null,
+
+            completeOnboarding.mutate(
+              {
+                userId: user.id,
+                accountType: pending.accountType as "business" | "individual",
                 currency: pending.currency,
-              });
-            if (businessError) {
-              ToastAlert.error(businessError.message);
-              return;
-            }
-            sessionStorage.removeItem(ONBOARDING_PENDING_KEY);
-            await refetchProfile();
-            ToastAlert.success("Phone verified and profile updated!");
-            router.replace("/dashboard");
+                businessName,
+                location: pending.location,
+                capacity: pending.capacity,
+                fullName: isBusiness
+                  ? undefined
+                  : (pending.individualName.trim() || profile?.full_name || undefined),
+                phone,
+              },
+              {
+                onSuccess: async () => {
+                  sessionStorage.removeItem(ONBOARDING_PENDING_KEY);
+                  await refetchProfile();
+                  router.replace("/dashboard");
+                },
+              }
+            );
           },
         }
       );

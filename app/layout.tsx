@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Figtree } from "next/font/google";
 import "./globals.css";
 import Providers from "@/providers/providers";
+import { APP_NAME } from "@/constants/values";
 
 const figtree = Figtree({
   variable: "--font-figtree",
@@ -9,7 +10,7 @@ const figtree = Figtree({
 });
 
 export const metadata: Metadata = {
-  title: "Ankara – Professional Invoicing, Made Simple",
+  title: `${APP_NAME} – Professional Invoicing, Made Simple`,
   description:
     "Create professional invoices, send via link, track views, and get paid with mobile money. Built for Africa.",
 };
