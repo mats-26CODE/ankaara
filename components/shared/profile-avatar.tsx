@@ -7,7 +7,7 @@ interface ProfileAvatarProps {
   name?: string;
   image?: string | null;
   alt?: string;
-  size?: "sm" | "default" | "lg" | "xl" | number;
+  size?: "xs" | "sm" | "default" | "lg" | "xl" | number;
   className?: string;
   fallback?: string;
 }
@@ -29,6 +29,7 @@ const getSizeClass = (
     return { style: { width: size, height: size } };
   }
   const sizeMap = {
+    xs: "size-6",
     sm: "size-8",
     default: "size-9",
     lg: "size-12",
