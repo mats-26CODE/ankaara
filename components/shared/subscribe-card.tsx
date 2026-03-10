@@ -9,6 +9,7 @@ import {
 } from "../ui/input-group";
 import { AtSign } from "lucide-react";
 import { useTranslation } from "@/hooks/use-translation";
+import { SUPPORT_EMAIL } from "@/constants/values";
 
 interface SubscribeCardProps {
   showHeader?: boolean;
@@ -30,7 +31,7 @@ export const SubscribeCard = ({
     if (email.trim()) {
       // We'll implement subscription logic here in the future
       // For now, we'll use mailto as a fallback
-      window.location.href = `mailto:support@angavu.com?subject=Subscribe to Newsletter&body=Email: ${email}`;
+      window.location.href = `mailto:${SUPPORT_EMAIL}?subject=Subscribe to Newsletter&body=Email: ${email}`;
       setEmail("");
     }
   };

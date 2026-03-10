@@ -118,7 +118,7 @@ export const translations = {
         },
       },
       benefits: {
-        title: "Kwa Nini Chagua Angavu?",
+        title: `Kwa Nini Chagua ${APP_NAME}?`,
         subtitle:
           "Vifaa vyetu vinakusaidia kufanya kazi yako iwe rahisi na wazi.",
         fast: {
@@ -156,7 +156,7 @@ export const translations = {
       },
       solution: {
         title: `${APP_NAME} Hukusaidia Kujiandaa Mapema`,
-        intro: "Kwa kutumia Angavu unapata:",
+        intro: `Kwa kutumia ${APP_NAME} unapata:`,
         whatItDoes: {
           recordSales: "Rekodi sahihi za mauzo",
           trackExpenses: "Ufuatiliaji wa matumizi",
@@ -228,7 +228,7 @@ export const translations = {
       trustCompliance: {
         title: `${APP_NAME} Inafuata Sheria`,
         statements: {
-          noTaxEvasion: "Angavu haisaidii kukwepa kodi.",
+          noTaxEvasion: `${APP_NAME} haisaidii kukwepa kodi.`,
           noBankConnection: "Hatuunganishi akaunti za benki au MNO.",
           helpsRecords: "Tunasaidia biashara kuwa na rekodi sahihi na wazi.",
         },
@@ -249,6 +249,23 @@ export const translations = {
       },
     },
     auth: {
+      onboarding: {
+        title: "Karibu! Ongeza Maelezo Yako",
+        subtitle: "Chagua aina ya akaunti na jaza maelezo",
+        accountType: "Aina ya Akaunti",
+        business: "Biashara",
+        individual: "Mtu Binafsi",
+        businessName: "Jina la Biashara",
+        businessNamePlaceholder: "Jina la biashara yako",
+        location: "Mahali / Anwani",
+        locationPlaceholder: "Mji, mtaa au anwani kamili",
+        capacity: "Uwezo (hiari)",
+        capacityPlaceholder: "mf. idadi ya wafanyakazi, kiwango",
+        currency: "Sarafu",
+        next: "Endelea",
+        finish: "Kamilisha",
+        creating: "Inatengeneza...",
+      },
       login: {
         welcome: "Karibu tena",
         subtitle: "Ingia kwenye akaunti yako",
@@ -264,11 +281,11 @@ export const translations = {
         noAccount: "Huna akaunti?",
         signUp: "Jisajili",
         terms:
-          "Kwa kuendelea, unakubali Vigezo vya Huduma na Sera ya Faragha ya Angavu.",
+          `Kwa kuendelea, unakubali Vigezo vya Huduma na Sera ya Faragha ya ${APP_NAME}.`,
         error: "Barua pepe/simu au nenosiri si sahihi",
       },
       signup: {
-        title: "Unda akaunti yako ya Angavu",
+        title: `Unda akaunti yako ya ${APP_NAME}`,
         subtitle: "Jisajili ili uanze",
         googleSignUp: "Jisajili na Google",
         orContinueWith: "Au endelea na",
@@ -283,7 +300,7 @@ export const translations = {
         haveAccount: "Tayari una akaunti?",
         signIn: "Ingia",
         terms:
-          "Kwa kuendelea, unakubali Vigezo vya Huduma na Sera ya Faragha ya Angavu.",
+          `Kwa kuendelea, unakubali Vigezo vya Huduma na Sera ya Faragha ya ${APP_NAME}.`,
         error: "Haikuweza kusajili. Tafadhali jaribu tena.",
         fillAllFields: "Tafadhali jaza sehemu zote",
         emailRequired: "Barua pepe inahitajika",
@@ -461,7 +478,7 @@ export const translations = {
       },
       solution: {
         title: `${APP_NAME} Helps You Prepare Early`,
-        intro: "By using Angavu you get:",
+        intro: `By using ${APP_NAME} you get:`,
         whatItDoes: {
           recordSales: "Accurate sales records",
           trackExpenses: "Expense tracking",
@@ -533,7 +550,7 @@ export const translations = {
       trustCompliance: {
         title: `${APP_NAME} Follows the Law`,
         statements: {
-          noTaxEvasion: "Angavu does not help evade taxes.",
+          noTaxEvasion: `${APP_NAME} does not help evade taxes.`,
           noBankConnection: "We do not connect bank or MNO accounts.",
           helpsRecords:
             "We help businesses have accurate and transparent records.",
@@ -555,6 +572,23 @@ export const translations = {
       },
     },
     auth: {
+      onboarding: {
+        title: "Welcome! Set up your account",
+        subtitle: "Choose your account type and add a few details",
+        accountType: "Account type",
+        business: "Business",
+        individual: "Individual",
+        businessName: "Business name",
+        businessNamePlaceholder: "Your business or trading name",
+        location: "Location / Address",
+        locationPlaceholder: "City, area or full address",
+        capacity: "Capacity (optional)",
+        capacityPlaceholder: "e.g. team size, scale",
+        currency: "Currency",
+        next: "Continue",
+        finish: "Finish",
+        creating: "Setting up...",
+      },
       login: {
         welcome: "Welcome back",
         subtitle: "Sign in to your account",
@@ -570,11 +604,11 @@ export const translations = {
         noAccount: "Don't have an account?",
         signUp: "Sign up",
         terms:
-          "By continuing, you agree to Angavu's Terms of Service and Privacy Policy.",
+          `By continuing, you agree to ${APP_NAME}'s Terms of Service and Privacy Policy.`,
         error: "Incorrect email/phone or password",
       },
       signup: {
-        title: "Create your Angavu account",
+        title: `Create your ${APP_NAME} account`,
         subtitle: "Sign up to get started",
         googleSignUp: "Sign up with Google",
         orContinueWith: "Or continue with",
@@ -589,7 +623,7 @@ export const translations = {
         haveAccount: "Already have an account?",
         signIn: "Sign in",
         terms:
-          "By continuing, you agree to Angavu's Terms of Service and Privacy Policy.",
+          `By continuing, you agree to ${APP_NAME}'s Terms of Service and Privacy Policy.`,
         error: "Unable to register. Please try again.",
         fillAllFields: "Please complete all fields",
         emailRequired: "Email is required",

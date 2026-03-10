@@ -68,11 +68,10 @@ const SignUpPage = () => {
     googleOAuthMutation.mutate();
   };
 
-  // Sample testimonial data
   const testimonial = {
     quote:
-      "As a business owner, Angavu has been a game-changer. Managing my records and preparing for TRA is now effortless. The platform's transparency features have made compliance so much easier. Highly recommend!",
-    author: "@tayos_business",
+      "Ankara makes invoicing and getting paid so much simpler. I create invoices in minutes, share a link, and get paid via mobile money. Perfect for freelancers and small businesses.",
+    author: "@ankara_user",
   };
 
   return (
