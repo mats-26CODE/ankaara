@@ -67,7 +67,12 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
     setCurrency(invoice.currency);
     const storedTax = Number(invoice.tax) || 0;
     const storedSubtotal = Number(invoice.subtotal) || 0;
-    const pct = storedSubtotal > 0 ? (storedTax / storedSubtotal) * 100 : 0;
+    const pct =
+      invoice.tax_percentage != null && Number(invoice.tax_percentage) >= 0
+        ? Number(invoice.tax_percentage)
+        : storedSubtotal > 0
+          ? (storedTax / storedSubtotal) * 100
+          : 0;
     setTax(pct ? String(Math.round(pct * 100) / 100) : "");
     setNotes(invoice.notes ?? "");
     setAccentColor(invoice.accent_color ?? "");
@@ -124,6 +129,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
         due_date: dueDate,
         currency,
         tax: taxAmount,
+        tax_percentage: taxPercent,
         template_id: templateId,
         accent_color: accentColor.trim() || null,
         footer_note: footerNote.trim() || null,

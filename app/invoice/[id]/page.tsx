@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { APP_NAME } from "@/constants/values";
 import { Button } from "@/components/ui/button";
 import { InvoiceTemplate } from "@/lib/invoice-templates/registry";
+import { InvoiceExportButtons, INVOICE_ELEMENT_ID } from "@/components/shared/invoice-export-buttons";
+import Logo from "@/components/shared/logo";
 import { CheckCircle2, Clock, CreditCard } from "lucide-react";
 
 type Props = {
@@ -23,8 +25,24 @@ export const generateMetadata = async ({ params }: Props) => {
   if (!data) return { title: "Invoice Not Found" };
 
   const clientName = (data.client as { name: string } | null)?.name ?? "Client";
+  const title = `${data.invoice_number} — ${clientName} | ${APP_NAME}`;
+
+  const headersList = await headers();
+  const host = headersList.get("x-forwarded-host") ?? headersList.get("host") ?? "";
+  const protocol = headersList.get("x-forwarded-proto") ?? "https";
+  const baseUrl = host ? `${protocol}://${host}` : "";
+
   return {
-    title: `${data.invoice_number} — ${clientName} | ${APP_NAME}`,
+    title,
+    openGraph: {
+      title,
+      images: baseUrl ? [`${baseUrl}/invoice/${id}/opengraph-image`] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      images: baseUrl ? [`${baseUrl}/invoice/${id}/opengraph-image`] : undefined,
+    },
   };
 };
 
@@ -94,6 +112,9 @@ const InvoiceContent = async ({ id }: { id: string }) => {
   return (
     <div className="min-h-screen bg-muted/30">
       <div className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
+        <div className="mb-6 flex justify-center">
+          <Logo />
+        </div>
         {/* Status banner */}
         {isPaid && (
           <div className="mb-6 flex items-center justify-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 p-4 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400">
@@ -108,7 +129,8 @@ const InvoiceContent = async ({ id }: { id: string }) => {
           </div>
         )}
 
-        <InvoiceTemplate
+        <div id={INVOICE_ELEMENT_ID} className="bg-white rounded-lg">
+          <InvoiceTemplate
           templateId={invoice.template_id ?? "classic"}
           invoiceNumber={invoice.invoice_number}
           status={invoice.status}
@@ -117,6 +139,13 @@ const InvoiceContent = async ({ id }: { id: string }) => {
           currency={invoice.currency}
           subtotal={Number(invoice.subtotal)}
           tax={Number(invoice.tax)}
+          taxPercent={
+            invoice.tax_percentage != null && Number(invoice.tax_percentage) > 0
+              ? Number(invoice.tax_percentage)
+              : Number(invoice.subtotal) > 0
+                ? (Number(invoice.tax) / Number(invoice.subtotal)) * 100
+                : null
+          }
           total={total}
           notes={invoice.notes}
           accentColor={invoice.accent_color}
@@ -132,6 +161,11 @@ const InvoiceContent = async ({ id }: { id: string }) => {
             total: Number(item.total),
           }))}
         />
+        </div>
+
+        <div className="mt-6 flex items-center justify-center">
+          <InvoiceExportButtons invoiceNumber={invoice.invoice_number} />
+        </div>
 
         {/* Pay section */}
         {!isPaid && (
@@ -151,12 +185,6 @@ const InvoiceContent = async ({ id }: { id: string }) => {
             </p>
           </div>
         )}
-
-        {/* Footer */}
-        <p className="text-center text-xs text-muted-foreground mt-8">
-          Powered by{" "}
-          <span className="font-brand">{APP_NAME}</span>
-        </p>
       </div>
     </div>
   );

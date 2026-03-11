@@ -4,7 +4,8 @@ import dayjs from "dayjs";
 const DEFAULT_BRAND = "#2563eb";
 
 export const BoldBrandTemplate = (props: InvoiceTemplateProps) => {
-  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, tax, total, notes, accentColor, footerNote, business, client, items, isPaid } = props;
+  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, tax, taxPercent, total, notes, accentColor, footerNote, business, client, items, isPaid } = props;
+  const taxLabel = Number(tax) > 0 && (taxPercent != null && taxPercent > 0) ? `Tax (${Number(taxPercent) % 1 === 0 ? taxPercent : Number(taxPercent).toFixed(1)}%)` : "Tax";
   const brand = accentColor || business?.brand_color || DEFAULT_BRAND;
 
   const renderLogo = () => {
@@ -89,7 +90,7 @@ export const BoldBrandTemplate = (props: InvoiceTemplateProps) => {
       <div className="px-8 py-8 flex justify-end">
         <div className="w-64 space-y-2">
           <div className="flex justify-between text-sm"><span className="text-gray-500">Subtotal</span><span>{Number(subtotal).toLocaleString()}</span></div>
-          {Number(tax) > 0 && <div className="flex justify-between text-sm"><span className="text-gray-500">Tax</span><span>{Number(tax).toLocaleString()}</span></div>}
+          {Number(tax) > 0 && <div className="flex justify-between text-sm"><span className="text-gray-500">{taxLabel}</span><span>{Number(tax).toLocaleString()}</span></div>}
           <div className="rounded-lg px-4 py-3 mt-2 flex justify-between items-baseline text-white" style={{ backgroundColor: brand }}>
             <span className="text-sm font-medium">Total</span>
             <span className="text-xl font-black">{currency} {Number(total).toLocaleString()}</span>

@@ -2,7 +2,8 @@ import type { InvoiceTemplateProps } from "@/lib/invoice-templates/types";
 import dayjs from "dayjs";
 
 export const ModernMinimalTemplate = (props: InvoiceTemplateProps) => {
-  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, tax, total, notes, footerNote, business, client, items, isPaid } = props;
+  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, tax, taxPercent, total, notes, footerNote, business, client, items, isPaid } = props;
+  const taxLabel = Number(tax) > 0 && (taxPercent != null && taxPercent > 0) ? `Tax (${Number(taxPercent) % 1 === 0 ? taxPercent : Number(taxPercent).toFixed(1)}%)` : "Tax";
 
   const renderLogo = () => {
     if (business?.logo_url) {
@@ -93,7 +94,7 @@ export const ModernMinimalTemplate = (props: InvoiceTemplateProps) => {
       <div className="px-8 py-8 flex justify-end">
         <div className="w-56 space-y-2">
           <div className="flex justify-between text-sm text-gray-500"><span>Subtotal</span><span>{Number(subtotal).toLocaleString()}</span></div>
-          {Number(tax) > 0 && <div className="flex justify-between text-sm text-gray-500"><span>Tax</span><span>{Number(tax).toLocaleString()}</span></div>}
+          {Number(tax) > 0 && <div className="flex justify-between text-sm text-gray-500"><span>{taxLabel}</span><span>{Number(tax).toLocaleString()}</span></div>}
           <div className="border-t border-gray-200 pt-3 mt-3">
             <div className="flex justify-between items-baseline">
               <span className="text-sm text-gray-500">Total</span>

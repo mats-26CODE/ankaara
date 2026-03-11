@@ -15,11 +15,18 @@ import {
   Copy,
   Check,
   Mail,
-  MessageCircle,
   Phone,
   ExternalLink,
   Share2,
+  FileDown,
+  FileImage,
 } from "lucide-react";
+import { jsPDF } from "jspdf";
+import {
+  captureElementAsCanvas,
+  downloadAsPng,
+  downloadAsPdf,
+} from "@/lib/capture-invoice";
 
 type ShareInvoiceDialogProps = {
   open: boolean;
@@ -31,6 +38,8 @@ type ShareInvoiceDialogProps = {
   shareUrl: string;
   isDraft?: boolean;
   onShare?: () => void;
+  /** ID of the invoice DOM element to capture as image (e.g. when sharing from dashboard detail) */
+  invoiceElementId?: string;
 };
 
 type ShareChannel = {
@@ -51,11 +60,13 @@ const ShareInvoiceDialog = ({
   shareUrl,
   isDraft,
   onShare,
+  invoiceElementId,
 }: ShareInvoiceDialogProps) => {
   const markAsSentIfDraft = () => {
     if (isDraft && onShare) onShare();
   };
   const [copied, setCopied] = useState(false);
+  const [exporting, setExporting] = useState<"pdf" | "image" | null>(null);
 
   const message = `Hi ${clientName}, here is your invoice ${invoiceNumber} for ${currency} ${total}. You can view and pay it here: ${shareUrl}`;
 
@@ -139,12 +150,51 @@ const ShareInvoiceDialog = ({
     markAsSentIfDraft();
   };
 
+  const captureInvoiceCanvas = async () => {
+    if (!invoiceElementId || typeof document === "undefined") return null;
+    const el = document.getElementById(invoiceElementId);
+    if (!el) return null;
+    return captureElementAsCanvas(el);
+  };
+
+  const handleExportImage = async () => {
+    setExporting("image");
+    try {
+      const canvas = await captureInvoiceCanvas();
+      if (!canvas) {
+        ToastAlert.error("Could not capture invoice");
+        return;
+      }
+      downloadAsPng(canvas, invoiceNumber);
+    } catch {
+      ToastAlert.error("Export failed");
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  const handleExportPdf = async () => {
+    setExporting("pdf");
+    try {
+      const canvas = await captureInvoiceCanvas();
+      if (!canvas) {
+        ToastAlert.error("Could not capture invoice");
+        return;
+      }
+      downloadAsPdf(canvas, invoiceNumber, jsPDF);
+    } catch {
+      ToastAlert.error("Export failed");
+    } finally {
+      setExporting(null);
+    }
+  };
+
   const handleNativeShare = async () => {
     if (navigator.share) {
       try {
         await navigator.share({
           title: `Invoice ${invoiceNumber}`,
-          text: `Invoice ${invoiceNumber} for ${currency} ${total}`,
+          text: message,
           url: shareUrl,
         });
         markAsSentIfDraft();
@@ -166,6 +216,32 @@ const ShareInvoiceDialog = ({
         </DialogHeader>
 
         <div className="space-y-4 py-2">
+          {/* Export as Image & PDF — for attaching to channels */}
+          {invoiceElementId && (
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                onClick={handleExportImage}
+                disabled={!!exporting}
+              >
+                <FileImage className="size-4 mr-2" />
+                {exporting === "image" ? "Exporting..." : "Export as Image"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                onClick={handleExportPdf}
+                disabled={!!exporting}
+              >
+                <FileDown className="size-4 mr-2" />
+                {exporting === "pdf" ? "Exporting..." : "Export as PDF"}
+              </Button>
+            </div>
+          )}
+
           {/* Copy link */}
           <div className="space-y-1.5">
             <p className="text-sm font-medium">Invoice Link</p>

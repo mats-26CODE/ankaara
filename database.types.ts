@@ -257,6 +257,7 @@ export type Database = {
           status: string
           subtotal: number
           tax: number
+          tax_percentage: number
           template_id: string
           total: number
           updated_at: string
@@ -277,6 +278,7 @@ export type Database = {
           status?: string
           subtotal?: number
           tax?: number
+          tax_percentage?: number
           template_id?: string
           total?: number
           updated_at?: string
@@ -297,6 +299,7 @@ export type Database = {
           status?: string
           subtotal?: number
           tax?: number
+          tax_percentage?: number
           template_id?: string
           total?: number
           updated_at?: string

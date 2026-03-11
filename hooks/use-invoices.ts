@@ -37,6 +37,7 @@ export type CreateInvoicePayload = {
   due_date: string;
   currency: string;
   tax: number;
+  tax_percentage?: number;
   notes?: string;
   template_id?: string;
   accent_color?: string;
@@ -51,6 +52,7 @@ export type UpdateInvoicePayload = {
   due_date?: string;
   currency?: string;
   tax?: number;
+  tax_percentage?: number;
   notes?: string | null;
   template_id?: string;
   accent_color?: string | null;
@@ -175,6 +177,7 @@ export const useCreateInvoice = () => {
           currency: payload.currency,
           subtotal,
           tax,
+          tax_percentage: payload.tax_percentage ?? 0,
           total,
           template_id: payload.template_id || "classic",
           accent_color: payload.accent_color?.trim() || null,
@@ -235,8 +238,10 @@ export const useUpdateInvoice = () => {
         updates.subtotal = subtotal;
         updates.tax = tax;
         updates.total = total;
-      } else if (payload.tax !== undefined) {
-        updates.tax = payload.tax;
+        if (payload.tax_percentage !== undefined) updates.tax_percentage = payload.tax_percentage;
+      } else {
+        if (payload.tax !== undefined) updates.tax = payload.tax;
+        if (payload.tax_percentage !== undefined) updates.tax_percentage = payload.tax_percentage;
       }
 
       const { data, error } = await supabase

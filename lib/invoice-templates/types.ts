@@ -31,6 +31,8 @@ export type InvoiceTemplateProps = {
   currency: string;
   subtotal: number;
   tax: number;
+  /** Tax rate in percent (e.g. 15 for 15%). Optional for backward compatibility. */
+  taxPercent?: number | null;
   total: number;
   notes: string | null;
   accentColor?: string | null;

@@ -23,6 +23,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { InvoiceTemplate } from "@/lib/invoice-templates/registry";
 import { ShareInvoiceDialog } from "@/components/shared/share-invoice-dialog";
+import { INVOICE_ELEMENT_ID } from "@/components/shared/invoice-export-buttons";
 import {
   ArrowLeft,
   Pencil,
@@ -151,7 +152,8 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
       </div>
 
       {/* Invoice Preview — rendered with selected template */}
-      <InvoiceTemplate
+      <div id={INVOICE_ELEMENT_ID}>
+        <InvoiceTemplate
         templateId={invoice.template_id ?? "classic"}
         invoiceNumber={invoice.invoice_number}
         status={invoice.status}
@@ -160,6 +162,13 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
         currency={invoice.currency}
         subtotal={Number(invoice.subtotal)}
         tax={Number(invoice.tax)}
+        taxPercent={
+          invoice.tax_percentage != null && Number(invoice.tax_percentage) > 0
+            ? Number(invoice.tax_percentage)
+            : Number(invoice.subtotal) > 0
+              ? (Number(invoice.tax) / Number(invoice.subtotal)) * 100
+              : null
+        }
         total={Number(invoice.total)}
         notes={invoice.notes}
         accentColor={invoice.accent_color}
@@ -175,6 +184,7 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
           total: Number(item.total),
         }))}
       />
+      </div>
 
       {/* Share Dialog */}
       <ShareInvoiceDialog
@@ -187,6 +197,7 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
         shareUrl={shareUrl}
         isDraft={isDraft}
         onShare={() => sendInvoice.mutate(invoice.id, { onSuccess: () => refetch() })}
+        invoiceElementId={INVOICE_ELEMENT_ID}
       />
 
       {/* Delete Dialog */}

@@ -15,6 +15,7 @@ const SAMPLE_DATA = {
   currency: "TZS",
   subtotal: 250000,
   tax: 45000,
+  taxPercent: 18,
   total: 295000,
   notes: "Thank you for your business. Payment due within 14 days.",
   accentColor: null,
@@ -36,8 +37,20 @@ const SAMPLE_DATA = {
     address: "456 Client St, Arusha",
   },
   items: [
-    { id: "1", description: "Web Development - Homepage", quantity: 1, unit_price: 150000, total: 150000 },
-    { id: "2", description: "UI/UX Design", quantity: 2, unit_price: 50000, total: 100000 },
+    {
+      id: "1",
+      description: "Web Development - Homepage",
+      quantity: 1,
+      unit_price: 150000,
+      total: 150000,
+    },
+    {
+      id: "2",
+      description: "UI/UX Design",
+      quantity: 2,
+      unit_price: 50000,
+      total: 100000,
+    },
   ],
 };
 
@@ -47,9 +60,12 @@ const TemplateSettingsPage = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-xl font-semibold tracking-tight">Invoice Templates</h2>
+        <h2 className="text-xl font-semibold tracking-tight">
+          Invoice Templates
+        </h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Choose and preview invoice templates. Select a template when creating invoices.
+          Choose and preview invoice templates. Select a template when creating
+          invoices.
         </p>
       </div>
 
@@ -74,7 +90,9 @@ const TemplateSettingsPage = () => {
               <CardTitle className="text-sm">{tmpl.name}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-xs text-muted-foreground">{tmpl.description}</p>
+              <p className="text-xs text-muted-foreground">
+                {tmpl.description}
+              </p>
             </CardContent>
           </Card>
         ))}

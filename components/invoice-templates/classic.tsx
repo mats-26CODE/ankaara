@@ -8,7 +8,8 @@ const StatusLabel = ({ status, isPaid }: { status: string; isPaid: boolean }) =>
 };
 
 export const ClassicTemplate = (props: InvoiceTemplateProps) => {
-  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, tax, total, notes, accentColor, footerNote, business, client, items, isPaid } = props;
+  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, tax, taxPercent, total, notes, accentColor, footerNote, business, client, items, isPaid } = props;
+  const taxLabel = Number(tax) > 0 && (taxPercent != null && taxPercent > 0) ? `Tax (${Number(taxPercent) % 1 === 0 ? taxPercent : Number(taxPercent).toFixed(1)}%)` : "Tax";
 
   const renderLogo = () => {
     if (business?.logo_url) {
@@ -87,7 +88,7 @@ export const ClassicTemplate = (props: InvoiceTemplateProps) => {
       <div className="px-8 py-6 flex justify-end">
         <div className="w-64 space-y-1">
           <div className="flex justify-between text-sm"><span className="text-gray-500">Subtotal</span><span>{Number(subtotal).toLocaleString()}</span></div>
-          {Number(tax) > 0 && <div className="flex justify-between text-sm"><span className="text-gray-500">Tax</span><span>{Number(tax).toLocaleString()}</span></div>}
+          {Number(tax) > 0 && <div className="flex justify-between text-sm"><span className="text-gray-500">{taxLabel}</span><span>{Number(tax).toLocaleString()}</span></div>}
           <div className="border-t border-gray-300 my-2" />
           <div className="flex justify-between text-lg font-bold"><span>Total</span><span>{currency} {Number(total).toLocaleString()}</span></div>
         </div>

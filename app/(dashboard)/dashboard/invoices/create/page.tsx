@@ -126,6 +126,7 @@ const CreateInvoicePage = () => {
         due_date: dueDate,
         currency,
         tax: taxAmount,
+        tax_percentage: taxPercent,
         template_id: templateId,
         accent_color: accentColor.trim() || undefined,
         footer_note: footerNote.trim() || undefined,
