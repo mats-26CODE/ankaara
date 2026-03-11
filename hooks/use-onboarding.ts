@@ -11,6 +11,7 @@ type CompleteOnboardingPayload = {
   businessName: string;
   location?: string;
   capacity?: string;
+  taxNumber?: string;
   fullName?: string;
   phone?: string;
 };
@@ -27,7 +28,7 @@ type SkipOnboardingPayload = {
 const upsertBusiness = async (
   supabase: ReturnType<typeof createClient>,
   ownerId: string,
-  fields: { name: string; address?: string | null; capacity?: string | null; currency: string }
+  fields: { name: string; address?: string | null; capacity?: string | null; tax_number?: string | null; currency: string }
 ) => {
   const { data: existing } = await supabase
     .from("businesses")
@@ -73,6 +74,7 @@ export const useCompleteOnboarding = () => {
         name: payload.businessName,
         address: isBusiness ? (payload.location?.trim() || null) : null,
         capacity: isBusiness ? (payload.capacity?.trim() || null) : null,
+        tax_number: isBusiness ? (payload.taxNumber?.trim() || null) : null,
         currency: payload.currency,
       });
     },

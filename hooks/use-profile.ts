@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
+import { ToastAlert } from "@/config/toast";
 
 /**
  * App-facing profile shape. Normalized from DB row (phone_number → phone, image_url → avatar_url).
@@ -125,4 +127,41 @@ export const useProfile = () => {
   }, [refetch]);
 
   return { profile, loading, refetch };
+};
+
+export type UpdateProfilePayload = {
+  full_name?: string;
+  phone?: string | null;
+  avatar_url?: string | null;
+  preferred_currency?: string;
+};
+
+export const useUpdateProfile = () => {
+  return useMutation({
+    mutationFn: async (payload: UpdateProfilePayload) => {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const fields: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(payload)) {
+        if (value !== undefined) fields[key] = value;
+      }
+
+      const { error } = await supabase
+        .from("profiles")
+        .update(fields)
+        .eq("id", user.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      ToastAlert.success("Profile updated");
+    },
+    onError: (error: Error) => {
+      ToastAlert.error(error.message || "Failed to update profile");
+    },
+  });
 };

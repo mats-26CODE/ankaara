@@ -1,0 +1,186 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase/client";
+import { ToastAlert } from "@/config/toast";
+
+export type Business = {
+  id: string;
+  owner_id: string;
+  name: string;
+  logo_url: string | null;
+  brand_color: string | null;
+  currency: string;
+  address: string | null;
+  tax_number: string | null;
+  capacity: string | null;
+  created_at: string;
+  updated_at: string | null;
+};
+
+export type CreateBusinessPayload = {
+  name: string;
+  currency: string;
+  address?: string;
+  tax_number?: string;
+  capacity?: string;
+  logo_url?: string;
+  brand_color?: string;
+};
+
+export type UpdateBusinessPayload = {
+  id: string;
+  name?: string;
+  currency?: string;
+  address?: string | null;
+  tax_number?: string | null;
+  capacity?: string | null;
+  logo_url?: string | null;
+  brand_color?: string | null;
+};
+
+export const useBusinesses = () => {
+  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const refetch = useCallback(async () => {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setBusinesses([]);
+      setLoading(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("businesses")
+      .select("*")
+      .eq("owner_id", user.id)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      setBusinesses([]);
+    } else {
+      setBusinesses((data as Business[]) || []);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  return { businesses, loading, refetch };
+};
+
+export const useCreateBusiness = () => {
+  return useMutation({
+    mutationFn: async (payload: CreateBusinessPayload) => {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase
+        .from("businesses")
+        .insert({
+          owner_id: user.id,
+          name: payload.name,
+          currency: payload.currency,
+          address: payload.address?.trim() || null,
+          tax_number: payload.tax_number?.trim() || null,
+          capacity: payload.capacity?.trim() || null,
+          logo_url: payload.logo_url || null,
+          brand_color: payload.brand_color || null,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as Business;
+    },
+    onSuccess: () => {
+      ToastAlert.success("Business created successfully");
+    },
+    onError: (error: Error) => {
+      ToastAlert.error(error.message || "Failed to create business");
+    },
+  });
+};
+
+export const useUpdateBusiness = () => {
+  return useMutation({
+    mutationFn: async (payload: UpdateBusinessPayload) => {
+      const supabase = createClient();
+      const { id, ...fields } = payload;
+
+      const updateFields: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(fields)) {
+        if (value !== undefined) updateFields[key] = value;
+      }
+
+      const { data, error } = await supabase
+        .from("businesses")
+        .update(updateFields)
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as Business;
+    },
+    onSuccess: () => {
+      ToastAlert.success("Business updated successfully");
+    },
+    onError: (error: Error) => {
+      ToastAlert.error(error.message || "Failed to update business");
+    },
+  });
+};
+
+export const useDeleteBusiness = () => {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const supabase = createClient();
+
+      const { count } = await supabase
+        .from("clients")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", id);
+
+      if (count && count > 0) {
+        throw new Error(
+          "Cannot delete this business — it still has clients. Remove them first."
+        );
+      }
+
+      const { count: invoiceCount } = await supabase
+        .from("invoices")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", id);
+
+      if (invoiceCount && invoiceCount > 0) {
+        throw new Error(
+          "Cannot delete this business — it still has invoices. Remove them first."
+        );
+      }
+
+      const { error } = await supabase
+        .from("businesses")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      ToastAlert.success("Business deleted");
+    },
+    onError: (error: Error) => {
+      ToastAlert.error(error.message || "Failed to delete business");
+    },
+  });
+};

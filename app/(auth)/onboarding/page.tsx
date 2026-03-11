@@ -53,6 +53,7 @@ const OnboardingPage = () => {
     individualName: "",
     location: "",
     capacity: "",
+    taxNumber: "",
     currency: "TZS",
     phone: "",
   });
@@ -140,6 +141,7 @@ const OnboardingPage = () => {
         businessName,
         location: form.location,
         capacity: form.capacity,
+        taxNumber: isBusiness ? form.taxNumber : undefined,
         fullName: isBusiness ? undefined : (form.individualName.trim() || profile?.full_name || undefined),
       },
       {
@@ -252,19 +254,33 @@ const OnboardingPage = () => {
                     className="h-11"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="capacity">
-                    {t("auth.onboarding.capacity")}
-                  </Label>
-                  <Input
-                    id="capacity"
-                    value={form.capacity}
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, capacity: e.target.value }))
-                    }
-                    placeholder={t("auth.onboarding.capacityPlaceholder")}
-                    className="h-11"
-                  />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="capacity">
+                      {t("auth.onboarding.capacity")}
+                    </Label>
+                    <Input
+                      id="capacity"
+                      value={form.capacity}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, capacity: e.target.value }))
+                      }
+                      placeholder={t("auth.onboarding.capacityPlaceholder")}
+                      className="h-11"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="taxNumber">TIN / VAT Number</Label>
+                    <Input
+                      id="taxNumber"
+                      value={form.taxNumber}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, taxNumber: e.target.value }))
+                      }
+                      placeholder="e.g. 123-456-789"
+                      className="h-11"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>{t("auth.onboarding.currency")}</Label>

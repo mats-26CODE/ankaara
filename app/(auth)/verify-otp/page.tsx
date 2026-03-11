@@ -2,8 +2,15 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { REGEXP_ONLY_DIGITS } from "input-otp";
 import Logo from "@/components/shared/logo";
 import { Button } from "@/components/ui/button";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+  InputOTPSeparator,
+} from "@/components/ui/input-otp";
 import {
   useVerifyOtp,
   useSendOtp,
@@ -11,7 +18,6 @@ import {
   useSendOtpForOnboarding,
 } from "@/hooks/use-auth";
 import { useOtpCountdown } from "@/hooks/use-otp-countdown";
-import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
 import { useTranslation } from "@/hooks/use-translation";
 import { useUser } from "@/hooks/use-user";
 import { useProfile } from "@/hooks/use-profile";
@@ -48,10 +54,14 @@ const VerifyOtpContent = () => {
     }
   }, [searchParams, router, startCountdown]);
 
+  const isVerifying = isOnboarding
+    ? verifyOtpForOnboardingMutation.isPending
+    : verifyOtpMutation.isPending;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!phone || !otp) {
+    if (!phone || otp.length < 6) {
       setError(t("auth.verifyOtp.fillAllFields"));
       return;
     }
@@ -75,6 +85,7 @@ const VerifyOtpContent = () => {
               individualName: string;
               location: string;
               capacity: string;
+              taxNumber?: string;
               currency: string;
             };
             const isBusiness = pending.accountType === "business";
@@ -90,6 +101,7 @@ const VerifyOtpContent = () => {
                 businessName,
                 location: pending.location,
                 capacity: pending.capacity,
+                taxNumber: isBusiness ? pending.taxNumber : undefined,
                 fullName: isBusiness
                   ? undefined
                   : (pending.individualName.trim() || profile?.full_name || undefined),
@@ -130,6 +142,25 @@ const VerifyOtpContent = () => {
     }
   };
 
+  const hasError =
+    !!error ||
+    verifyOtpMutation.isError ||
+    sendOtpMutation.isError ||
+    verifyOtpForOnboardingMutation.isError ||
+    sendOtpForOnboardingMutation.isError;
+
+  const errorMessage =
+    error ||
+    (verifyOtpMutation.error instanceof Error
+      ? verifyOtpMutation.error.message
+      : verifyOtpForOnboardingMutation.error instanceof Error
+        ? verifyOtpForOnboardingMutation.error.message
+        : sendOtpMutation.error instanceof Error
+          ? sendOtpMutation.error.message
+          : sendOtpForOnboardingMutation.error instanceof Error
+            ? sendOtpForOnboardingMutation.error.message
+            : t("auth.verifyOtp.error"));
+
   return (
     <div className="min-h-screen max-h-screen flex items-center justify-center p-8 bg-background">
       <div className="w-full max-w-md space-y-8 flex flex-col items-center justify-center">
@@ -146,39 +177,33 @@ const VerifyOtpContent = () => {
           </p>
         </div>
 
-        {(error ||
-          verifyOtpMutation.isError ||
-          sendOtpMutation.isError ||
-          verifyOtpForOnboardingMutation.isError ||
-          sendOtpForOnboardingMutation.isError) && (
-          <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
-            {error ||
-              (verifyOtpMutation.error instanceof Error
-                ? verifyOtpMutation.error.message
-                : verifyOtpForOnboardingMutation.error instanceof Error
-                ? verifyOtpForOnboardingMutation.error.message
-                : sendOtpMutation.error instanceof Error
-                ? sendOtpMutation.error.message
-                : sendOtpForOnboardingMutation.error instanceof Error
-                ? sendOtpForOnboardingMutation.error.message
-                : t("auth.verifyOtp.error"))}
+        {hasError && (
+          <div className="w-full p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+            {errorMessage}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-2">
-            <InputGroup className="bg-muted/50 border border-primary/20 text-foreground placeholder:text-muted-foreground h-10 flex-1">
-              <InputGroupInput
-                type="text"
-                id="otp"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                placeholder={t("auth.verifyOtp.codePlaceholder")}
-                required
-                maxLength={6}
-                className="text-center text-2xl tracking-widest font-mono"
-              />
-            </InputGroup>
+        <form onSubmit={handleSubmit} className="space-y-6 flex flex-col items-center">
+          <div className="space-y-3 flex flex-col items-center">
+            <InputOTP
+              maxLength={6}
+              pattern={REGEXP_ONLY_DIGITS}
+              value={otp}
+              onChange={setOtp}
+              disabled={isVerifying}
+            >
+              <InputOTPGroup>
+                <InputOTPSlot index={0} />
+                <InputOTPSlot index={1} />
+                <InputOTPSlot index={2} />
+              </InputOTPGroup>
+              <InputOTPSeparator />
+              <InputOTPGroup>
+                <InputOTPSlot index={3} />
+                <InputOTPSlot index={4} />
+                <InputOTPSlot index={5} />
+              </InputOTPGroup>
+            </InputOTP>
             <p className="text-xs text-muted-foreground text-center">
               {t("auth.verifyOtp.codeHint")}
             </p>
@@ -188,17 +213,9 @@ const VerifyOtpContent = () => {
             type="submit"
             className="w-full"
             size="lg"
-            disabled={
-              (isOnboarding
-                ? verifyOtpForOnboardingMutation.isPending
-                : verifyOtpMutation.isPending) || !phone || !otp
-            }
+            disabled={isVerifying || !phone || otp.length < 6}
           >
-            {isOnboarding
-              ? verifyOtpForOnboardingMutation.isPending
-                ? t("auth.verifyOtp.verifying")
-                : t("auth.verifyOtp.verify")
-              : verifyOtpMutation.isPending
+            {isVerifying
               ? t("auth.verifyOtp.verifying")
               : t("auth.verifyOtp.verify")}
           </Button>
@@ -222,8 +239,8 @@ const VerifyOtpContent = () => {
                   ? t("auth.verifyOtp.sending")
                   : t("auth.verifyOtp.resend")
                 : sendOtpMutation.isPending
-                ? t("auth.verifyOtp.sending")
-                : t("auth.verifyOtp.resend")}
+                  ? t("auth.verifyOtp.sending")
+                  : t("auth.verifyOtp.resend")}
             </button>
           ) : (
             <span className="text-muted-foreground">
