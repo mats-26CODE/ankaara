@@ -4,6 +4,7 @@ import { use, useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useInvoice, useUpdateInvoice, type InvoiceItemInput } from "@/hooks/use-invoices";
 import { useClients } from "@/hooks/use-clients";
+import { ClientPickerDialog } from "@/components/shared/client-picker-dialog";
 import { useCurrencies } from "@/hooks/use-currencies";
 import { TEMPLATES, type TemplateId } from "@/lib/invoice-templates/types";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Plus, Trash2, ArrowLeft } from "lucide-react";
@@ -41,7 +43,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
   const { currencies, loading: currenciesLoading } = useCurrencies();
   const updateInvoice = useUpdateInvoice();
 
-  const { clients, loading: clientsLoading } = useClients(
+  const { clients, loading: clientsLoading, refetch: refetchClients } = useClients(
     invoice?.organization_id ?? null
   );
 
@@ -63,7 +65,10 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
     setIssueDate(invoice.issue_date);
     setDueDate(invoice.due_date);
     setCurrency(invoice.currency);
-    setTax(String(Number(invoice.tax) || ""));
+    const storedTax = Number(invoice.tax) || 0;
+    const storedSubtotal = Number(invoice.subtotal) || 0;
+    const pct = storedSubtotal > 0 ? (storedTax / storedSubtotal) * 100 : 0;
+    setTax(pct ? String(Math.round(pct * 100) / 100) : "");
     setNotes(invoice.notes ?? "");
     setAccentColor(invoice.accent_color ?? "");
     setFooterNote(invoice.footer_note ?? "");
@@ -83,7 +88,8 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
     () => items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0),
     [items]
   );
-  const taxAmount = Number(tax) || 0;
+  const taxPercent = Number(tax) || 0;
+  const taxAmount = subtotal * (taxPercent / 100);
   const total = subtotal + taxAmount;
 
   const updateItem = (index: number, field: keyof InvoiceItemInput, value: string | number) => {
@@ -192,37 +198,30 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Client *</Label>
-                <Select value={clientId} onValueChange={setClientId}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a client" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {clients.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <ClientPickerDialog
+                  businessId={invoice?.organization_id ?? null}
+                  value={clientId}
+                  onChange={setClientId}
+                  clients={clients}
+                  refetchClients={refetchClients}
+                />
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-issue-date">Issue Date *</Label>
-                  <Input
-                    id="edit-issue-date"
-                    type="date"
+                  <Label>Issue Date *</Label>
+                  <DatePicker
                     value={issueDate}
-                    onChange={(e) => setIssueDate(e.target.value)}
+                    onChange={setIssueDate}
+                    placeholder="Select issue date"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-due-date">Due Date *</Label>
-                  <Input
-                    id="edit-due-date"
-                    type="date"
+                  <Label>Due Date *</Label>
+                  <DatePicker
                     value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
+                    onChange={setDueDate}
+                    placeholder="Select due date"
                   />
                 </div>
               </div>
@@ -401,17 +400,27 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
                 <span className="font-medium">{subtotal.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between text-sm gap-3">
-                <span className="text-muted-foreground shrink-0">Tax</span>
-                <Input
-                  type="number"
-                  min={0}
-                  step="any"
-                  value={tax}
-                  onChange={(e) => setTax(e.target.value)}
-                  placeholder="0"
-                  className="w-28 text-right h-8"
-                />
+                <span className="text-muted-foreground shrink-0">Tax (%)</span>
+                <div className="relative w-28">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step="any"
+                    value={tax}
+                    onChange={(e) => setTax(e.target.value)}
+                    placeholder="0"
+                    className="text-right h-8 pr-7"
+                  />
+                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">%</span>
+                </div>
               </div>
+              {taxAmount > 0 && (
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Tax amount</span>
+                  <span>{taxAmount.toLocaleString()}</span>
+                </div>
+              )}
               <Separator />
               <div className="flex justify-between font-semibold text-lg">
                 <span>Total</span>

@@ -19,7 +19,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ClientPickerDialog } from "@/components/shared/client-picker-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Plus, Trash2, ArrowLeft } from "lucide-react";
@@ -35,7 +37,7 @@ const CreateInvoicePage = () => {
   const router = useRouter();
   const { businesses, loading: bizLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
-  const { clients, loading: clientsLoading } = useClients(currentBusinessId);
+  const { clients, loading: clientsLoading, refetch: refetchClients } = useClients(currentBusinessId);
   const { currencies, loading: currenciesLoading } = useCurrencies();
   const createInvoice = useCreateInvoice();
 
@@ -79,7 +81,8 @@ const CreateInvoicePage = () => {
     () => items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0),
     [items],
   );
-  const taxAmount = Number(tax) || 0;
+  const taxPercent = Number(tax) || 0;
+  const taxAmount = subtotal * (taxPercent / 100);
   const total = subtotal + taxAmount;
 
   const updateItem = (
@@ -177,50 +180,30 @@ const CreateInvoicePage = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Client *</Label>
-                <Select value={clientId} onValueChange={setClientId}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a client" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {clients.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {clients.length === 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    No clients yet.{" "}
-                    <button
-                      type="button"
-                      onClick={() => router.push("/dashboard/clients")}
-                      className="underline hover:text-foreground"
-                    >
-                      Add a client first
-                    </button>
-                    .
-                  </p>
-                )}
+                <ClientPickerDialog
+                  businessId={currentBusinessId}
+                  value={clientId}
+                  onChange={setClientId}
+                  clients={clients}
+                  refetchClients={refetchClients}
+                />
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="issue-date">Issue Date *</Label>
-                  <Input
-                    id="issue-date"
-                    type="date"
+                  <Label>Issue Date *</Label>
+                  <DatePicker
                     value={issueDate}
-                    onChange={(e) => setIssueDate(e.target.value)}
+                    onChange={setIssueDate}
+                    placeholder="Select issue date"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="due-date">Due Date *</Label>
-                  <Input
-                    id="due-date"
-                    type="date"
+                  <Label>Due Date *</Label>
+                  <DatePicker
                     value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
+                    onChange={setDueDate}
+                    placeholder="Select due date"
                   />
                 </div>
               </div>
@@ -416,17 +399,27 @@ const CreateInvoicePage = () => {
                 <span className="font-medium">{subtotal.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between text-sm gap-3">
-                <span className="text-muted-foreground shrink-0">Tax</span>
-                <Input
-                  type="number"
-                  min={0}
-                  step="any"
-                  value={tax}
-                  onChange={(e) => setTax(e.target.value)}
-                  placeholder="0"
-                  className="w-28 text-right h-8"
-                />
+                <span className="text-muted-foreground shrink-0">Tax (%)</span>
+                <div className="relative w-28">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step="any"
+                    value={tax}
+                    onChange={(e) => setTax(e.target.value)}
+                    placeholder="0"
+                    className="text-right h-8 pr-7"
+                  />
+                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">%</span>
+                </div>
               </div>
+              {taxAmount > 0 && (
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Tax amount</span>
+                  <span>{taxAmount.toLocaleString()}</span>
+                </div>
+              )}
               <Separator />
               <div className="flex justify-between font-semibold text-lg">
                 <span>Total</span>

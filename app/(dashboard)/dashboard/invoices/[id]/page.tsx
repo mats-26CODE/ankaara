@@ -117,8 +117,8 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
     <div className="space-y-6 max-w-4xl">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
+        <div className="space-y-3">
+          <Button variant="outline" size="icon" onClick={() => router.back()}>
             <ArrowLeft className="size-4" />
           </Button>
           <div>
