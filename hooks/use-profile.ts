@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { ToastAlert } from "@/config/toast";
+import type { Tables } from "@/database.types";
 
 /**
  * App-facing profile shape. Normalized from DB row (phone_number → phone, image_url → avatar_url).
@@ -21,25 +22,7 @@ export type Profile = {
   updated_at: string | null;
 };
 
-/** Raw row from public.profiles (DB schema) */
-type ProfileRow = {
-  id: string;
-  full_name: string | null;
-  email: string | null;
-  phone: string | null;
-  phone_number?: string | null;
-  avatar_url: string | null;
-  image_url?: unknown;
-  account_type: "business" | "individual" | null;
-  preferred_currency?: string | null;
-  onboarding_completed: boolean;
-  created_at: string;
-  updated_at: string | null;
-  is_active?: boolean;
-  is_deleted?: boolean;
-  notification_token?: string | null;
-  auth_type?: unknown;
-};
+type ProfileRow = Tables<"profiles">;
 
 const normalizeAvatarUrl = (avatar_url: string | null, image_url: unknown): string | null => {
   if (avatar_url) return avatar_url;
@@ -58,7 +41,7 @@ const normalizeRow = (row: ProfileRow): Profile => ({
   email: row.email ?? null,
   phone: row.phone ?? row.phone_number ?? null,
   avatar_url: normalizeAvatarUrl(row.avatar_url ?? null, row.image_url),
-  account_type: row.account_type ?? null,
+  account_type: (row.account_type as Profile["account_type"]) ?? null,
   preferred_currency: row.preferred_currency ?? "TZS",
   onboarding_completed: row.onboarding_completed ?? false,
   created_at: row.created_at,
@@ -93,7 +76,7 @@ export const useProfile = () => {
     }
 
     if (existing) {
-      setProfile(normalizeRow(existing as ProfileRow));
+      setProfile(normalizeRow(existing));
       setLoading(false);
       return;
     }
@@ -118,7 +101,7 @@ export const useProfile = () => {
       setLoading(false);
       return;
     }
-    setProfile(normalizeRow(inserted as ProfileRow));
+    setProfile(normalizeRow(inserted));
     setLoading(false);
   }, []);
 

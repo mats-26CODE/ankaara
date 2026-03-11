@@ -2,15 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import type { Tables } from "@/database.types";
 
-export type Currency = {
-  code: string;
-  name: string;
-  symbol: string;
-  decimal_digits: number;
-  symbol_position: "left" | "right";
-  space_between: boolean;
-};
+export type Currency = Pick<
+  Tables<"currencies">,
+  "code" | "name" | "symbol" | "decimal_digits" | "symbol_position" | "space_between"
+>;
 
 let cachedCurrencies: Currency[] | null = null;
 
@@ -30,9 +27,8 @@ export const useCurrencies = () => {
         .order("name");
 
       if (!error && data) {
-        const rows = data as Currency[];
-        cachedCurrencies = rows;
-        setCurrencies(rows);
+        cachedCurrencies = data;
+        setCurrencies(data);
       }
       setLoading(false);
     };

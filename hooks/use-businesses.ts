@@ -4,41 +4,11 @@ import { useState, useEffect, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { ToastAlert } from "@/config/toast";
+import type { Tables, TablesInsert, TablesUpdate } from "@/database.types";
 
-export type Business = {
-  id: string;
-  owner_id: string;
-  name: string;
-  logo_url: string | null;
-  brand_color: string | null;
-  currency: string;
-  address: string | null;
-  tax_number: string | null;
-  capacity: string | null;
-  created_at: string;
-  updated_at: string | null;
-};
-
-export type CreateBusinessPayload = {
-  name: string;
-  currency: string;
-  address?: string;
-  tax_number?: string;
-  capacity?: string;
-  logo_url?: string;
-  brand_color?: string;
-};
-
-export type UpdateBusinessPayload = {
-  id: string;
-  name?: string;
-  currency?: string;
-  address?: string | null;
-  tax_number?: string | null;
-  capacity?: string | null;
-  logo_url?: string | null;
-  brand_color?: string | null;
-};
+export type Business = Tables<"businesses">;
+export type CreateBusinessPayload = Omit<TablesInsert<"businesses">, "owner_id">;
+export type UpdateBusinessPayload = TablesUpdate<"businesses"> & { id: string };
 
 export const useBusinesses = () => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -64,7 +34,7 @@ export const useBusinesses = () => {
     if (error) {
       setBusinesses([]);
     } else {
-      setBusinesses((data as Business[]) || []);
+      setBusinesses(data ?? []);
     }
     setLoading(false);
   }, []);
@@ -101,7 +71,7 @@ export const useCreateBusiness = () => {
         .single();
 
       if (error) throw error;
-      return data as Business;
+      return data;
     },
     onSuccess: () => {
       ToastAlert.success("Business created successfully");
@@ -131,7 +101,7 @@ export const useUpdateBusiness = () => {
         .single();
 
       if (error) throw error;
-      return data as Business;
+      return data;
     },
     onSuccess: () => {
       ToastAlert.success("Business updated successfully");

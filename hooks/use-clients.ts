@@ -4,33 +4,12 @@ import { useState, useEffect, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { ToastAlert } from "@/config/toast";
+import type { Tables, TablesInsert, TablesUpdate } from "@/database.types";
 
-export type Client = {
-  id: string;
-  organization_id: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
-  created_at: string;
-  updated_at: string | null;
-};
-
-export type CreateClientPayload = {
-  organization_id: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-};
-
-export type UpdateClientPayload = {
-  id: string;
-  name?: string;
-  email?: string | null;
-  phone?: string | null;
-  address?: string | null;
-};
+export type Client = Tables<"clients">;
+export type CreateClientPayload = Pick<TablesInsert<"clients">, "organization_id" | "name"> &
+  Partial<Pick<TablesInsert<"clients">, "email" | "phone" | "address">>;
+export type UpdateClientPayload = TablesUpdate<"clients"> & { id: string };
 
 export const useClients = (businessId: string | null) => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -52,7 +31,7 @@ export const useClients = (businessId: string | null) => {
     if (error) {
       setClients([]);
     } else {
-      setClients((data as Client[]) || []);
+      setClients(data ?? []);
     }
     setLoading(false);
   }, [businessId]);
@@ -82,7 +61,7 @@ export const useCreateClient = () => {
         .single();
 
       if (error) throw error;
-      return data as Client;
+      return data;
     },
     onSuccess: () => {
       ToastAlert.success("Client added successfully");
@@ -112,7 +91,7 @@ export const useUpdateClient = () => {
         .single();
 
       if (error) throw error;
-      return data as Client;
+      return data;
     },
     onSuccess: () => {
       ToastAlert.success("Client updated successfully");
