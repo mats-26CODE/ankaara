@@ -16,7 +16,7 @@ const toConfig = (
   code: c.code,
   symbol: c.symbol,
   decimalDigits: c.decimal_digits,
-  symbolPosition: c.symbol_position,
+  symbolPosition: c.symbol_position as "left" | "right",
   spaceBetween: c.space_between,
   ...overrides,
 });

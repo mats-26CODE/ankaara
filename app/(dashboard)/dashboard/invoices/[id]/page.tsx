@@ -22,14 +22,13 @@ import {
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { InvoiceTemplate } from "@/lib/invoice-templates/registry";
-import { ToastAlert } from "@/config/toast";
+import { ShareInvoiceDialog } from "@/components/shared/share-invoice-dialog";
 import {
   ArrowLeft,
   Pencil,
   Send,
   Trash2,
-  ExternalLink,
-  Copy,
+  Share2,
 } from "lucide-react";
 import dayjs from "dayjs";
 
@@ -72,6 +71,7 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const deleteInvoice = useDeleteInvoice();
   const sendInvoice = useSendInvoice();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
   if (loading) {
     return (
@@ -97,11 +97,6 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
 
   const handleSend = () => {
     sendInvoice.mutate(invoice.id, { onSuccess: () => refetch() });
-  };
-
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(shareUrl);
-    ToastAlert.success("Link copied to clipboard");
   };
 
   const handleDelete = () => {
@@ -153,18 +148,14 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
             </>
           )}
           {!isDraft && (
-            <>
-              <Button variant="outline" size="sm" onClick={handleCopyLink}>
-                <Copy className="size-4 mr-1" />
-                Copy Link
-              </Button>
-              <Button variant="outline" size="sm" asChild>
-                <a href={shareUrl} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="size-4 mr-1" />
-                  Open Public Page
-                </a>
-              </Button>
-            </>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShareDialogOpen(true)}
+            >
+              <Share2 className="size-4 mr-1" />
+              Share
+            </Button>
           )}
           <Button
             variant="ghost"
@@ -201,6 +192,17 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
           unit_price: Number(item.unit_price),
           total: Number(item.total),
         }))}
+      />
+
+      {/* Share Dialog */}
+      <ShareInvoiceDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        invoiceNumber={invoice.invoice_number}
+        clientName={invoice.client?.name ?? "Client"}
+        total={Number(invoice.total).toLocaleString()}
+        currency={invoice.currency}
+        shareUrl={shareUrl}
       />
 
       {/* Delete Dialog */}

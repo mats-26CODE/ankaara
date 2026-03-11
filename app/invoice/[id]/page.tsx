@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
+import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { APP_NAME } from "@/constants/values";
 import { Button } from "@/components/ui/button";
 import { InvoiceTemplate } from "@/lib/invoice-templates/registry";
-
-export const dynamic = "force-dynamic";
+import { CheckCircle2, Clock, CreditCard } from "lucide-react";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -28,8 +28,8 @@ export const generateMetadata = async ({ params }: Props) => {
   };
 };
 
-const PublicInvoicePage = async ({ params }: Props) => {
-  const { id } = await params;
+const InvoiceContent = async ({ id }: { id: string }) => {
+  await connection();
   const supabase = await createClient();
 
   const { data: invoice, error } = await supabase
@@ -88,10 +88,26 @@ const PublicInvoicePage = async ({ params }: Props) => {
   } | null;
 
   const isPaid = invoice.status === "paid";
+  const isOverdue = invoice.status === "overdue";
+  const total = Number(invoice.total);
 
   return (
     <div className="min-h-screen bg-muted/30">
       <div className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
+        {/* Status banner */}
+        {isPaid && (
+          <div className="mb-6 flex items-center justify-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 p-4 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400">
+            <CheckCircle2 className="size-5" />
+            <span className="font-medium">This invoice has been paid</span>
+          </div>
+        )}
+        {isOverdue && (
+          <div className="mb-6 flex items-center justify-center gap-2 rounded-lg bg-red-50 border border-red-200 p-4 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+            <Clock className="size-5" />
+            <span className="font-medium">This invoice is overdue</span>
+          </div>
+        )}
+
         <InvoiceTemplate
           templateId={invoice.template_id ?? "classic"}
           invoiceNumber={invoice.invoice_number}
@@ -101,7 +117,7 @@ const PublicInvoicePage = async ({ params }: Props) => {
           currency={invoice.currency}
           subtotal={Number(invoice.subtotal)}
           tax={Number(invoice.tax)}
-          total={Number(invoice.total)}
+          total={total}
           notes={invoice.notes}
           accentColor={invoice.accent_color}
           footerNote={invoice.footer_note}
@@ -117,23 +133,38 @@ const PublicInvoicePage = async ({ params }: Props) => {
           }))}
         />
 
-        {/* Pay Button */}
+        {/* Pay section */}
         {!isPaid && (
-          <div className="mt-6 flex justify-center">
-            <Button size="lg" disabled className="min-w-[200px]">
+          <div className="mt-6 rounded-lg border bg-background p-6 text-center space-y-3">
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Amount Due</p>
+              <p className="text-3xl font-bold tracking-tight">
+                {invoice.currency} {total.toLocaleString()}
+              </p>
+            </div>
+            <Button size="lg" disabled className="min-w-[220px]">
+              <CreditCard className="size-4 mr-2" />
               Pay Now — Coming Soon
             </Button>
+            <p className="text-xs text-muted-foreground">
+              Online payments will be available soon via Snipe Payment Gateway.
+            </p>
           </div>
         )}
 
         {/* Footer */}
-        <p className="text-center text-xs text-muted-foreground mt-6">
+        <p className="text-center text-xs text-muted-foreground mt-8">
           Powered by{" "}
           <span className="font-brand">{APP_NAME}</span>
         </p>
       </div>
     </div>
   );
+};
+
+const PublicInvoicePage = async ({ params }: Props) => {
+  const { id } = await params;
+  return <InvoiceContent id={id} />;
 };
 
 export default PublicInvoicePage;
