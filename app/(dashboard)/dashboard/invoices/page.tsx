@@ -58,14 +58,13 @@ import {
   MoreHorizontal,
   Eye,
   Pencil,
-  Send,
   Trash2,
   Building2,
-  ExternalLink,
+  Share2,
   FileText,
 } from "lucide-react";
 import dayjs from "dayjs";
-import { ToastAlert } from "@/config/toast";
+import { ShareInvoiceDialog } from "@/components/shared/share-invoice-dialog";
 
 const STATUS_CONFIG: Record<
   InvoiceStatus,
@@ -126,6 +125,8 @@ const InvoicesContent = () => {
   const [search, setSearch] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingInvoice, setDeletingInvoice] = useState<Invoice | null>(null);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [sharingInvoice, setSharingInvoice] = useState<Invoice | null>(null);
 
   useEffect(() => {
     if (!currentBusinessId && businesses.length > 0) {
@@ -160,8 +161,9 @@ const InvoicesContent = () => {
     });
   };
 
-  const handleSend = (inv: Invoice) => {
-    sendInvoice.mutate(inv.id, { onSuccess: () => refetch() });
+  const handleShare = (inv: Invoice) => {
+    setSharingInvoice(inv);
+    setShareDialogOpen(true);
   };
 
   if (bizLoading) {
@@ -340,24 +342,10 @@ const InvoicesContent = () => {
                               </Link>
                             </DropdownMenuItem>
                           )}
-                          {inv.status === "draft" && (
-                            <DropdownMenuItem onClick={() => handleSend(inv)}>
-                              <Send className="size-4 mr-2" />
-                              Mark as Sent
-                            </DropdownMenuItem>
-                          )}
-                          {inv.status !== "draft" && (
-                            <DropdownMenuItem
-                              onClick={() => {
-                                const url = `${window.location.origin}/invoice/${inv.id}`;
-                                navigator.clipboard.writeText(url);
-                                ToastAlert.success("Link copied to clipboard");
-                              }}
-                            >
-                              <ExternalLink className="size-4 mr-2" />
-                              Copy Share Link
-                            </DropdownMenuItem>
-                          )}
+                          <DropdownMenuItem onClick={() => handleShare(inv)}>
+                            <Share2 className="size-4 mr-2" />
+                            Share
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => openDelete(inv)}
@@ -376,6 +364,23 @@ const InvoicesContent = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Share Dialog */}
+      {sharingInvoice && (
+        <ShareInvoiceDialog
+          open={shareDialogOpen}
+          onOpenChange={setShareDialogOpen}
+          invoiceNumber={sharingInvoice.invoice_number}
+          clientName={sharingInvoice.client?.name ?? "Client"}
+          total={Number(sharingInvoice.total).toLocaleString()}
+          currency={sharingInvoice.currency}
+          shareUrl={`${typeof window !== "undefined" ? window.location.origin : ""}/invoice/${sharingInvoice.id}`}
+          isDraft={sharingInvoice.status === "draft"}
+          onShare={() =>
+            sendInvoice.mutate(sharingInvoice.id, { onSuccess: () => refetch() })
+          }
+        />
+      )}
 
       {/* Delete Confirmation */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

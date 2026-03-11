@@ -138,10 +138,10 @@ export const DashboardSidebar = () => {
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                         <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild isActive={pathname === "/dashboard/invoices?status=paid"}>
-                            <Link href="/dashboard/invoices?status=paid">
-                              <CheckCircle2 className="size-4" />
-                              <span>Paid</span>
+                          <SidebarMenuSubButton asChild isActive={pathname === "/dashboard/invoices?status=draft"}>
+                            <Link href="/dashboard/invoices?status=draft">
+                              <Clock className="size-4" />
+                              <span>Drafts</span>
                             </Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
@@ -154,6 +154,14 @@ export const DashboardSidebar = () => {
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                         <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild isActive={pathname === "/dashboard/invoices?status=paid"}>
+                            <Link href="/dashboard/invoices?status=paid">
+                              <CheckCircle2 className="size-4" />
+                              <span>Paid</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
                           <SidebarMenuSubButton asChild isActive={pathname === "/dashboard/invoices?status=overdue"}>
                             <Link href="/dashboard/invoices?status=overdue">
                               <AlertTriangle className="size-4" />
@@ -161,14 +169,7 @@ export const DashboardSidebar = () => {
                             </Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild isActive={pathname === "/dashboard/invoices?status=draft"}>
-                            <Link href="/dashboard/invoices?status=draft">
-                              <Clock className="size-4" />
-                              <span>Drafts</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
+                        
                       </SidebarMenuSub>
                     </Collapsible.Content>
                   )}

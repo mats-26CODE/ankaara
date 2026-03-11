@@ -29,6 +29,8 @@ type ShareInvoiceDialogProps = {
   total: string;
   currency: string;
   shareUrl: string;
+  isDraft?: boolean;
+  onShare?: () => void;
 };
 
 type ShareChannel = {
@@ -47,7 +49,12 @@ const ShareInvoiceDialog = ({
   total,
   currency,
   shareUrl,
+  isDraft,
+  onShare,
 }: ShareInvoiceDialogProps) => {
+  const markAsSentIfDraft = () => {
+    if (isDraft && onShare) onShare();
+  };
   const [copied, setCopied] = useState(false);
 
   const message = `Hi ${clientName}, here is your invoice ${invoiceNumber} for ${currency} ${total}. You can view and pay it here: ${shareUrl}`;
@@ -123,11 +130,13 @@ const ShareInvoiceDialog = ({
     setCopied(true);
     ToastAlert.success("Link copied to clipboard");
     setTimeout(() => setCopied(false), 2000);
+    markAsSentIfDraft();
   };
 
   const handleShare = (channel: ShareChannel) => {
     const url = channel.getUrl(shareUrl, message);
     window.open(url, "_blank", "noopener,noreferrer");
+    markAsSentIfDraft();
   };
 
   const handleNativeShare = async () => {
@@ -138,6 +147,7 @@ const ShareInvoiceDialog = ({
           text: `Invoice ${invoiceNumber} for ${currency} ${total}`,
           url: shareUrl,
         });
+        markAsSentIfDraft();
       } catch {
         // user cancelled
       }

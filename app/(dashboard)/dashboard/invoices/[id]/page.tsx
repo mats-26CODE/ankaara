@@ -26,7 +26,6 @@ import { ShareInvoiceDialog } from "@/components/shared/share-invoice-dialog";
 import {
   ArrowLeft,
   Pencil,
-  Send,
   Trash2,
   Share2,
 } from "lucide-react";
@@ -95,10 +94,6 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const isDraft = invoice.status === "draft";
   const shareUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/invoice/${invoice.id}`;
 
-  const handleSend = () => {
-    sendInvoice.mutate(invoice.id, { onSuccess: () => refetch() });
-  };
-
   const handleDelete = () => {
     deleteInvoice.mutate(invoice.id, {
       onSuccess: () => {
@@ -130,33 +125,20 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
         </div>
         <div className="flex items-center gap-2">
           {isDraft && (
-            <>
-              <Button variant="outline" size="sm" asChild>
-                <Link href={`/dashboard/invoices/${invoice.id}/edit`}>
-                  <Pencil className="size-4 mr-1" />
-                  Edit
-                </Link>
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleSend}
-                isLoading={sendInvoice.isPending}
-              >
-                <Send className="size-4 mr-1" />
-                Mark as Sent
-              </Button>
-            </>
-          )}
-          {!isDraft && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShareDialogOpen(true)}
-            >
-              <Share2 className="size-4 mr-1" />
-              Share
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/dashboard/invoices/${invoice.id}/edit`}>
+                <Pencil className="size-4 mr-1" />
+                Edit
+              </Link>
             </Button>
           )}
+          <Button
+            size="sm"
+            onClick={() => setShareDialogOpen(true)}
+          >
+            <Share2 className="size-4 mr-1" />
+            Share
+          </Button>
           <Button
             variant="ghost"
             size="icon"
@@ -203,6 +185,8 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
         total={Number(invoice.total).toLocaleString()}
         currency={invoice.currency}
         shareUrl={shareUrl}
+        isDraft={isDraft}
+        onShare={() => sendInvoice.mutate(invoice.id, { onSuccess: () => refetch() })}
       />
 
       {/* Delete Dialog */}
