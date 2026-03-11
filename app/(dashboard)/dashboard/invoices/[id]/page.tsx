@@ -195,6 +195,8 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
         tax={Number(invoice.tax)}
         total={Number(invoice.total)}
         notes={invoice.notes}
+        accentColor={invoice.accent_color}
+        footerNote={invoice.footer_note}
         isPaid={invoice.status === "paid"}
         business={invoice.business ?? null}
         client={invoice.client ?? null}

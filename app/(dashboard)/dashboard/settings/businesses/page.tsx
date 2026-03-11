@@ -40,7 +40,10 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
-import { Plus, Pencil, Trash2, Check } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Plus, Pencil, Trash2, Check, ImageIcon, Type } from "lucide-react";
+
+type LogoMode = "image" | "text";
 
 type FormState = {
   name: string;
@@ -48,6 +51,10 @@ type FormState = {
   address: string;
   tax_number: string;
   capacity: string;
+  logo_mode: LogoMode;
+  logo_url: string;
+  logo_text: string;
+  brand_color: string;
 };
 
 const emptyForm: FormState = {
@@ -56,6 +63,10 @@ const emptyForm: FormState = {
   address: "",
   tax_number: "",
   capacity: "",
+  logo_mode: "text",
+  logo_url: "",
+  logo_text: "",
+  brand_color: "",
 };
 
 const BusinessesSettingsPage = () => {
@@ -103,6 +114,10 @@ const BusinessesSettingsPage = () => {
       address: biz.address || "",
       tax_number: biz.tax_number || "",
       capacity: biz.capacity || "",
+      logo_mode: biz.logo_url ? "image" : "text",
+      logo_url: biz.logo_url || "",
+      logo_text: biz.logo_text || "",
+      brand_color: biz.brand_color || "",
     });
     setDialogOpen(true);
   };
@@ -115,6 +130,9 @@ const BusinessesSettingsPage = () => {
   const handleSubmit = () => {
     if (!form.name.trim()) return;
 
+    const logoUrl = form.logo_mode === "image" ? form.logo_url.trim() || null : null;
+    const logoText = form.logo_mode === "text" ? form.logo_text.trim() || null : null;
+
     if (editingBusiness) {
       updateBusiness.mutate(
         {
@@ -124,6 +142,9 @@ const BusinessesSettingsPage = () => {
           address: form.address.trim() || null,
           tax_number: form.tax_number.trim() || null,
           capacity: form.capacity.trim() || null,
+          logo_url: logoUrl,
+          logo_text: logoText,
+          brand_color: form.brand_color.trim() || null,
         },
         {
           onSuccess: () => {
@@ -139,6 +160,9 @@ const BusinessesSettingsPage = () => {
         address: form.address.trim() || undefined,
         tax_number: form.tax_number.trim() || undefined,
         capacity: form.capacity.trim() || undefined,
+        logo_url: logoUrl || undefined,
+        logo_text: logoText || undefined,
+        brand_color: form.brand_color.trim() || undefined,
       };
       createBusiness.mutate(payload, {
         onSuccess: (newBiz) => {
@@ -349,6 +373,90 @@ const BusinessesSettingsPage = () => {
                   placeholder="e.g. 1-10 employees"
                 />
               </div>
+            </div>
+
+            <Separator />
+
+            {/* Logo */}
+            <div className="space-y-3">
+              <Label>Logo</Label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setForm((p) => ({ ...p, logo_mode: "text" }))}
+                  className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                    form.logo_mode === "text" ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40"
+                  }`}
+                >
+                  <Type className="size-3.5" /> Text Logo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm((p) => ({ ...p, logo_mode: "image" }))}
+                  className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                    form.logo_mode === "image" ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40"
+                  }`}
+                >
+                  <ImageIcon className="size-3.5" /> Image URL
+                </button>
+              </div>
+
+              {form.logo_mode === "text" ? (
+                <div className="space-y-2">
+                  <Input
+                    value={form.logo_text}
+                    onChange={(e) => setForm((p) => ({ ...p, logo_text: e.target.value }))}
+                    placeholder="e.g. Acme Corp"
+                  />
+                  {form.logo_text && (
+                    <div className="rounded-md border bg-muted/30 px-4 py-3">
+                      <p className="text-lg font-bold">{form.logo_text}</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Input
+                    value={form.logo_url}
+                    onChange={(e) => setForm((p) => ({ ...p, logo_url: e.target.value }))}
+                    placeholder="https://example.com/logo.png"
+                  />
+                  {form.logo_url && (
+                    <div className="rounded-md border bg-muted/30 px-4 py-3 flex items-center justify-center">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={form.logo_url}
+                        alt="Logo preview"
+                        className="h-10 w-auto max-w-[200px] object-contain"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Brand Color */}
+            <div className="space-y-2">
+              <Label htmlFor="biz-brand-color">Brand Color</Label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="color"
+                  id="biz-brand-color"
+                  value={form.brand_color || "#2563eb"}
+                  onChange={(e) => setForm((p) => ({ ...p, brand_color: e.target.value }))}
+                  className="h-9 w-12 cursor-pointer rounded border p-0.5"
+                />
+                <Input
+                  value={form.brand_color}
+                  onChange={(e) => setForm((p) => ({ ...p, brand_color: e.target.value }))}
+                  placeholder="#2563eb"
+                  className="flex-1"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Used as the accent color on Bold Brand template invoices
+              </p>
             </div>
           </div>
 

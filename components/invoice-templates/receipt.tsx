@@ -2,23 +2,28 @@ import type { InvoiceTemplateProps } from "@/lib/invoice-templates/types";
 import dayjs from "dayjs";
 
 export const ReceiptTemplate = (props: InvoiceTemplateProps) => {
-  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, tax, total, notes, business, client, items, isPaid } = props;
+  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, tax, total, notes, footerNote, business, client, items, isPaid } = props;
+
+  const renderLogo = () => {
+    if (business?.logo_url) {
+      // eslint-disable-next-line @next/next/no-img-element
+      return <img src={business.logo_url} alt={business.name} className="h-10 w-auto mx-auto mb-2" />;
+    }
+    if (business?.logo_text) {
+      return <p className="text-xl font-bold">{business.logo_text}</p>;
+    }
+    return <p className="text-xl font-bold">{business?.name}</p>;
+  };
 
   return (
     <div className="bg-white text-gray-900 max-w-md mx-auto rounded-lg border border-dashed border-gray-300 overflow-hidden">
-      {/* Header — centered */}
+      {/* Header */}
       <div className="text-center px-6 pt-8 pb-4">
-        {business?.logo_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={business.logo_url} alt={business.name} className="h-10 w-auto mx-auto mb-2" />
-        ) : (
-          <p className="text-xl font-bold">{business?.name}</p>
-        )}
+        {renderLogo()}
         {business?.address && <p className="text-xs text-gray-500 mt-1">{business.address}</p>}
         {business?.tax_number && <p className="text-xs text-gray-400">TIN: {business.tax_number}</p>}
       </div>
 
-      {/* Dashed separator */}
       <div className="border-t border-dashed border-gray-300 mx-4" />
 
       {/* Invoice info */}
@@ -47,7 +52,7 @@ export const ReceiptTemplate = (props: InvoiceTemplateProps) => {
 
       <div className="border-t border-dashed border-gray-300 mx-4" />
 
-      {/* Items — simple list */}
+      {/* Items */}
       <div className="px-6 py-4">
         {items.map((item) => (
           <div key={item.id} className="flex justify-between py-2 border-b border-gray-50 last:border-0 text-sm">
@@ -62,7 +67,7 @@ export const ReceiptTemplate = (props: InvoiceTemplateProps) => {
 
       <div className="border-t border-dashed border-gray-300 mx-4" />
 
-      {/* Totals — centered */}
+      {/* Totals */}
       <div className="px-6 py-4 space-y-1">
         <div className="flex justify-between text-sm"><span className="text-gray-500">Subtotal</span><span>{Number(subtotal).toLocaleString()}</span></div>
         {Number(tax) > 0 && <div className="flex justify-between text-sm"><span className="text-gray-500">Tax</span><span>{Number(tax).toLocaleString()}</span></div>}
@@ -80,9 +85,11 @@ export const ReceiptTemplate = (props: InvoiceTemplateProps) => {
         </>
       )}
 
-      {/* Footer */}
+      {/* Footer Note */}
       <div className="px-6 pb-6 pt-2 text-center">
-        <p className="text-[10px] text-gray-300 uppercase tracking-widest">Thank you for your business</p>
+        <p className="text-[10px] text-gray-300 uppercase tracking-widest">
+          {footerNote || "Thank you for your business"}
+        </p>
       </div>
     </div>
   );

@@ -2,11 +2,22 @@ import type { InvoiceTemplateProps } from "@/lib/invoice-templates/types";
 import dayjs from "dayjs";
 
 export const ModernMinimalTemplate = (props: InvoiceTemplateProps) => {
-  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, tax, total, notes, business, client, items, isPaid } = props;
+  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, tax, total, notes, footerNote, business, client, items, isPaid } = props;
+
+  const renderLogo = () => {
+    if (business?.logo_url) {
+      // eslint-disable-next-line @next/next/no-img-element
+      return <img src={business.logo_url} alt={business.name} className="h-8 w-auto ml-auto mb-2" />;
+    }
+    if (business?.logo_text) {
+      return <p className="text-lg font-semibold">{business.logo_text}</p>;
+    }
+    return <p className="text-lg font-semibold">{business?.name}</p>;
+  };
 
   return (
     <div className="bg-white text-gray-800 rounded-2xl overflow-hidden" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-      {/* Header — large invoice number */}
+      {/* Header */}
       <div className="px-8 pt-10 pb-6">
         <div className="flex justify-between items-start">
           <div>
@@ -14,12 +25,7 @@ export const ModernMinimalTemplate = (props: InvoiceTemplateProps) => {
             <h1 className="text-4xl font-extralight tracking-tight text-gray-900 mt-1">{invoiceNumber}</h1>
           </div>
           <div className="text-right">
-            {business?.logo_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={business.logo_url} alt={business.name} className="h-8 w-auto ml-auto mb-2" />
-            ) : (
-              <p className="text-lg font-semibold">{business?.name}</p>
-            )}
+            {renderLogo()}
             {business?.address && <p className="text-xs text-gray-400 mt-1">{business.address}</p>}
           </div>
         </div>
@@ -104,6 +110,13 @@ export const ModernMinimalTemplate = (props: InvoiceTemplateProps) => {
             <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-2">Notes</p>
             <p className="text-sm text-gray-600 whitespace-pre-wrap">{notes}</p>
           </div>
+        </div>
+      )}
+
+      {/* Footer Note */}
+      {footerNote && (
+        <div className="px-8 pb-8 text-center">
+          <p className="text-xs text-gray-400 whitespace-pre-wrap">{footerNote}</p>
         </div>
       )}
     </div>

@@ -2,6 +2,7 @@ export type TemplateBusinessInfo = {
   name: string;
   address: string | null;
   logo_url: string | null;
+  logo_text: string | null;
   tax_number: string | null;
   brand_color: string | null;
   currency: string;
@@ -32,6 +33,8 @@ export type InvoiceTemplateProps = {
   tax: number;
   total: number;
   notes: string | null;
+  accentColor?: string | null;
+  footerNote?: string | null;
   business: TemplateBusinessInfo | null;
   client: TemplateClientInfo | null;
   items: TemplateLineItem[];

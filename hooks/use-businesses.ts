@@ -65,6 +65,7 @@ export const useCreateBusiness = () => {
           tax_number: payload.tax_number?.trim() || null,
           capacity: payload.capacity?.trim() || null,
           logo_url: payload.logo_url || null,
+          logo_text: payload.logo_text?.trim() || null,
           brand_color: payload.brand_color || null,
         })
         .select()

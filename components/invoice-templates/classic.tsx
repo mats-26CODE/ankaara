@@ -8,7 +8,18 @@ const StatusLabel = ({ status, isPaid }: { status: string; isPaid: boolean }) =>
 };
 
 export const ClassicTemplate = (props: InvoiceTemplateProps) => {
-  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, tax, total, notes, business, client, items, isPaid } = props;
+  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, tax, total, notes, accentColor, footerNote, business, client, items, isPaid } = props;
+
+  const renderLogo = () => {
+    if (business?.logo_url) {
+      // eslint-disable-next-line @next/next/no-img-element
+      return <img src={business.logo_url} alt={business.name} className="h-10 w-auto mb-2" />;
+    }
+    if (business?.logo_text) {
+      return <p className="text-xl font-bold text-gray-900">{business.logo_text}</p>;
+    }
+    return <p className="text-xl font-bold text-gray-900">{business?.name}</p>;
+  };
 
   return (
     <div className="bg-white text-gray-900 rounded-lg border border-gray-200 shadow-sm overflow-hidden">
@@ -16,12 +27,7 @@ export const ClassicTemplate = (props: InvoiceTemplateProps) => {
       <div className="border-b border-gray-200 bg-gray-50 px-8 py-6">
         <div className="flex justify-between items-start">
           <div>
-            {business?.logo_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={business.logo_url} alt={business.name} className="h-10 w-auto mb-2" />
-            ) : (
-              <p className="text-xl font-bold text-gray-900">{business?.name}</p>
-            )}
+            {renderLogo()}
             {business?.address && <p className="text-sm text-gray-500 mt-1">{business.address}</p>}
             {business?.tax_number && <p className="text-xs text-gray-400">TIN: {business.tax_number}</p>}
           </div>
@@ -92,6 +98,13 @@ export const ClassicTemplate = (props: InvoiceTemplateProps) => {
         <div className="border-t border-gray-200 px-8 py-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Notes</p>
           <p className="text-sm whitespace-pre-wrap text-gray-600">{notes}</p>
+        </div>
+      )}
+
+      {/* Footer Note */}
+      {footerNote && (
+        <div className="border-t border-gray-200 px-8 py-4 text-center" style={accentColor ? { backgroundColor: accentColor + "08" } : undefined}>
+          <p className="text-xs text-gray-500 whitespace-pre-wrap">{footerNote}</p>
         </div>
       )}
     </div>

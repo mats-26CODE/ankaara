@@ -19,7 +19,7 @@ export type InvoiceItem = Tables<"invoice_items">;
 export type Invoice = Tables<"invoices"> & {
   status: InvoiceStatus;
   client?: Pick<Tables<"clients">, "id" | "name" | "email" | "phone" | "address">;
-  business?: Pick<Tables<"businesses">, "id" | "name" | "address" | "logo_url" | "tax_number" | "brand_color" | "currency">;
+  business?: Pick<Tables<"businesses">, "id" | "name" | "address" | "logo_url" | "logo_text" | "tax_number" | "brand_color" | "currency">;
   items?: InvoiceItem[];
 };
 
@@ -39,6 +39,8 @@ export type CreateInvoicePayload = {
   tax: number;
   notes?: string;
   template_id?: string;
+  accent_color?: string;
+  footer_note?: string;
   items: InvoiceItemInput[];
 };
 
@@ -51,6 +53,8 @@ export type UpdateInvoicePayload = {
   tax?: number;
   notes?: string | null;
   template_id?: string;
+  accent_color?: string | null;
+  footer_note?: string | null;
   items?: InvoiceItemInput[];
 };
 
@@ -117,7 +121,7 @@ export const useInvoice = (invoiceId: string | null) => {
     const supabase = createClient();
     const { data, error } = await supabase
       .from("invoices")
-      .select("*, client:clients(id, name, email, phone, address), business:businesses!invoices_organization_id_fkey(id, name, address, logo_url, tax_number, brand_color, currency)")
+      .select("*, client:clients(id, name, email, phone, address), business:businesses!invoices_organization_id_fkey(id, name, address, logo_url, logo_text, tax_number, brand_color, currency)")
       .eq("id", invoiceId)
       .single();
 
@@ -173,6 +177,8 @@ export const useCreateInvoice = () => {
           tax,
           total,
           template_id: payload.template_id || "classic",
+          accent_color: payload.accent_color?.trim() || null,
+          footer_note: payload.footer_note?.trim() || null,
           notes: payload.notes?.trim() || null,
         })
         .select()
@@ -217,6 +223,8 @@ export const useUpdateInvoice = () => {
       if (payload.due_date) updates.due_date = payload.due_date;
       if (payload.currency) updates.currency = payload.currency;
       if (payload.template_id) updates.template_id = payload.template_id;
+      if (payload.accent_color !== undefined) updates.accent_color = payload.accent_color?.trim() || null;
+      if (payload.footer_note !== undefined) updates.footer_note = payload.footer_note?.trim() || null;
       if (payload.notes !== undefined) updates.notes = payload.notes?.trim() || null;
 
       if (payload.items) {

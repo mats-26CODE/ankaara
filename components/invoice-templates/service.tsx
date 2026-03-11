@@ -2,7 +2,18 @@ import type { InvoiceTemplateProps } from "@/lib/invoice-templates/types";
 import dayjs from "dayjs";
 
 export const ServiceTemplate = (props: InvoiceTemplateProps) => {
-  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, tax, total, notes, business, client, items, isPaid } = props;
+  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, tax, total, notes, footerNote, business, client, items, isPaid } = props;
+
+  const renderLogo = () => {
+    if (business?.logo_url) {
+      // eslint-disable-next-line @next/next/no-img-element
+      return <img src={business.logo_url} alt={business.name} className="h-8 w-auto mb-1" />;
+    }
+    if (business?.logo_text) {
+      return <p className="font-bold text-gray-900">{business.logo_text}</p>;
+    }
+    return <p className="font-bold text-gray-900">{business?.name}</p>;
+  };
 
   return (
     <div className="bg-white text-gray-900 rounded-lg border border-gray-200 overflow-hidden">
@@ -11,12 +22,7 @@ export const ServiceTemplate = (props: InvoiceTemplateProps) => {
         {/* Left — Business */}
         <div className="px-6 py-5 border-r border-gray-200">
           <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-2">From</p>
-          {business?.logo_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={business.logo_url} alt={business.name} className="h-8 w-auto mb-1" />
-          ) : (
-            <p className="font-bold text-gray-900">{business?.name}</p>
-          )}
+          {renderLogo()}
           {business?.address && <p className="text-xs text-gray-500 mt-0.5">{business.address}</p>}
           {business?.tax_number && <p className="text-xs text-gray-400">TIN: {business.tax_number}</p>}
         </div>
@@ -58,7 +64,7 @@ export const ServiceTemplate = (props: InvoiceTemplateProps) => {
         </div>
       </div>
 
-      {/* Service items — full-width description */}
+      {/* Service items */}
       <div className="px-6 py-4">
         <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-3">Services Provided</p>
         <table className="w-full text-sm">
@@ -103,6 +109,13 @@ export const ServiceTemplate = (props: InvoiceTemplateProps) => {
         <div className="px-6 py-5 border-t border-gray-200">
           <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-1">Notes & Terms</p>
           <p className="text-sm text-gray-600 whitespace-pre-wrap">{notes}</p>
+        </div>
+      )}
+
+      {/* Footer Note */}
+      {footerNote && (
+        <div className="px-6 py-4 border-t border-gray-200 text-center bg-gray-50">
+          <p className="text-xs text-gray-500 whitespace-pre-wrap">{footerNote}</p>
         </div>
       )}
     </div>

@@ -51,6 +51,8 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
   const [currency, setCurrency] = useState("");
   const [tax, setTax] = useState("");
   const [notes, setNotes] = useState("");
+  const [accentColor, setAccentColor] = useState("");
+  const [footerNote, setFooterNote] = useState("");
   const [templateId, setTemplateId] = useState<TemplateId>("classic");
   const [items, setItems] = useState<InvoiceItemInput[]>([]);
   const [prefilled, setPrefilled] = useState(false);
@@ -63,6 +65,8 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
     setCurrency(invoice.currency);
     setTax(String(Number(invoice.tax) || ""));
     setNotes(invoice.notes ?? "");
+    setAccentColor(invoice.accent_color ?? "");
+    setFooterNote(invoice.footer_note ?? "");
     setTemplateId((invoice.template_id as TemplateId) || "classic");
     setItems(
       (invoice.items ?? []).map((item) => ({
@@ -115,6 +119,8 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
         currency,
         tax: taxAmount,
         template_id: templateId,
+        accent_color: accentColor.trim() || null,
+        footer_note: footerNote.trim() || null,
         notes: notes.trim() || null,
         items,
       },
@@ -311,18 +317,50 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
             </CardContent>
           </Card>
 
-          {/* Notes */}
+          {/* Notes & Customization */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Notes</CardTitle>
+              <CardTitle className="text-base">Notes & Customization</CardTitle>
             </CardHeader>
-            <CardContent>
-              <Textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Additional notes or payment instructions..."
-                rows={3}
-              />
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Notes</Label>
+                <Textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Additional notes or payment instructions..."
+                  rows={3}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Invoice Footer Note</Label>
+                <Textarea
+                  value={footerNote}
+                  onChange={(e) => setFooterNote(e.target.value)}
+                  placeholder="e.g. Thank you for your business!"
+                  rows={2}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Accent Color</Label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={accentColor || "#2563eb"}
+                    onChange={(e) => setAccentColor(e.target.value)}
+                    className="h-9 w-12 cursor-pointer rounded border p-0.5"
+                  />
+                  <Input
+                    value={accentColor}
+                    onChange={(e) => setAccentColor(e.target.value)}
+                    placeholder="#2563eb"
+                    className="flex-1"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Overrides the business brand color for this invoice
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>

@@ -35,7 +35,7 @@ const PublicInvoicePage = async ({ params }: Props) => {
   const { data: invoice, error } = await supabase
     .from("invoices")
     .select(
-      "*, client:clients(id, name, email, phone, address), business:businesses!invoices_organization_id_fkey(id, name, address, logo_url, tax_number, brand_color, currency)"
+      "*, client:clients(id, name, email, phone, address), business:businesses!invoices_organization_id_fkey(id, name, address, logo_url, logo_text, tax_number, brand_color, currency)"
     )
     .eq("id", id)
     .single();
@@ -81,6 +81,7 @@ const PublicInvoicePage = async ({ params }: Props) => {
     name: string;
     address: string | null;
     logo_url: string | null;
+    logo_text: string | null;
     tax_number: string | null;
     brand_color: string | null;
     currency: string;
@@ -102,6 +103,8 @@ const PublicInvoicePage = async ({ params }: Props) => {
           tax={Number(invoice.tax)}
           total={Number(invoice.total)}
           notes={invoice.notes}
+          accentColor={invoice.accent_color}
+          footerNote={invoice.footer_note}
           isPaid={isPaid}
           business={business}
           client={client}

@@ -22,6 +22,7 @@ export type Database = {
           created_at: string
           currency: string
           id: string
+          logo_text: string | null
           logo_url: string | null
           name: string
           owner_id: string
@@ -35,6 +36,7 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          logo_text?: string | null
           logo_url?: string | null
           name: string
           owner_id: string
@@ -48,6 +50,7 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          logo_text?: string | null
           logo_url?: string | null
           name?: string
           owner_id?: string
@@ -239,10 +242,12 @@ export type Database = {
       }
       invoices: {
         Row: {
+          accent_color: string | null
           client_id: string
           created_at: string
           currency: string
           due_date: string
+          footer_note: string | null
           id: string
           invoice_number: string
           issue_date: string
@@ -257,10 +262,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          accent_color?: string | null
           client_id: string
           created_at?: string
           currency?: string
           due_date: string
+          footer_note?: string | null
           id?: string
           invoice_number: string
           issue_date: string
@@ -275,10 +282,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          accent_color?: string | null
           client_id?: string
           created_at?: string
           currency?: string
           due_date?: string
+          footer_note?: string | null
           id?: string
           invoice_number?: string
           issue_date?: string

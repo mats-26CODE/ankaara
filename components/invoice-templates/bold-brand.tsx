@@ -4,8 +4,19 @@ import dayjs from "dayjs";
 const DEFAULT_BRAND = "#2563eb";
 
 export const BoldBrandTemplate = (props: InvoiceTemplateProps) => {
-  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, tax, total, notes, business, client, items, isPaid } = props;
-  const brand = business?.brand_color || DEFAULT_BRAND;
+  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, tax, total, notes, accentColor, footerNote, business, client, items, isPaid } = props;
+  const brand = accentColor || business?.brand_color || DEFAULT_BRAND;
+
+  const renderLogo = () => {
+    if (business?.logo_url) {
+      // eslint-disable-next-line @next/next/no-img-element
+      return <img src={business.logo_url} alt={business.name} className="h-10 w-auto mb-3 brightness-0 invert" />;
+    }
+    if (business?.logo_text) {
+      return <p className="text-2xl font-bold">{business.logo_text}</p>;
+    }
+    return <p className="text-2xl font-bold">{business?.name}</p>;
+  };
 
   return (
     <div className="bg-white text-gray-900 rounded-xl overflow-hidden shadow-sm">
@@ -13,12 +24,7 @@ export const BoldBrandTemplate = (props: InvoiceTemplateProps) => {
       <div className="px-8 py-8 text-white" style={{ backgroundColor: brand }}>
         <div className="flex justify-between items-start">
           <div>
-            {business?.logo_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={business.logo_url} alt={business.name} className="h-10 w-auto mb-3 brightness-0 invert" />
-            ) : (
-              <p className="text-2xl font-bold">{business?.name}</p>
-            )}
+            {renderLogo()}
             {business?.address && <p className="text-sm opacity-80 mt-1">{business.address}</p>}
             {business?.tax_number && <p className="text-xs opacity-60">TIN: {business.tax_number}</p>}
           </div>
@@ -96,6 +102,13 @@ export const BoldBrandTemplate = (props: InvoiceTemplateProps) => {
         <div className="px-8 pb-8">
           <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: brand }}>Notes</p>
           <p className="text-sm text-gray-600 whitespace-pre-wrap">{notes}</p>
+        </div>
+      )}
+
+      {/* Footer Note */}
+      {footerNote && (
+        <div className="px-8 pb-6 text-center">
+          <p className="text-xs whitespace-pre-wrap" style={{ color: brand + "99" }}>{footerNote}</p>
         </div>
       )}
     </div>
