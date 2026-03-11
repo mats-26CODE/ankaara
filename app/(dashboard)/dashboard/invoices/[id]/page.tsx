@@ -10,14 +10,8 @@ import {
   useSendInvoice,
   type InvoiceStatus,
 } from "@/hooks/use-invoices";
-import { useFormatAmount } from "@/hooks/use-format-amount";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -26,16 +20,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import { InvoiceTemplate } from "@/lib/invoice-templates/registry";
 import { ToastAlert } from "@/config/toast";
 import {
   ArrowLeft,
@@ -85,8 +71,6 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const { invoice, loading, refetch } = useInvoice(id);
   const deleteInvoice = useDeleteInvoice();
   const sendInvoice = useSendInvoice();
-  const { format } = useFormatAmount();
-
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   if (loading) {
@@ -199,107 +183,29 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
         </div>
       </div>
 
-      {/* Invoice Preview Card */}
-      <Card>
-        <CardHeader className="pb-0">
-          <div className="grid gap-6 sm:grid-cols-2">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Bill To
-              </p>
-              <p className="mt-1 font-semibold">{invoice.client?.name}</p>
-              {invoice.client?.email && (
-                <p className="text-sm text-muted-foreground">{invoice.client.email}</p>
-              )}
-              {invoice.client?.phone && (
-                <p className="text-sm text-muted-foreground">{invoice.client.phone}</p>
-              )}
-              {invoice.client?.address && (
-                <p className="text-sm text-muted-foreground">{invoice.client.address}</p>
-              )}
-            </div>
-            <div className="sm:text-right space-y-1">
-              <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Issue Date
-                </p>
-                <p className="text-sm">{dayjs(invoice.issue_date).format("MMM D, YYYY")}</p>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Due Date
-                </p>
-                <p className="text-sm">{dayjs(invoice.due_date).format("MMM D, YYYY")}</p>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Currency
-                </p>
-                <p className="text-sm">{invoice.currency}</p>
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="pt-6">
-          {/* Items table */}
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[50%]">Description</TableHead>
-                <TableHead className="text-right">Qty</TableHead>
-                <TableHead className="text-right">Unit Price</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {(invoice.items ?? []).map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>{item.description}</TableCell>
-                  <TableCell className="text-right">{Number(item.quantity)}</TableCell>
-                  <TableCell className="text-right">
-                    {Number(item.unit_price).toLocaleString()}
-                  </TableCell>
-                  <TableCell className="text-right font-medium">
-                    {Number(item.total).toLocaleString()}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-
-          <Separator className="my-4" />
-
-          {/* Totals */}
-          <div className="flex flex-col items-end gap-1">
-            <div className="flex w-60 justify-between text-sm">
-              <span className="text-muted-foreground">Subtotal</span>
-              <span>{Number(invoice.subtotal).toLocaleString()}</span>
-            </div>
-            {Number(invoice.tax) > 0 && (
-              <div className="flex w-60 justify-between text-sm">
-                <span className="text-muted-foreground">Tax</span>
-                <span>{Number(invoice.tax).toLocaleString()}</span>
-              </div>
-            )}
-            <Separator className="my-1 w-60" />
-            <div className="flex w-60 justify-between font-semibold text-lg">
-              <span>Total</span>
-              <span>{format(Number(invoice.total))}</span>
-            </div>
-          </div>
-
-          {/* Notes */}
-          {invoice.notes && (
-            <div className="mt-6 rounded-lg bg-muted/50 p-4">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
-                Notes
-              </p>
-              <p className="text-sm whitespace-pre-wrap">{invoice.notes}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Invoice Preview — rendered with selected template */}
+      <InvoiceTemplate
+        templateId={invoice.template_id ?? "classic"}
+        invoiceNumber={invoice.invoice_number}
+        status={invoice.status}
+        issueDate={invoice.issue_date}
+        dueDate={invoice.due_date}
+        currency={invoice.currency}
+        subtotal={Number(invoice.subtotal)}
+        tax={Number(invoice.tax)}
+        total={Number(invoice.total)}
+        notes={invoice.notes}
+        isPaid={invoice.status === "paid"}
+        business={invoice.business ?? null}
+        client={invoice.client ?? null}
+        items={(invoice.items ?? []).map((item) => ({
+          id: item.id,
+          description: item.description,
+          quantity: Number(item.quantity),
+          unit_price: Number(item.unit_price),
+          total: Number(item.total),
+        }))}
+      />
 
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

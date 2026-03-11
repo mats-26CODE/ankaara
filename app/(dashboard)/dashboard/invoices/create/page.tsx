@@ -7,6 +7,7 @@ import { useBusinesses, type Business } from "@/hooks/use-businesses";
 import { useCurrentBusinessId } from "@/lib/stores/business-store";
 import { useCreateInvoice, type InvoiceItemInput } from "@/hooks/use-invoices";
 import { useCurrencies } from "@/hooks/use-currencies";
+import { TEMPLATES, type TemplateId } from "@/lib/invoice-templates/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,6 +55,7 @@ const CreateInvoicePage = () => {
   const [currency, setCurrency] = useState("");
   const [tax, setTax] = useState("");
   const [notes, setNotes] = useState("");
+  const [templateId, setTemplateId] = useState<TemplateId>("classic");
   const [items, setItems] = useState<InvoiceItemInput[]>([emptyItem()]);
 
   useEffect(() => {
@@ -116,6 +118,7 @@ const CreateInvoicePage = () => {
         due_date: dueDate,
         currency,
         tax: taxAmount,
+        template_id: templateId,
         notes: notes.trim() || undefined,
         items,
       },
@@ -338,8 +341,32 @@ const CreateInvoicePage = () => {
           </Card>
         </div>
 
-        {/* Right: Summary */}
+        {/* Right: Summary + Template */}
         <div className="space-y-6">
+          {/* Template Picker */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Template</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 gap-2">
+              {TEMPLATES.map((tmpl) => (
+                <button
+                  key={tmpl.id}
+                  type="button"
+                  onClick={() => setTemplateId(tmpl.id)}
+                  className={`text-left rounded-lg border-2 p-3 transition-colors ${
+                    templateId === tmpl.id
+                      ? "border-primary bg-primary/5"
+                      : "border-transparent bg-muted/50 hover:border-primary/30"
+                  }`}
+                >
+                  <p className="text-sm font-medium">{tmpl.name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{tmpl.description}</p>
+                </button>
+              ))}
+            </CardContent>
+          </Card>
+
           <Card className="sticky top-6">
             <CardHeader>
               <CardTitle className="text-base">Summary</CardTitle>

@@ -19,6 +19,7 @@ export type InvoiceItem = Tables<"invoice_items">;
 export type Invoice = Tables<"invoices"> & {
   status: InvoiceStatus;
   client?: Pick<Tables<"clients">, "id" | "name" | "email" | "phone" | "address">;
+  business?: Pick<Tables<"businesses">, "id" | "name" | "address" | "logo_url" | "tax_number" | "brand_color" | "currency">;
   items?: InvoiceItem[];
 };
 
@@ -37,6 +38,7 @@ export type CreateInvoicePayload = {
   currency: string;
   tax: number;
   notes?: string;
+  template_id?: string;
   items: InvoiceItemInput[];
 };
 
@@ -48,6 +50,7 @@ export type UpdateInvoicePayload = {
   currency?: string;
   tax?: number;
   notes?: string | null;
+  template_id?: string;
   items?: InvoiceItemInput[];
 };
 
@@ -114,7 +117,7 @@ export const useInvoice = (invoiceId: string | null) => {
     const supabase = createClient();
     const { data, error } = await supabase
       .from("invoices")
-      .select("*, client:clients(id, name, email, phone, address)")
+      .select("*, client:clients(id, name, email, phone, address), business:businesses!invoices_organization_id_fkey(id, name, address, logo_url, tax_number, brand_color, currency)")
       .eq("id", invoiceId)
       .single();
 
@@ -169,6 +172,7 @@ export const useCreateInvoice = () => {
           subtotal,
           tax,
           total,
+          template_id: payload.template_id || "classic",
           notes: payload.notes?.trim() || null,
         })
         .select()
@@ -212,6 +216,7 @@ export const useUpdateInvoice = () => {
       if (payload.issue_date) updates.issue_date = payload.issue_date;
       if (payload.due_date) updates.due_date = payload.due_date;
       if (payload.currency) updates.currency = payload.currency;
+      if (payload.template_id) updates.template_id = payload.template_id;
       if (payload.notes !== undefined) updates.notes = payload.notes?.trim() || null;
 
       if (payload.items) {

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useInvoice, useUpdateInvoice, type InvoiceItemInput } from "@/hooks/use-invoices";
 import { useClients } from "@/hooks/use-clients";
 import { useCurrencies } from "@/hooks/use-currencies";
+import { TEMPLATES, type TemplateId } from "@/lib/invoice-templates/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,6 +51,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
   const [currency, setCurrency] = useState("");
   const [tax, setTax] = useState("");
   const [notes, setNotes] = useState("");
+  const [templateId, setTemplateId] = useState<TemplateId>("classic");
   const [items, setItems] = useState<InvoiceItemInput[]>([]);
   const [prefilled, setPrefilled] = useState(false);
 
@@ -61,6 +63,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
     setCurrency(invoice.currency);
     setTax(String(Number(invoice.tax) || ""));
     setNotes(invoice.notes ?? "");
+    setTemplateId((invoice.template_id as TemplateId) || "classic");
     setItems(
       (invoice.items ?? []).map((item) => ({
         id: item.id,
@@ -111,6 +114,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
         due_date: dueDate,
         currency,
         tax: taxAmount,
+        template_id: templateId,
         notes: notes.trim() || null,
         items,
       },
@@ -323,8 +327,32 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
           </Card>
         </div>
 
-        {/* Summary */}
+        {/* Summary + Template */}
         <div className="space-y-6">
+          {/* Template Picker */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Template</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 gap-2">
+              {TEMPLATES.map((tmpl) => (
+                <button
+                  key={tmpl.id}
+                  type="button"
+                  onClick={() => setTemplateId(tmpl.id)}
+                  className={`text-left rounded-lg border-2 p-3 transition-colors ${
+                    templateId === tmpl.id
+                      ? "border-primary bg-primary/5"
+                      : "border-transparent bg-muted/50 hover:border-primary/30"
+                  }`}
+                >
+                  <p className="text-sm font-medium">{tmpl.name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{tmpl.description}</p>
+                </button>
+              ))}
+            </CardContent>
+          </Card>
+
           <Card className="sticky top-6">
             <CardHeader>
               <CardTitle className="text-base">Summary</CardTitle>

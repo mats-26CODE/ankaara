@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   User,
   Building2,
+  Palette,
 } from "lucide-react";
 import {
   Sidebar,
@@ -245,6 +246,14 @@ export const DashboardSidebar = () => {
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
                         )}
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild isActive={isActive("/dashboard/settings/templates")}>
+                            <Link href="/dashboard/settings/templates">
+                              <Palette className="size-4" />
+                              <span>Invoice Templates</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
                       </SidebarMenuSub>
                     </Collapsible.Content>
                   )}
