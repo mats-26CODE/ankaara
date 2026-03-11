@@ -145,16 +145,10 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
               <Button
                 size="sm"
                 onClick={handleSend}
-                disabled={sendInvoice.isPending}
+                isLoading={sendInvoice.isPending}
               >
-                {sendInvoice.isPending ? (
-                  <Spinner className="size-4" />
-                ) : (
-                  <>
-                    <Send className="size-4 mr-1" />
-                    Mark as Sent
-                  </>
-                )}
+                <Send className="size-4 mr-1" />
+                Mark as Sent
               </Button>
             </>
           )}
@@ -231,9 +225,9 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
             <Button
               variant="destructive"
               onClick={handleDelete}
-              disabled={deleteInvoice.isPending}
+              isLoading={deleteInvoice.isPending}
             >
-              {deleteInvoice.isPending ? <Spinner className="size-4" /> : "Delete"}
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>

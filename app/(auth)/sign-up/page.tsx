@@ -16,7 +16,7 @@ import {
 import { APP_NAME } from "@/constants/values";
 import { useTranslation } from "@/hooks/use-translation";
 import { validatePhoneNumber } from "@/helpers/helpers";
-import { Spinner } from "@/components/ui/spinner";
+
 
 const SignUpPage = () => {
   const { t } = useTranslation();
@@ -98,9 +98,8 @@ const SignUpPage = () => {
               variant="outline"
               className="w-full h-12 border-2"
               onClick={handleGoogleSignIn}
-              disabled={
-                googleOAuthMutation.isPending || sendOtpMutation.isPending
-              }
+              disabled={sendOtpMutation.isPending}
+              isLoading={googleOAuthMutation.isPending}
             >
               <svg
                 className="w-5 h-5 mr-2"
@@ -124,11 +123,7 @@ const SignUpPage = () => {
                   fill="#EA4335"
                 />
               </svg>
-              {googleOAuthMutation.isPending ? (
-                <Spinner className="size-4 mr-2 text-white" />
-              ) : (
-                t("auth.signup.googleSignUp")
-              )}
+              {t("auth.signup.googleSignUp")}
             </Button>
 
             <div className="relative">
@@ -178,13 +173,9 @@ const SignUpPage = () => {
                 type="submit"
                 className="w-full"
                 size="lg"
-                disabled={sendOtpMutation.isPending}
+                isLoading={sendOtpMutation.isPending}
               >
-                {sendOtpMutation.isPending ? (
-                  <Spinner className="size-4 mr-2 text-white" />
-                ) : (
-                  t("auth.signup.signUp")
-                )}
+                {t("auth.signup.signUp")}
               </Button>
             </form>
 

@@ -313,9 +313,10 @@ const ClientPickerDialog = ({
             </Button>
             <Button
               onClick={handleAddClient}
-              disabled={createClient.isPending || !addForm.name.trim()}
+              disabled={!addForm.name.trim()}
+              isLoading={createClient.isPending}
             >
-              {createClient.isPending ? <Spinner className="size-4" /> : "Add Client"}
+              Add Client
             </Button>
           </DialogFooter>
         </DialogContent>

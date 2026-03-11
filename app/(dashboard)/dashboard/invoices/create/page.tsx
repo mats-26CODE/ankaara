@@ -272,7 +272,8 @@ const CreateInvoicePage = () => {
                         type="number"
                         min={1}
                         step="any"
-                        value={item.quantity}
+                        value={item.quantity || ""}
+                        placeholder="0"
                         onChange={(e) =>
                           updateItem(
                             idx,
@@ -288,7 +289,8 @@ const CreateInvoicePage = () => {
                         type="number"
                         min={0}
                         step="any"
-                        value={item.unit_price}
+                        value={item.unit_price || ""}
+                        placeholder="0"
                         onChange={(e) =>
                           updateItem(
                             idx,
@@ -432,13 +434,10 @@ const CreateInvoicePage = () => {
                 <Button
                   className="w-full"
                   onClick={handleSubmit}
-                  disabled={!canSubmit || createInvoice.isPending}
+                  disabled={!canSubmit}
+                  isLoading={createInvoice.isPending}
                 >
-                  {createInvoice.isPending ? (
-                    <Spinner className="size-4" />
-                  ) : (
-                    "Create Invoice"
-                  )}
+                  Create Invoice
                 </Button>
                 <Button
                   variant="outline"

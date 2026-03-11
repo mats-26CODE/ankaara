@@ -302,8 +302,8 @@ const ProfileSettingsPage = () => {
           </div>
 
           <div className="flex justify-end">
-            <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving ? <Spinner className="size-4" /> : "Save Changes"}
+            <Button onClick={handleSave} isLoading={isSaving}>
+              Save Changes
             </Button>
           </div>
         </CardContent>
@@ -434,8 +434,8 @@ const ProfileSettingsPage = () => {
             </div>
 
             <div className="flex justify-end">
-              <Button onClick={handleSaveBusiness} disabled={updateBusiness.isPending}>
-                {updateBusiness.isPending ? <Spinner className="size-4" /> : "Save Business Details"}
+              <Button onClick={handleSaveBusiness} isLoading={updateBusiness.isPending}>
+                Save Business Details
               </Button>
             </div>
           </CardContent>
@@ -546,9 +546,10 @@ const ProfileSettingsPage = () => {
             </Button>
             <Button
               onClick={handleVerifyOtp}
-              disabled={verifyOtp.isPending || otpCode.length < 6}
+              disabled={otpCode.length < 6}
+              isLoading={verifyOtp.isPending}
             >
-              {verifyOtp.isPending ? <Spinner className="size-4" /> : "Verify"}
+              Verify
             </Button>
           </DialogFooter>
         </DialogContent>

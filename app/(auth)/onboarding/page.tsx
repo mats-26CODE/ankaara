@@ -399,16 +399,10 @@ const OnboardingPage = () => {
               )}
               <Button
                 type="submit"
-                disabled={submitting || sendOtpMutation.isPending}
+                isLoading={submitting || sendOtpMutation.isPending}
                 className={step === 1 ? "w-full" : "flex-1"}
               >
-                {submitting || sendOtpMutation.isPending ? (
-                  <Spinner className="size-4" />
-                ) : step === 1 ? (
-                  t("auth.onboarding.next")
-                ) : (
-                  t("auth.onboarding.finish")
-                )}
+                {step === 1 ? t("auth.onboarding.next") : t("auth.onboarding.finish")}
               </Button>
             </div>
           </form>

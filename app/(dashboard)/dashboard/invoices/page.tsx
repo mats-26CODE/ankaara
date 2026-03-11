@@ -382,9 +382,9 @@ const InvoicesContent = () => {
             <Button
               variant="destructive"
               onClick={handleDelete}
-              disabled={deleteInvoice.isPending}
+              isLoading={deleteInvoice.isPending}
             >
-              {deleteInvoice.isPending ? <Spinner className="size-4" /> : "Delete"}
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>

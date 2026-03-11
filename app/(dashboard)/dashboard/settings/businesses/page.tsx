@@ -468,14 +468,8 @@ const BusinessesSettingsPage = () => {
             >
               Cancel
             </Button>
-            <Button onClick={handleSubmit} disabled={isMutating || !form.name.trim()}>
-              {isMutating ? (
-                <Spinner className="size-4" />
-              ) : editingBusiness ? (
-                "Save"
-              ) : (
-                "Create"
-              )}
+            <Button onClick={handleSubmit} disabled={!form.name.trim()} isLoading={isMutating}>
+              {editingBusiness ? "Save" : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -503,13 +497,9 @@ const BusinessesSettingsPage = () => {
             <Button
               variant="destructive"
               onClick={handleDelete}
-              disabled={deleteBusiness.isPending}
+              isLoading={deleteBusiness.isPending}
             >
-              {deleteBusiness.isPending ? (
-                <Spinner className="size-4" />
-              ) : (
-                "Delete"
-              )}
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>

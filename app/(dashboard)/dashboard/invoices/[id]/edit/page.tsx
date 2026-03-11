@@ -283,7 +283,8 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
                         type="number"
                         min={1}
                         step="any"
-                        value={item.quantity}
+                        value={item.quantity || ""}
+                        placeholder="0"
                         onChange={(e) =>
                           updateItem(idx, "quantity", Number(e.target.value) || 0)
                         }
@@ -295,7 +296,8 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
                         type="number"
                         min={0}
                         step="any"
-                        value={item.unit_price}
+                        value={item.unit_price || ""}
+                        placeholder="0"
                         onChange={(e) =>
                           updateItem(idx, "unit_price", Number(e.target.value) || 0)
                         }
@@ -433,13 +435,10 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
                 <Button
                   className="w-full"
                   onClick={handleSubmit}
-                  disabled={!canSubmit || updateInvoice.isPending}
+                  disabled={!canSubmit}
+                  isLoading={updateInvoice.isPending}
                 >
-                  {updateInvoice.isPending ? (
-                    <Spinner className="size-4" />
-                  ) : (
-                    "Save Changes"
-                  )}
+                  Save Changes
                 </Button>
                 <Button
                   variant="outline"

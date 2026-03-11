@@ -213,11 +213,10 @@ const VerifyOtpContent = () => {
             type="submit"
             className="w-full"
             size="lg"
-            disabled={isVerifying || !phone || otp.length < 6}
+            disabled={!phone || otp.length < 6}
+            isLoading={isVerifying}
           >
-            {isVerifying
-              ? t("auth.verifyOtp.verifying")
-              : t("auth.verifyOtp.verify")}
+            {t("auth.verifyOtp.verify")}
           </Button>
         </form>
 

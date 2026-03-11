@@ -372,15 +372,10 @@ const ClientsPage = () => {
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={isMutating || !form.name.trim()}
+              disabled={!form.name.trim()}
+              isLoading={isMutating}
             >
-              {isMutating ? (
-                <Spinner className="size-4" />
-              ) : editingClient ? (
-                "Save"
-              ) : (
-                "Add Client"
-              )}
+              {editingClient ? "Save" : "Add Client"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -408,13 +403,9 @@ const ClientsPage = () => {
             <Button
               variant="destructive"
               onClick={handleDelete}
-              disabled={deleteClient.isPending}
+              isLoading={deleteClient.isPending}
             >
-              {deleteClient.isPending ? (
-                <Spinner className="size-4" />
-              ) : (
-                "Delete"
-              )}
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>
