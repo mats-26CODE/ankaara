@@ -260,10 +260,7 @@ export const translations = {
     auth: {
       onboarding: {
         title: "Karibu! Ongeza Maelezo Yako",
-        subtitle: "Chagua aina ya akaunti na jaza maelezo",
-        accountType: "Aina ya Akaunti",
-        business: "Biashara",
-        individual: "Mtu Binafsi",
+        subtitle: "Jaza maelezo yako na uanze kutumia ankara",
         businessName: "Jina la Biashara",
         businessNamePlaceholder: "Jina la biashara yako",
         yourName: "Jina lako",
@@ -596,10 +593,7 @@ export const translations = {
     auth: {
       onboarding: {
         title: "Welcome! Set up your account",
-        subtitle: "Choose your account type and add a few details",
-        accountType: "Account type",
-        business: "Business",
-        individual: "Individual",
+        subtitle: "Add a few details to get started",
         businessName: "Business name",
         businessNamePlaceholder: "Your business or trading name",
         yourName: "Your name",

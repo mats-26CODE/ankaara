@@ -6,7 +6,6 @@ import { ToastAlert } from "@/config/toast";
 
 type CompleteOnboardingPayload = {
   userId: string;
-  accountType: "business" | "individual";
   currency: string;
   businessName: string;
   location?: string;
@@ -55,15 +54,13 @@ export const useCompleteOnboarding = () => {
   return useMutation({
     mutationFn: async (payload: CompleteOnboardingPayload) => {
       const supabase = createClient();
-      const isBusiness = payload.accountType === "business";
 
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
-          account_type: payload.accountType,
           preferred_currency: payload.currency,
           onboarding_completed: true,
-          ...(!isBusiness && payload.fullName ? { full_name: payload.fullName } : {}),
+          ...(payload.fullName ? { full_name: payload.fullName } : {}),
           ...(payload.phone ? { phone: payload.phone } : {}),
         })
         .eq("id", payload.userId);
@@ -72,9 +69,9 @@ export const useCompleteOnboarding = () => {
 
       await upsertBusiness(supabase, payload.userId, {
         name: payload.businessName,
-        address: isBusiness ? (payload.location?.trim() || null) : null,
-        capacity: isBusiness ? (payload.capacity?.trim() || null) : null,
-        tax_number: isBusiness ? (payload.taxNumber?.trim() || null) : null,
+        address: payload.location?.trim() || null,
+        capacity: payload.capacity?.trim() || null,
+        tax_number: payload.taxNumber?.trim() || null,
         currency: payload.currency,
       });
     },
@@ -95,7 +92,6 @@ export const useSkipOnboarding = () => {
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
-          account_type: "individual",
           preferred_currency: payload.currency,
           onboarding_completed: true,
         })

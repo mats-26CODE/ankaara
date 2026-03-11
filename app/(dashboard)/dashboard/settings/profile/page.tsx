@@ -59,7 +59,6 @@ const ProfileSettingsPage = () => {
 
   const { businesses, loading: bizLoading, refetch: refetchBiz } = useBusinesses();
   const updateBusiness = useUpdateBusiness();
-  const isIndividual = profile?.account_type !== "business";
   const myBusiness: Business | undefined = businesses[0];
 
   const sendOtp = useSendOtpForOnboarding();

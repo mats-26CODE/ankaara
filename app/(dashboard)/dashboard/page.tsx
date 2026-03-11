@@ -44,7 +44,6 @@ const checkProfileCompleteness = (
 
   const missing: string[] = [];
   if (!profile.full_name?.trim()) missing.push("name");
-  if (!profile.account_type) missing.push("account type");
 
   return { complete: missing.length === 0, missing };
 };
@@ -148,11 +147,6 @@ const DashboardPage = () => {
                     </>
                   )}
                 </div>
-                {profile?.account_type && (
-                  <span className="inline-block mt-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium capitalize">
-                    {profile.account_type}
-                  </span>
-                )}
               </div>
             </div>
             <Button asChild variant="outline" size="sm">
@@ -323,15 +317,6 @@ const DashboardPage = () => {
             <CardDescription>Your account overview</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                Account Type
-              </span>
-              <span className="text-sm font-medium capitalize">
-                {profile?.account_type || "—"}
-              </span>
-            </div>
-            <Separator />
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">
                 Phone Verified

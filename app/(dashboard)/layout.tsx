@@ -8,6 +8,7 @@ import { DashboardSidebar } from "@/components/shared/dashboard-sidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useUser } from "@/hooks/use-user";
 import { useProfile } from "@/hooks/use-profile";
+import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import { Spinner } from "@/components/ui/spinner";
 
 export default function DashboardLayout({
@@ -19,15 +20,22 @@ export default function DashboardLayout({
   const { user, loading: userLoading } = useUser();
   const { profile, loading: profileLoading } = useProfile();
 
+  const onboardingSkipped = useOnboardingStore((s) => s.skipped);
+  const profileIncomplete = !!profile && !profile.full_name?.trim() && !onboardingSkipped;
+
   useEffect(() => {
     if (userLoading || profileLoading) return;
     if (!user) {
       router.replace("/login");
       return;
     }
-  }, [user, userLoading, profile, profileLoading, router]);
+    if (profileIncomplete) {
+      router.replace("/onboarding");
+      return;
+    }
+  }, [user, userLoading, profileLoading, profileIncomplete, router]);
 
-  if (userLoading || profileLoading || !user) {
+  if (userLoading || profileLoading || !user || profileIncomplete) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Spinner className="size-8" />

@@ -80,31 +80,24 @@ const VerifyOtpContent = () => {
               return;
             }
             const pending = JSON.parse(pendingRaw) as {
-              accountType: string;
+              fullName: string;
               businessName: string;
-              individualName: string;
               location: string;
               capacity: string;
               taxNumber?: string;
               currency: string;
             };
-            const isBusiness = pending.accountType === "business";
-            const businessName = isBusiness
-              ? pending.businessName.trim()
-              : pending.individualName.trim() || profile?.full_name || "My Business";
+            const businessName = pending.businessName.trim() || pending.fullName.trim() || profile?.full_name || "My Business";
 
             completeOnboarding.mutate(
               {
                 userId: user.id,
-                accountType: pending.accountType as "business" | "individual",
                 currency: pending.currency,
                 businessName,
                 location: pending.location,
                 capacity: pending.capacity,
-                taxNumber: isBusiness ? pending.taxNumber : undefined,
-                fullName: isBusiness
-                  ? undefined
-                  : (pending.individualName.trim() || profile?.full_name || undefined),
+                taxNumber: pending.taxNumber || undefined,
+                fullName: pending.fullName.trim() || profile?.full_name || undefined,
                 phone,
               },
               {

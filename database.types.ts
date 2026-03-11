@@ -423,7 +423,6 @@ export type Database = {
       }
       profiles: {
         Row: {
-          account_type: string | null
           auth_type: Database["public"]["Enums"]["auth_type"] | null
           avatar_url: string | null
           created_at: string
@@ -441,7 +440,6 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          account_type?: string | null
           auth_type?: Database["public"]["Enums"]["auth_type"] | null
           avatar_url?: string | null
           created_at?: string
@@ -459,7 +457,6 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          account_type?: string | null
           auth_type?: Database["public"]["Enums"]["auth_type"] | null
           avatar_url?: string | null
           created_at?: string

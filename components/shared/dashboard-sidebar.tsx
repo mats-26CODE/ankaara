@@ -39,13 +39,10 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import { useProfile } from "@/hooks/use-profile";
 
 export const DashboardSidebar = () => {
   const pathname = usePathname();
   const { state } = useSidebar();
-  const { profile } = useProfile();
-  const isBusinessAccount = profile?.account_type === "business";
   const [invoicesOpen, setInvoicesOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -236,16 +233,14 @@ export const DashboardSidebar = () => {
                             </Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
-                        {isBusinessAccount && (
-                          <SidebarMenuSubItem>
-                            <SidebarMenuSubButton asChild isActive={isActive("/dashboard/settings/businesses")}>
-                              <Link href="/dashboard/settings/businesses">
-                                <Building2 className="size-4" />
-                                <span>Businesses</span>
-                              </Link>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        )}
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild isActive={isActive("/dashboard/settings/businesses")}>
+                            <Link href="/dashboard/settings/businesses">
+                              <Building2 className="size-4" />
+                              <span>Businesses</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
                         <SidebarMenuSubItem>
                           <SidebarMenuSubButton asChild isActive={isActive("/dashboard/settings/templates")}>
                             <Link href="/dashboard/settings/templates">

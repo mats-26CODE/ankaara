@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import {
   useBusinesses,
   useCreateBusiness,
@@ -11,7 +10,6 @@ import {
   type CreateBusinessPayload,
 } from "@/hooks/use-businesses";
 import { useCurrentBusinessId } from "@/lib/stores/business-store";
-import { useProfile } from "@/hooks/use-profile";
 import { useCurrencies } from "@/hooks/use-currencies";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,8 +68,6 @@ const emptyForm: FormState = {
 };
 
 const BusinessesSettingsPage = () => {
-  const router = useRouter();
-  const { profile, loading: profileLoading } = useProfile();
   const { businesses, loading, refetch } = useBusinesses();
   const { currencies, loading: currenciesLoading } = useCurrencies();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
@@ -79,19 +75,11 @@ const BusinessesSettingsPage = () => {
   const updateBusiness = useUpdateBusiness();
   const deleteBusiness = useDeleteBusiness();
 
-  const isBusinessAccount = profile?.account_type === "business";
-
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingBusiness, setEditingBusiness] = useState<Business | null>(null);
   const [deletingBusiness, setDeletingBusiness] = useState<Business | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
-
-  useEffect(() => {
-    if (!profileLoading && profile && !isBusinessAccount) {
-      router.replace("/dashboard/settings/profile");
-    }
-  }, [profileLoading, profile, isBusinessAccount, router]);
 
   // Auto-select first business if none selected
   useEffect(() => {
@@ -196,7 +184,7 @@ const BusinessesSettingsPage = () => {
     updateBusiness.isPending ||
     deleteBusiness.isPending;
 
-  if (loading || currenciesLoading || profileLoading || !isBusinessAccount) {
+  if (loading || currenciesLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <Spinner className="size-6" />
@@ -209,21 +197,15 @@ const BusinessesSettingsPage = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
-            <CardTitle>
-              {isBusinessAccount ? "Your Businesses" : "Your Business"}
-            </CardTitle>
+            <CardTitle>Your Businesses</CardTitle>
             <CardDescription>
-              {isBusinessAccount
-                ? "Manage your business outlets. Clients and invoices are scoped to the active business."
-                : "Manage your business details. Upgrade to a Business account to create multiple outlets."}
+              Manage your businesses. Clients and invoices are scoped to the active business.
             </CardDescription>
           </div>
-          {isBusinessAccount && (
-            <Button size="sm" onClick={openCreate}>
-              <Plus className="size-4 mr-1" />
-              Add Business
-            </Button>
-          )}
+          <Button size="sm" onClick={openCreate}>
+            <Plus className="size-4 mr-1" />
+            Add Business
+          </Button>
         </CardHeader>
         <CardContent>
           {businesses.length === 0 ? (
@@ -275,21 +257,19 @@ const BusinessesSettingsPage = () => {
                       >
                         <Pencil className="size-4" />
                       </Button>
-                      {isBusinessAccount && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openDelete(biz)}
-                          disabled={businesses.length <= 1}
-                          title={
-                            businesses.length <= 1
-                              ? "Cannot delete the only business"
-                              : "Delete business"
-                          }
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => openDelete(biz)}
+                        disabled={businesses.length <= 1}
+                        title={
+                          businesses.length <= 1
+                            ? "Cannot delete the only business"
+                            : "Delete business"
+                        }
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
                     </div>
                   </div>
                 );

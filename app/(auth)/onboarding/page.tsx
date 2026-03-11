@@ -17,25 +17,18 @@ import { useUser } from "@/hooks/use-user";
 import { useProfile } from "@/hooks/use-profile";
 import { useTranslation } from "@/hooks/use-translation";
 import { Spinner } from "@/components/ui/spinner";
-import { Building2, User } from "lucide-react";
 import { addCountryCode } from "@/helpers/helpers";
 import { useSendOtpForOnboarding } from "@/hooks/use-auth";
 import { useCurrencies } from "@/hooks/use-currencies";
 import { useCompleteOnboarding, useSkipOnboarding } from "@/hooks/use-onboarding";
+import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import type { Profile } from "@/hooks/use-profile";
 
 const ONBOARDING_PENDING_KEY = "onboarding_pending";
 
-/**
- * True when the profile has all essential fields filled.
- * Must match the logic in the dashboard page so we don't loop.
- */
 const isProfileActuallyComplete = (profile: Profile | null): boolean => {
   if (!profile) return false;
-  return !!(
-    profile.full_name?.trim() &&
-    profile.account_type
-  );
+  return !!profile.full_name?.trim();
 };
 
 const OnboardingPage = () => {
@@ -44,13 +37,11 @@ const OnboardingPage = () => {
   const { user, loading: userLoading } = useUser();
   const { profile, loading: profileLoading, refetch } = useProfile();
   const { currencies, loading: currenciesLoading } = useCurrencies();
-  const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
-    accountType: "" as "" | "business" | "individual",
+    fullName: "",
     businessName: "",
-    individualName: "",
     location: "",
     capacity: "",
     taxNumber: "",
@@ -63,15 +54,16 @@ const OnboardingPage = () => {
     if (prefilled || !profile) return;
     setForm((prev) => ({
       ...prev,
-      accountType: profile.account_type || prev.accountType,
-      individualName: profile.full_name?.trim() || prev.individualName,
+      fullName: profile.full_name?.trim() || prev.fullName,
       currency: profile.preferred_currency || prev.currency,
     }));
     setPrefilled(true);
   }, [profile, prefilled]);
+
   const sendOtpMutation = useSendOtpForOnboarding();
   const completeOnboarding = useCompleteOnboarding();
   const skipOnboarding = useSkipOnboarding();
+  const setOnboardingSkipped = useOnboardingStore((s) => s.setSkipped);
   const showOptionalPhone = !profile?.phone;
 
   const profileComplete = isProfileActuallyComplete(profile);
@@ -90,21 +82,8 @@ const OnboardingPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (step === 1) {
-      if (!form.accountType) {
-        setError("Please select an account type");
-        return;
-      }
-      setStep(2);
-      return;
-    }
 
-    const isBusiness = form.accountType === "business";
-    if (isBusiness && !form.businessName.trim()) {
-      setError("Business name is required");
-      return;
-    }
-    if (!isBusiness && !form.individualName.trim()) {
+    if (!form.fullName.trim()) {
       setError("Your name is required");
       return;
     }
@@ -128,21 +107,18 @@ const OnboardingPage = () => {
       return;
     }
 
-    const businessName = isBusiness
-      ? form.businessName.trim()
-      : form.individualName.trim() || profile?.full_name || "My Business";
+    const businessName = form.businessName.trim() || form.fullName.trim() || profile?.full_name || "My Business";
 
     setSubmitting(true);
     completeOnboarding.mutate(
       {
         userId: user!.id,
-        accountType: form.accountType as "business" | "individual",
         currency: form.currency,
         businessName,
         location: form.location,
         capacity: form.capacity,
-        taxNumber: isBusiness ? form.taxNumber : undefined,
-        fullName: isBusiness ? undefined : (form.individualName.trim() || profile?.full_name || undefined),
+        taxNumber: form.taxNumber || undefined,
+        fullName: form.fullName.trim() || profile?.full_name || undefined,
       },
       {
         onSuccess: async () => {
@@ -183,201 +159,123 @@ const OnboardingPage = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {step === 1 && (
-              <div className="space-y-4">
-                <Label>{t("auth.onboarding.accountType")}</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setForm((p) => ({ ...p, accountType: "business" }))
-                    }
-                    className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-colors ${
-                      form.accountType === "business"
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border hover:border-primary/50"
-                    }`}
-                  >
-                    <Building2 className="size-8" />
-                    <span className="font-medium">
-                      {t("auth.onboarding.business")}
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setForm((p) => ({ ...p, accountType: "individual" }))
-                    }
-                    className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-colors ${
-                      form.accountType === "individual"
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border hover:border-primary/50"
-                    }`}
-                  >
-                    <User className="size-8" />
-                    <span className="font-medium">
-                      {t("auth.onboarding.individual")}
-                    </span>
-                  </button>
-                </div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="fullName">
+                  {t("auth.onboarding.yourName")}
+                </Label>
+                <Input
+                  id="fullName"
+                  value={form.fullName}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, fullName: e.target.value }))
+                  }
+                  placeholder={t("auth.onboarding.yourNamePlaceholder")}
+                  required
+                  className="h-11"
+                />
               </div>
-            )}
 
-            {step === 2 && form.accountType === "business" && (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="businessName">
-                    {t("auth.onboarding.businessName")}
-                  </Label>
-                  <Input
-                    id="businessName"
-                    value={form.businessName}
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, businessName: e.target.value }))
-                    }
-                    placeholder={t("auth.onboarding.businessNamePlaceholder")}
-                    required
-                    className="h-11"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="location">
-                    {t("auth.onboarding.location")}
-                  </Label>
-                  <Input
-                    id="location"
-                    value={form.location}
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, location: e.target.value }))
-                    }
-                    placeholder={t("auth.onboarding.locationPlaceholder")}
-                    className="h-11"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="capacity">
-                      {t("auth.onboarding.capacity")}
-                    </Label>
-                    <Input
-                      id="capacity"
-                      value={form.capacity}
-                      onChange={(e) =>
-                        setForm((p) => ({ ...p, capacity: e.target.value }))
-                      }
-                      placeholder={t("auth.onboarding.capacityPlaceholder")}
-                      className="h-11"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="taxNumber">TIN / VAT Number</Label>
-                    <Input
-                      id="taxNumber"
-                      value={form.taxNumber}
-                      onChange={(e) =>
-                        setForm((p) => ({ ...p, taxNumber: e.target.value }))
-                      }
-                      placeholder="e.g. 123-456-789"
-                      className="h-11"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>{t("auth.onboarding.currency")}</Label>
-                  <Select
-                    value={form.currency}
-                    onValueChange={(v) =>
-                      setForm((p) => ({ ...p, currency: v }))
-                    }
-                  >
-                    <SelectTrigger className="h-11 w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {currencies.map((c) => (
-                        <SelectItem key={c.code} value={c.code}>
-                          {c.code} — {c.name} ({c.symbol})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {showOptionalPhone && (
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">
-                      {t("auth.onboarding.phoneOptional")}
-                    </Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={form.phone}
-                      onChange={(e) =>
-                        setForm((p) => ({ ...p, phone: e.target.value }))
-                      }
-                      placeholder={t("auth.onboarding.phonePlaceholder")}
-                      className="h-11"
-                    />
-                  </div>
-                )}
+              <div className="space-y-2">
+                <Label>{t("auth.onboarding.currency")}</Label>
+                <Select
+                  value={form.currency}
+                  onValueChange={(v) =>
+                    setForm((p) => ({ ...p, currency: v }))
+                  }
+                >
+                  <SelectTrigger className="h-11 w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {currencies.map((c) => (
+                      <SelectItem key={c.code} value={c.code}>
+                        {c.code} — {c.name} ({c.symbol})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            )}
 
-            {step === 2 && form.accountType === "individual" && (
-              <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="businessName">
+                  {t("auth.onboarding.businessName")}
+                  <span className="text-muted-foreground font-normal ml-1">(optional)</span>
+                </Label>
+                <Input
+                  id="businessName"
+                  value={form.businessName}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, businessName: e.target.value }))
+                  }
+                  placeholder={t("auth.onboarding.businessNamePlaceholder")}
+                  className="h-11"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="location">
+                  {t("auth.onboarding.location")}
+                  <span className="text-muted-foreground font-normal ml-1">(optional)</span>
+                </Label>
+                <Input
+                  id="location"
+                  value={form.location}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, location: e.target.value }))
+                  }
+                  placeholder={t("auth.onboarding.locationPlaceholder")}
+                  className="h-11"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label htmlFor="individualName">
-                    {t("auth.onboarding.yourName")}
+                  <Label htmlFor="capacity">
+                    {t("auth.onboarding.capacity")}
                   </Label>
                   <Input
-                    id="individualName"
-                    value={form.individualName}
+                    id="capacity"
+                    value={form.capacity}
                     onChange={(e) =>
-                      setForm((p) => ({ ...p, individualName: e.target.value }))
+                      setForm((p) => ({ ...p, capacity: e.target.value }))
                     }
-                    placeholder={t("auth.onboarding.yourNamePlaceholder")}
-                    required
+                    placeholder={t("auth.onboarding.capacityPlaceholder")}
                     className="h-11"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{t("auth.onboarding.currency")}</Label>
-                  <Select
-                    value={form.currency}
-                    onValueChange={(v) =>
-                      setForm((p) => ({ ...p, currency: v }))
+                  <Label htmlFor="taxNumber">TIN / VAT Number</Label>
+                  <Input
+                    id="taxNumber"
+                    value={form.taxNumber}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, taxNumber: e.target.value }))
                     }
-                  >
-                    <SelectTrigger className="h-11 w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {currencies.map((c) => (
-                        <SelectItem key={c.code} value={c.code}>
-                          {c.code} — {c.name} ({c.symbol})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="e.g. 123-456-789"
+                    className="h-11"
+                  />
                 </div>
-                {showOptionalPhone && (
-                  <div className="space-y-2">
-                    <Label htmlFor="phoneIndividual">
-                      {t("auth.onboarding.phoneOptional")}
-                    </Label>
-                    <Input
-                      id="phoneIndividual"
-                      type="tel"
-                      value={form.phone}
-                      onChange={(e) =>
-                        setForm((p) => ({ ...p, phone: e.target.value }))
-                      }
-                      placeholder={t("auth.onboarding.phonePlaceholder")}
-                      className="h-11"
-                    />
-                  </div>
-                )}
               </div>
-            )}
+
+              {showOptionalPhone && (
+                <div className="space-y-2">
+                  <Label htmlFor="phone">
+                    {t("auth.onboarding.phoneOptional")}
+                  </Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={form.phone}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, phone: e.target.value }))
+                    }
+                    placeholder={t("auth.onboarding.phonePlaceholder")}
+                    className="h-11"
+                  />
+                </div>
+              )}
+            </div>
 
             {error && (
               <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
@@ -385,51 +283,26 @@ const OnboardingPage = () => {
               </p>
             )}
 
-            <div className="flex gap-3">
-              {step === 2 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setStep(1)}
-                  disabled={submitting}
-                  className="flex-1"
-                >
-                  Back
-                </Button>
-              )}
-              <Button
-                type="submit"
-                isLoading={submitting || sendOtpMutation.isPending}
-                className={step === 1 ? "w-full" : "flex-1"}
-              >
-                {step === 1 ? t("auth.onboarding.next") : t("auth.onboarding.finish")}
-              </Button>
-            </div>
+            <Button
+              type="submit"
+              isLoading={submitting || sendOtpMutation.isPending}
+              className="w-full"
+            >
+              {t("auth.onboarding.finish")}
+            </Button>
           </form>
 
           <p className="text-center text-xs text-muted-foreground">
             <button
               type="button"
               onClick={() => {
-                setSubmitting(true);
-                setError(null);
-                skipOnboarding.mutate(
-                  {
-                    userId: user!.id,
-                    currency: form.currency,
-                    fullName: profile?.full_name || undefined,
-                  },
-                  {
-                    onSuccess: async () => {
-                      await refetch();
-                      router.replace("/dashboard");
-                    },
-                    onError: (err) => {
-                      setError(err.message);
-                      setSubmitting(false);
-                    },
-                  }
-                );
+                setOnboardingSkipped(true);
+                skipOnboarding.mutate({
+                  userId: user!.id,
+                  currency: form.currency,
+                  fullName: profile?.full_name || undefined,
+                });
+                router.replace("/dashboard");
               }}
               disabled={submitting || skipOnboarding.isPending}
               className="hover:underline text-muted-foreground"
