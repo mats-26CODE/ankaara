@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   useInvoices,
   useDeleteInvoice,
@@ -101,6 +101,8 @@ const StatusBadge = ({ status }: { status: InvoiceStatus }) => {
 
 const InvoicesContent = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const statusParam = searchParams.get("status") as InvoiceStatus | null;
 
   const { businesses, loading: bizLoading } = useBusinesses();
@@ -108,6 +110,11 @@ const InvoicesContent = () => {
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "all">(
     statusParam || "all"
   );
+
+  useEffect(() => {
+    setStatusFilter(statusParam || "all");
+  }, [statusParam]);
+
   const { invoices, loading, refetch } = useInvoices(
     currentBusinessId,
     statusFilter === "all" ? null : statusFilter
@@ -220,7 +227,17 @@ const InvoicesContent = () => {
             </div>
             <Select
               value={statusFilter}
-              onValueChange={(v) => setStatusFilter(v as InvoiceStatus | "all")}
+              onValueChange={(v) => {
+                const next = v as InvoiceStatus | "all";
+                setStatusFilter(next);
+                const params = new URLSearchParams(searchParams.toString());
+                if (next === "all") {
+                  params.delete("status");
+                } else {
+                  params.set("status", next);
+                }
+                router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+              }}
             >
               <SelectTrigger className="w-[160px]">
                 <SelectValue placeholder="All statuses" />
