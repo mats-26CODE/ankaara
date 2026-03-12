@@ -24,8 +24,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import { Plus, Trash2, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, Eye } from "lucide-react";
 import dayjs from "dayjs";
+import { InvoiceTemplate } from "@/lib/invoice-templates/registry";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const emptyItem = (): InvoiceItemInput => ({
   description: "",
@@ -37,23 +39,22 @@ const CreateInvoicePage = () => {
   const router = useRouter();
   const { businesses, loading: bizLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
-  const { clients, loading: clientsLoading, refetch: refetchClients } = useClients(currentBusinessId);
+  const {
+    clients,
+    loading: clientsLoading,
+    refetch: refetchClients,
+  } = useClients(currentBusinessId);
   const { currencies, loading: currenciesLoading } = useCurrencies();
   const createInvoice = useCreateInvoice();
 
   const currentBusiness = useMemo(
-    () =>
-      businesses.find((b) => b.id === currentBusinessId) as
-        | Business
-        | undefined,
+    () => businesses.find((b) => b.id === currentBusinessId) as Business | undefined,
     [businesses, currentBusinessId],
   );
 
   const [clientId, setClientId] = useState("");
   const [issueDate, setIssueDate] = useState(dayjs().format("YYYY-MM-DD"));
-  const [dueDate, setDueDate] = useState(
-    dayjs().add(14, "day").format("YYYY-MM-DD"),
-  );
+  const [dueDate, setDueDate] = useState(dayjs().add(14, "day").format("YYYY-MM-DD"));
   const [currency, setCurrency] = useState("");
   const [tax, setTax] = useState("");
   const [notes, setNotes] = useState("");
@@ -61,6 +62,7 @@ const CreateInvoicePage = () => {
   const [footerNote, setFooterNote] = useState("");
   const [templateId, setTemplateId] = useState<TemplateId>("classic");
   const [items, setItems] = useState<InvoiceItemInput[]>([emptyItem()]);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     if (!currentBusinessId && businesses.length > 0) {
@@ -85,14 +87,71 @@ const CreateInvoicePage = () => {
   const taxAmount = subtotal * (taxPercent / 100);
   const total = subtotal + taxAmount;
 
-  const updateItem = (
-    index: number,
-    field: keyof InvoiceItemInput,
-    value: string | number,
-  ) => {
-    setItems((prev) =>
-      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)),
-    );
+  const selectedClient = useMemo(() => clients.find((c) => c.id === clientId), [clients, clientId]);
+
+  const previewProps = useMemo(
+    () => ({
+      templateId,
+      invoiceNumber: "INV-PREVIEW",
+      status: "draft",
+      issueDate,
+      dueDate,
+      currency: currency || "TZS",
+      subtotal,
+      tax: taxAmount,
+      taxPercent: taxPercent || null,
+      total,
+      notes: notes || null,
+      accentColor: accentColor.trim() || null,
+      footerNote: footerNote.trim() || null,
+      isPaid: false,
+      business: currentBusiness
+        ? {
+            name: currentBusiness.name,
+            address: currentBusiness.address ?? null,
+            logo_url: currentBusiness.logo_url ?? null,
+            logo_text: currentBusiness.logo_text ?? null,
+            tax_number: currentBusiness.tax_number ?? null,
+            brand_color: currentBusiness.brand_color ?? null,
+            currency: currentBusiness.currency,
+          }
+        : null,
+      client: selectedClient
+        ? {
+            name: selectedClient.name,
+            email: selectedClient.email ?? null,
+            phone: selectedClient.phone ?? null,
+            address: selectedClient.address ?? null,
+          }
+        : { name: "—", email: null, phone: null, address: null },
+      items: items.map((item, i) => ({
+        id: String(i),
+        description: item.description || "—",
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total: item.quantity * item.unit_price,
+      })),
+    }),
+    [
+      templateId,
+      issueDate,
+      dueDate,
+      currency,
+      subtotal,
+      taxAmount,
+      taxPercent,
+      total,
+      notes,
+      accentColor,
+      footerNote,
+      currentBusiness,
+      selectedClient,
+      items,
+    ],
+  );
+
+  const updateItem = (index: number, field: keyof InvoiceItemInput, value: string | number) => {
+    setItems((prev) => prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
   };
 
   const removeItem = (index: number) => {
@@ -110,10 +169,7 @@ const CreateInvoicePage = () => {
     !!dueDate &&
     !!currency &&
     items.length > 0 &&
-    items.every(
-      (item) =>
-        item.description.trim() && item.quantity > 0 && item.unit_price > 0,
-    );
+    items.every((item) => item.description.trim() && item.quantity > 0 && item.unit_price > 0);
 
   const handleSubmit = () => {
     if (!canSubmit || !currentBusinessId) return;
@@ -152,7 +208,7 @@ const CreateInvoicePage = () => {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="max-w-4xl space-y-6">
       <div className="space-y-3">
         <Button
           variant="outline"
@@ -164,15 +220,59 @@ const CreateInvoicePage = () => {
         </Button>
         <div>
           <h1 className="text-2xl font-bold tracking-tight">New Invoice</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Create an invoice for {currentBusiness?.name ?? "your business"}.
           </p>
         </div>
       </div>
 
+      {/* Template selection + small preview */}
+      <Card className="border-primary/80 gap-2 border shadow-xs">
+        <CardHeader className="flex items-end justify-between pb-3">
+          <div>
+            <CardTitle className="text-base">Template</CardTitle>
+            <p className="text-muted-foreground text-sm">
+              Choose a template. The preview updates as you fill the form.
+            </p>
+          </div>
+
+          <div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full border-dashed border-gray-300"
+              onClick={() => setPreviewOpen(true)}
+            >
+              <Eye className="mr-2 size-4" />
+              See full preview
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
+            {TEMPLATES.map((tmpl) => (
+              <button
+                key={tmpl.id}
+                type="button"
+                onClick={() => setTemplateId(tmpl.id)}
+                className={`min-w-[180px] rounded-lg border-2 px-3 py-2 text-left transition-colors ${
+                  templateId === tmpl.id
+                    ? "border-primary bg-primary/5"
+                    : "bg-muted/50 hover:border-primary/30 border-transparent"
+                }`}
+              >
+                <p className="text-sm font-medium">{tmpl.name}</p>
+                <p className="text-muted-foreground line-clamp-1 text-xs">{tmpl.description}</p>
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left: Form */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6 lg:col-span-2">
           {/* Client & Dates */}
           <Card>
             <CardHeader>
@@ -201,11 +301,7 @@ const CreateInvoicePage = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>Due Date *</Label>
-                  <DatePicker
-                    value={dueDate}
-                    onChange={setDueDate}
-                    placeholder="Select due date"
-                  />
+                  <DatePicker value={dueDate} onChange={setDueDate} placeholder="Select due date" />
                 </div>
               </div>
 
@@ -232,13 +328,13 @@ const CreateInvoicePage = () => {
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-base">Line Items</CardTitle>
               <Button variant="outline" size="sm" onClick={addItem}>
-                <Plus className="size-4 mr-1" />
+                <Plus className="mr-1 size-4" />
                 Add Item
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
               {items.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">
+                <p className="text-muted-foreground py-4 text-center text-sm">
                   Add at least one item to your invoice.
                 </p>
               )}
@@ -249,9 +345,7 @@ const CreateInvoicePage = () => {
                       <Label>Description *</Label>
                       <Input
                         value={item.description}
-                        onChange={(e) =>
-                          updateItem(idx, "description", e.target.value)
-                        }
+                        onChange={(e) => updateItem(idx, "description", e.target.value)}
                         placeholder="Service or product description"
                       />
                     </div>
@@ -259,10 +353,10 @@ const CreateInvoicePage = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="shrink-0 mt-6"
+                        className="mt-6 shrink-0"
                         onClick={() => removeItem(idx)}
                       >
-                        <Trash2 className="size-4 text-destructive" />
+                        <Trash2 className="text-destructive size-4" />
                       </Button>
                     )}
                   </div>
@@ -275,13 +369,7 @@ const CreateInvoicePage = () => {
                         step="any"
                         value={item.quantity || ""}
                         placeholder="0"
-                        onChange={(e) =>
-                          updateItem(
-                            idx,
-                            "quantity",
-                            Number(e.target.value) || 0,
-                          )
-                        }
+                        onChange={(e) => updateItem(idx, "quantity", Number(e.target.value) || 0)}
                       />
                     </div>
                     <div className="space-y-2">
@@ -292,13 +380,7 @@ const CreateInvoicePage = () => {
                         step="any"
                         value={item.unit_price || ""}
                         placeholder="0"
-                        onChange={(e) =>
-                          updateItem(
-                            idx,
-                            "unit_price",
-                            Number(e.target.value) || 0,
-                          )
-                        }
+                        onChange={(e) => updateItem(idx, "unit_price", Number(e.target.value) || 0)}
                       />
                     </div>
                     <div className="space-y-2">
@@ -306,9 +388,7 @@ const CreateInvoicePage = () => {
                       <Input
                         readOnly
                         tabIndex={-1}
-                        value={(
-                          item.quantity * item.unit_price
-                        ).toLocaleString()}
+                        value={(item.quantity * item.unit_price).toLocaleString()}
                         className="bg-muted"
                       />
                     </div>
@@ -358,7 +438,7 @@ const CreateInvoicePage = () => {
                     className="flex-1"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Overrides the business brand color for this invoice
                 </p>
               </div>
@@ -366,32 +446,8 @@ const CreateInvoicePage = () => {
           </Card>
         </div>
 
-        {/* Right: Summary + Template */}
+        {/* Right: Summary */}
         <div className="space-y-6">
-          {/* Template Picker */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Template</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 gap-2">
-              {TEMPLATES.map((tmpl) => (
-                <button
-                  key={tmpl.id}
-                  type="button"
-                  onClick={() => setTemplateId(tmpl.id)}
-                  className={`text-left rounded-lg border-2 p-3 transition-colors ${
-                    templateId === tmpl.id
-                      ? "border-primary bg-primary/5"
-                      : "border-transparent bg-muted/50 hover:border-primary/30"
-                  }`}
-                >
-                  <p className="text-sm font-medium">{tmpl.name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{tmpl.description}</p>
-                </button>
-              ))}
-            </CardContent>
-          </Card>
-
           <Card className="sticky top-6">
             <CardHeader>
               <CardTitle className="text-base">Summary</CardTitle>
@@ -401,7 +457,7 @@ const CreateInvoicePage = () => {
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="font-medium">{subtotal.toLocaleString()}</span>
               </div>
-              <div className="flex items-center justify-between text-sm gap-3">
+              <div className="flex items-center justify-between gap-3 text-sm">
                 <span className="text-muted-foreground shrink-0">Tax (%)</span>
                 <div className="relative w-28">
                   <Input
@@ -412,26 +468,28 @@ const CreateInvoicePage = () => {
                     value={tax}
                     onChange={(e) => setTax(e.target.value)}
                     placeholder="0"
-                    className="text-right h-8 pr-7"
+                    className="h-8 pr-7 text-right"
                   />
-                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">%</span>
+                  <span className="text-muted-foreground pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-xs">
+                    %
+                  </span>
                 </div>
               </div>
               {taxAmount > 0 && (
-                <div className="flex justify-between text-xs text-muted-foreground">
+                <div className="text-muted-foreground flex justify-between text-xs">
                   <span>Tax amount</span>
                   <span>{taxAmount.toLocaleString()}</span>
                 </div>
               )}
               <Separator />
-              <div className="flex justify-between font-semibold text-lg">
+              <div className="flex justify-between text-lg font-semibold">
                 <span>Total</span>
                 <span>
                   {currency} {total.toLocaleString()}
                 </span>
               </div>
 
-              <div className="pt-2 space-y-2">
+              <div className="space-y-2 pt-2">
                 <Button
                   className="w-full"
                   onClick={handleSubmit}
@@ -440,11 +498,7 @@ const CreateInvoicePage = () => {
                 >
                   Create Invoice
                 </Button>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => router.back()}
-                >
+                <Button variant="outline" className="w-full" onClick={() => router.back()}>
                   Cancel
                 </Button>
               </div>
@@ -452,6 +506,20 @@ const CreateInvoicePage = () => {
           </Card>
         </div>
       </div>
+
+      {/* Full preview dialog */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="flex max-h-[90vh] max-w-7xl flex-col overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Invoice preview</DialogTitle>
+          </DialogHeader>
+          <div className="bg-muted/30 flex-1 overflow-auto rounded-lg border p-4">
+            <div className="mx-auto max-w-5xl rounded-lg bg-white shadow-sm">
+              <InvoiceTemplate {...previewProps} />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

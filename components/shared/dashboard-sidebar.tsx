@@ -9,7 +9,6 @@ import {
   LayoutDashboard,
   FileText,
   Users,
-  Settings,
   Plus,
   ChevronRight,
   Send,
@@ -44,7 +43,6 @@ export const DashboardSidebar = () => {
   const pathname = usePathname();
   const { state } = useSidebar();
   const [invoicesOpen, setInvoicesOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const isActive = (path: string) => {
     if (path === "/dashboard") {
@@ -60,10 +58,6 @@ export const DashboardSidebar = () => {
   useEffect(() => {
     if (isInvoicesActive) setInvoicesOpen(true);
   }, [isInvoicesActive]);
-
-  useEffect(() => {
-    if (isSettingsActive) setSettingsOpen(true);
-  }, [isSettingsActive]);
 
   return (
     <Sidebar variant="floating" collapsible="icon">
@@ -198,63 +192,30 @@ export const DashboardSidebar = () => {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <Collapsible.Root
-                open={settingsOpen}
-                onOpenChange={setSettingsOpen}
-                asChild
-              >
-                <SidebarMenuItem>
-                  <Collapsible.Trigger asChild>
-                    <SidebarMenuButton
-                      isActive={isSettingsActive}
-                      tooltip="Settings"
-                      className={cn(showSubmenu && "cursor-pointer")}
-                    >
-                      <Settings className="size-4 shrink-0" />
-                      <span>Settings</span>
-                      {showSubmenu && (
-                        <ChevronRight
-                          className={cn(
-                            "ml-auto size-4 shrink-0 transition-transform duration-200",
-                            settingsOpen && "rotate-90"
-                          )}
-                        />
-                      )}
-                    </SidebarMenuButton>
-                  </Collapsible.Trigger>
-
-                  {showSubmenu && (
-                    <Collapsible.Content>
-                      <SidebarMenuSub>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild isActive={isActive("/dashboard/settings/profile")}>
-                            <Link href="/dashboard/settings/profile">
-                              <User className="size-4" />
-                              <span>Profile</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild isActive={isActive("/dashboard/settings/businesses")}>
-                            <Link href="/dashboard/settings/businesses">
-                              <Building2 className="size-4" />
-                              <span>Businesses</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild isActive={isActive("/dashboard/settings/templates")}>
-                            <Link href="/dashboard/settings/templates">
-                              <Palette className="size-4" />
-                              <span>Invoice Templates</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      </SidebarMenuSub>
-                    </Collapsible.Content>
-                  )}
-                </SidebarMenuItem>
-              </Collapsible.Root>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive("/dashboard/settings/profile")} tooltip="Profile">
+                  <Link href="/dashboard/settings/profile">
+                    <User className="size-4" />
+                    <span>Profile</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive("/dashboard/settings/businesses")} tooltip="Businesses">
+                  <Link href="/dashboard/settings/businesses">
+                    <Building2 className="size-4" />
+                    <span>Businesses</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive("/dashboard/settings/templates")} tooltip="Invoice Templates">
+                  <Link href="/dashboard/settings/templates">
+                    <Palette className="size-4" />
+                    <span>Invoice Templates</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
