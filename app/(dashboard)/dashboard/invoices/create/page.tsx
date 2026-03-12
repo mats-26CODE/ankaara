@@ -509,12 +509,12 @@ const CreateInvoicePage = () => {
 
       {/* Full preview dialog */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="flex max-h-[90vh] max-w-7xl flex-col overflow-hidden">
+        <DialogContent className="flex max-h-[90vh] max-w-[95vw] flex-col overflow-hidden">
           <DialogHeader>
             <DialogTitle>Invoice preview</DialogTitle>
           </DialogHeader>
           <div className="bg-muted/30 flex-1 overflow-auto rounded-lg border p-4">
-            <div className="mx-auto max-w-5xl rounded-lg bg-white shadow-sm">
+            <div className="w-full min-w-0 rounded-lg bg-white shadow-sm">
               <InvoiceTemplate {...previewProps} />
             </div>
           </div>
