@@ -16,11 +16,7 @@ import { useFormatAmount } from "@/hooks/use-format-amount";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -106,9 +102,7 @@ const InvoicesContent = () => {
 
   const { businesses, loading: bizLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
-  const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "all">(
-    statusParam || "all"
-  );
+  const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "all">(statusParam || "all");
 
   useEffect(() => {
     setStatusFilter(statusParam || "all");
@@ -116,7 +110,7 @@ const InvoicesContent = () => {
 
   const { invoices, loading, refetch } = useInvoices(
     currentBusinessId,
-    statusFilter === "all" ? null : statusFilter
+    statusFilter === "all" ? null : statusFilter,
   );
   const deleteInvoice = useDeleteInvoice();
   const sendInvoice = useSendInvoice();
@@ -141,7 +135,7 @@ const InvoicesContent = () => {
       (inv) =>
         inv.invoice_number.toLowerCase().includes(q) ||
         inv.client?.name?.toLowerCase().includes(q) ||
-        inv.notes?.toLowerCase().includes(q)
+        inv.notes?.toLowerCase().includes(q),
     );
   }, [invoices, search]);
 
@@ -176,12 +170,12 @@ const InvoicesContent = () => {
 
   if (businesses.length === 0) {
     return (
-      <Card className="max-w-lg mx-auto mt-12">
+      <Card className="mx-auto mt-12 max-w-lg">
         <CardContent className="flex flex-col items-center gap-4 py-12">
-          <Building2 className="size-12 text-muted-foreground" />
-          <div className="text-center space-y-1">
+          <Building2 className="text-muted-foreground size-12" />
+          <div className="space-y-1 text-center">
             <p className="font-medium">No business yet</p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Create a business first to start creating invoices.
             </p>
           </div>
@@ -198,18 +192,17 @@ const InvoicesContent = () => {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Invoices</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Manage invoices for{" "}
             <span className="font-medium">
-              {businesses.find((b) => b.id === currentBusinessId)?.name ??
-                "your business"}
+              {businesses.find((b) => b.id === currentBusinessId)?.name ?? "your business"}
             </span>
             .
           </p>
         </div>
         <Button size="sm" asChild>
           <Link href="/dashboard/invoices/create">
-            <Plus className="size-4 mr-1" />
+            <Plus className="mr-1 size-4" />
             New Invoice
           </Link>
         </Button>
@@ -218,8 +211,8 @@ const InvoicesContent = () => {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <div className="relative max-w-sm flex-1">
+              <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -263,8 +256,8 @@ const InvoicesContent = () => {
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-12 text-center">
-              <FileText className="size-10 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
+              <FileText className="text-muted-foreground size-10" />
+              <p className="text-muted-foreground text-sm">
                 {invoices.length === 0
                   ? "No invoices yet. Create your first one."
                   : "No invoices match your search."}
@@ -272,7 +265,7 @@ const InvoicesContent = () => {
               {invoices.length === 0 && (
                 <Button size="sm" variant="outline" asChild>
                   <Link href="/dashboard/invoices/create">
-                    <Plus className="size-4 mr-1" />
+                    <Plus className="mr-1 size-4" />
                     Create Invoice
                   </Link>
                 </Button>
@@ -301,7 +294,7 @@ const InvoicesContent = () => {
                       >
                         {inv.invoice_number}
                       </Link>
-                      <div className="sm:hidden mt-1">
+                      <div className="mt-1 sm:hidden">
                         <StatusBadge status={inv.status} />
                       </div>
                     </TableCell>
@@ -311,10 +304,10 @@ const InvoicesContent = () => {
                     <TableCell className="hidden sm:table-cell">
                       <StatusBadge status={inv.status} />
                     </TableCell>
-                    <TableCell className="hidden md:table-cell text-muted-foreground">
+                    <TableCell className="text-muted-foreground hidden md:table-cell">
                       {dayjs(inv.issue_date).format("MMM D, YYYY")}
                     </TableCell>
-                    <TableCell className="hidden md:table-cell text-muted-foreground">
+                    <TableCell className="text-muted-foreground hidden md:table-cell">
                       {dayjs(inv.due_date).format("MMM D, YYYY")}
                     </TableCell>
                     <TableCell className="text-right font-medium">
@@ -330,28 +323,30 @@ const InvoicesContent = () => {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem asChild>
                             <Link href={`/dashboard/invoices/${inv.id}`}>
-                              <Eye className="size-4 mr-2" />
+                              <Eye className="mr-2 size-4" />
                               View
                             </Link>
                           </DropdownMenuItem>
                           {inv.status === "draft" && (
                             <DropdownMenuItem asChild>
                               <Link href={`/dashboard/invoices/${inv.id}/edit`}>
-                                <Pencil className="size-4 mr-2" />
+                                <Pencil className="mr-2 size-4" />
                                 Edit
                               </Link>
                             </DropdownMenuItem>
                           )}
-                          <DropdownMenuItem onClick={() => handleShare(inv)}>
-                            <Share2 className="size-4 mr-2" />
-                            Share
-                          </DropdownMenuItem>
+                          {inv.status !== "draft" && (
+                            <DropdownMenuItem onClick={() => handleShare(inv)}>
+                              <Share2 className="mr-2 size-4" />
+                              Share
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => openDelete(inv)}
                             className="text-destructive focus:text-destructive"
                           >
-                            <Trash2 className="size-4 mr-2" />
+                            <Trash2 className="mr-2 size-4" />
                             Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -376,9 +371,7 @@ const InvoicesContent = () => {
           currency={sharingInvoice.currency}
           shareUrl={`${typeof window !== "undefined" ? window.location.origin : ""}/invoice/${sharingInvoice.id}`}
           isDraft={sharingInvoice.status === "draft"}
-          onShare={() =>
-            sendInvoice.mutate(sharingInvoice.id, { onSuccess: () => refetch() })
-          }
+          onShare={() => sendInvoice.mutate(sharingInvoice.id, { onSuccess: () => refetch() })}
         />
       )}
 
@@ -389,8 +382,8 @@ const InvoicesContent = () => {
             <DialogTitle>Delete Invoice</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete{" "}
-              <span className="font-medium">{deletingInvoice?.invoice_number}</span>?
-              This cannot be undone.
+              <span className="font-medium">{deletingInvoice?.invoice_number}</span>? This cannot be
+              undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

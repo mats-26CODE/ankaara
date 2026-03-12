@@ -18,12 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
@@ -43,9 +38,11 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
   const { currencies, loading: currenciesLoading } = useCurrencies();
   const updateInvoice = useUpdateInvoice();
 
-  const { clients, loading: clientsLoading, refetch: refetchClients } = useClients(
-    invoice?.organization_id ?? null
-  );
+  const {
+    clients,
+    loading: clientsLoading,
+    refetch: refetchClients,
+  } = useClients(invoice?.organization_id ?? null);
 
   const [clientId, setClientId] = useState("");
   const [issueDate, setIssueDate] = useState("");
@@ -84,23 +81,21 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
         description: item.description,
         quantity: Number(item.quantity),
         unit_price: Number(item.unit_price),
-      }))
+      })),
     );
     setPrefilled(true);
   }, [invoice, prefilled]);
 
   const subtotal = useMemo(
     () => items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0),
-    [items]
+    [items],
   );
   const taxPercent = Number(tax) || 0;
   const taxAmount = subtotal * (taxPercent / 100);
   const total = subtotal + taxAmount;
 
   const updateItem = (index: number, field: keyof InvoiceItemInput, value: string | number) => {
-    setItems((prev) =>
-      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
-    );
+    setItems((prev) => prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
   };
 
   const removeItem = (index: number) => {
@@ -140,7 +135,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
         onSuccess: () => {
           router.push(`/dashboard/invoices/${id}`);
         },
-      }
+      },
     );
   };
 
@@ -168,9 +163,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
   if (invoice.status !== "draft") {
     return (
       <div className="flex flex-col items-center gap-4 py-12">
-        <p className="text-muted-foreground">
-          Only draft invoices can be edited.
-        </p>
+        <p className="text-muted-foreground">Only draft invoices can be edited.</p>
         <Button variant="outline" asChild>
           <Link href={`/dashboard/invoices/${id}`}>View Invoice</Link>
         </Button>
@@ -179,23 +172,19 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="max-w-4xl space-y-6">
       <div className="space-y-3">
         <Button variant="outline" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="size-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Edit {invoice.invoice_number}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Update this draft invoice.
-          </p>
+          <h1 className="text-2xl font-bold tracking-tight">Edit {invoice.invoice_number}</h1>
+          <p className="text-muted-foreground text-sm">Update this draft invoice.</p>
         </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6 lg:col-span-2">
           {/* Details */}
           <Card>
             <CardHeader>
@@ -224,11 +213,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
                 </div>
                 <div className="space-y-2">
                   <Label>Due Date *</Label>
-                  <DatePicker
-                    value={dueDate}
-                    onChange={setDueDate}
-                    placeholder="Select due date"
-                  />
+                  <DatePicker value={dueDate} onChange={setDueDate} placeholder="Select due date" />
                 </div>
               </div>
 
@@ -255,7 +240,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-base">Line Items</CardTitle>
               <Button variant="outline" size="sm" onClick={addItem}>
-                <Plus className="size-4 mr-1" />
+                <Plus className="mr-1 size-4" />
                 Add Item
               </Button>
             </CardHeader>
@@ -275,10 +260,10 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="shrink-0 mt-6"
+                        className="mt-6 shrink-0"
                         onClick={() => removeItem(idx)}
                       >
-                        <Trash2 className="size-4 text-destructive" />
+                        <Trash2 className="text-destructive size-4" />
                       </Button>
                     )}
                   </div>
@@ -291,9 +276,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
                         step="any"
                         value={item.quantity || ""}
                         placeholder="0"
-                        onChange={(e) =>
-                          updateItem(idx, "quantity", Number(e.target.value) || 0)
-                        }
+                        onChange={(e) => updateItem(idx, "quantity", Number(e.target.value) || 0)}
                       />
                     </div>
                     <div className="space-y-2">
@@ -304,9 +287,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
                         step="any"
                         value={item.unit_price || ""}
                         placeholder="0"
-                        onChange={(e) =>
-                          updateItem(idx, "unit_price", Number(e.target.value) || 0)
-                        }
+                        onChange={(e) => updateItem(idx, "unit_price", Number(e.target.value) || 0)}
                       />
                     </div>
                     <div className="space-y-2">
@@ -364,7 +345,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
                     className="flex-1"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Overrides the business brand color for this invoice
                 </p>
               </div>
@@ -385,14 +366,14 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
                   key={tmpl.id}
                   type="button"
                   onClick={() => setTemplateId(tmpl.id)}
-                  className={`text-left rounded-lg border-2 p-3 transition-colors ${
+                  className={`rounded-lg border-2 p-3 text-left transition-colors ${
                     templateId === tmpl.id
                       ? "border-primary bg-primary/5"
-                      : "border-transparent bg-muted/50 hover:border-primary/30"
+                      : "bg-muted/50 hover:border-primary/30 border-transparent"
                   }`}
                 >
                   <p className="text-sm font-medium">{tmpl.name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{tmpl.description}</p>
+                  <p className="text-muted-foreground mt-0.5 text-xs">{tmpl.description}</p>
                 </button>
               ))}
             </CardContent>
@@ -407,7 +388,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="font-medium">{subtotal.toLocaleString()}</span>
               </div>
-              <div className="flex items-center justify-between text-sm gap-3">
+              <div className="flex items-center justify-between gap-3 text-sm">
                 <span className="text-muted-foreground shrink-0">Tax (%)</span>
                 <div className="relative w-28">
                   <Input
@@ -418,26 +399,28 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
                     value={tax}
                     onChange={(e) => setTax(e.target.value)}
                     placeholder="0"
-                    className="text-right h-8 pr-7"
+                    className="h-8 pr-7 text-right"
                   />
-                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">%</span>
+                  <span className="text-muted-foreground pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-xs">
+                    %
+                  </span>
                 </div>
               </div>
               {taxAmount > 0 && (
-                <div className="flex justify-between text-xs text-muted-foreground">
+                <div className="text-muted-foreground flex justify-between text-xs">
                   <span>Tax amount</span>
                   <span>{taxAmount.toLocaleString()}</span>
                 </div>
               )}
               <Separator />
-              <div className="flex justify-between font-semibold text-lg">
+              <div className="flex justify-between text-lg font-semibold">
                 <span>Total</span>
                 <span>
                   {currency} {total.toLocaleString()}
                 </span>
               </div>
 
-              <div className="pt-2 space-y-2">
+              <div className="space-y-2 pt-2">
                 <Button
                   className="w-full"
                   onClick={handleSubmit}
@@ -446,11 +429,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
                 >
                   Save Changes
                 </Button>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => router.back()}
-                >
+                <Button variant="outline" className="w-full" onClick={() => router.back()}>
                   Cancel
                 </Button>
               </div>

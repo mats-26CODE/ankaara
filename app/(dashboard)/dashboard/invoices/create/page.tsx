@@ -63,6 +63,7 @@ const CreateInvoicePage = () => {
   const [templateId, setTemplateId] = useState<TemplateId>("classic");
   const [items, setItems] = useState<InvoiceItemInput[]>([emptyItem()]);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [savingMode, setSavingMode] = useState<"draft" | "submit" | null>(null);
 
   useEffect(() => {
     if (!currentBusinessId && businesses.length > 0) {
@@ -171,9 +172,15 @@ const CreateInvoicePage = () => {
     items.length > 0 &&
     items.every((item) => item.description.trim() && item.quantity > 0 && item.unit_price > 0);
 
+  const canSaveDraft =
+    !!currentBusinessId &&
+    !!clientId &&
+    items.length > 0 &&
+    items.some((item) => item.description.trim() || item.quantity !== 1 || item.unit_price > 0);
+
   const handleSubmit = () => {
     if (!canSubmit || !currentBusinessId) return;
-
+    setSavingMode("submit");
     createInvoice.mutate(
       {
         organization_id: currentBusinessId,
@@ -193,6 +200,34 @@ const CreateInvoicePage = () => {
         onSuccess: (invoice) => {
           router.push(`/dashboard/invoices/${invoice.id}`);
         },
+        onSettled: () => setSavingMode(null),
+      },
+    );
+  };
+
+  const handleSaveDraft = () => {
+    if (!canSaveDraft || !currentBusinessId) return;
+    setSavingMode("draft");
+    createInvoice.mutate(
+      {
+        organization_id: currentBusinessId,
+        client_id: clientId,
+        issue_date: issueDate,
+        due_date: dueDate,
+        currency,
+        tax: taxAmount,
+        tax_percentage: taxPercent,
+        template_id: templateId,
+        accent_color: accentColor.trim() || undefined,
+        footer_note: footerNote.trim() || undefined,
+        notes: notes.trim() || undefined,
+        items,
+      },
+      {
+        onSuccess: (invoice) => {
+          router.push(`/dashboard/invoices/${invoice.id}`);
+        },
+        onSettled: () => setSavingMode(null),
       },
     );
   };
@@ -491,10 +526,19 @@ const CreateInvoicePage = () => {
 
               <div className="space-y-2 pt-2">
                 <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleSaveDraft}
+                  disabled={!canSaveDraft}
+                  isLoading={createInvoice.isPending && savingMode === "draft"}
+                >
+                  Save as Draft
+                </Button>
+                <Button
                   className="w-full"
                   onClick={handleSubmit}
                   disabled={!canSubmit}
-                  isLoading={createInvoice.isPending}
+                  isLoading={createInvoice.isPending && savingMode === "submit"}
                 >
                   Create Invoice
                 </Button>

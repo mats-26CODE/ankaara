@@ -135,7 +135,11 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
           )}
           <Button
             size="sm"
-            onClick={() => setShareDialogOpen(true)}
+            onClick={() => {
+              if (!isDraft) setShareDialogOpen(true);
+            }}
+            disabled={isDraft}
+            variant={isDraft ? "outline" : "default"}
           >
             <Share2 className="size-4 mr-1" />
             Share
