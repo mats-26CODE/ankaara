@@ -52,7 +52,6 @@ export const DashboardSidebar = () => {
   };
 
   const isInvoicesActive = pathname.startsWith("/dashboard/invoices");
-  const isSettingsActive = pathname.startsWith("/dashboard/settings");
   const showSubmenu = state !== "collapsed";
 
   useEffect(() => {
@@ -61,10 +60,8 @@ export const DashboardSidebar = () => {
 
   return (
     <Sidebar variant="floating" collapsible="icon">
-      <SidebarHeader className="flex flex-row items-center justify-between border-b border-sidebar-border p-4">
-        <span className="text-lg font-brand truncate group-data-[collapsible=icon]:hidden">
-          {APP_NAME}
-        </span>
+      <SidebarHeader className="border-sidebar-border flex flex-row items-center justify-between border-b p-4">
+        Dashboard
         <SidebarTrigger className="shrink-0 group-data-[collapsible=icon]:-ml-1.5" />
       </SidebarHeader>
 
@@ -87,11 +84,7 @@ export const DashboardSidebar = () => {
               </SidebarMenuItem>
 
               {/* Invoices — collapsible */}
-              <Collapsible.Root
-                open={invoicesOpen}
-                onOpenChange={setInvoicesOpen}
-                asChild
-              >
+              <Collapsible.Root open={invoicesOpen} onOpenChange={setInvoicesOpen} asChild>
                 <SidebarMenuItem>
                   <Collapsible.Trigger asChild>
                     <SidebarMenuButton
@@ -105,7 +98,7 @@ export const DashboardSidebar = () => {
                         <ChevronRight
                           className={cn(
                             "ml-auto size-4 shrink-0 transition-transform duration-200",
-                            invoicesOpen && "rotate-90"
+                            invoicesOpen && "rotate-90",
                           )}
                         />
                       )}
@@ -124,7 +117,10 @@ export const DashboardSidebar = () => {
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                         <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild isActive={isActive("/dashboard/invoices/create")}>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={isActive("/dashboard/invoices/create")}
+                          >
                             <Link href="/dashboard/invoices/create">
                               <Plus className="size-4" />
                               <span>Create Invoice</span>
@@ -132,7 +128,10 @@ export const DashboardSidebar = () => {
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                         <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild isActive={pathname === "/dashboard/invoices?status=draft"}>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={pathname === "/dashboard/invoices?status=draft"}
+                          >
                             <Link href="/dashboard/invoices?status=draft">
                               <Clock className="size-4" />
                               <span>Drafts</span>
@@ -140,7 +139,10 @@ export const DashboardSidebar = () => {
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                         <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild isActive={pathname === "/dashboard/invoices?status=sent"}>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={pathname === "/dashboard/invoices?status=sent"}
+                          >
                             <Link href="/dashboard/invoices?status=sent">
                               <Send className="size-4" />
                               <span>Sent</span>
@@ -148,7 +150,10 @@ export const DashboardSidebar = () => {
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                         <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild isActive={pathname === "/dashboard/invoices?status=paid"}>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={pathname === "/dashboard/invoices?status=paid"}
+                          >
                             <Link href="/dashboard/invoices?status=paid">
                               <CheckCircle2 className="size-4" />
                               <span>Paid</span>
@@ -156,14 +161,16 @@ export const DashboardSidebar = () => {
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                         <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild isActive={pathname === "/dashboard/invoices?status=overdue"}>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={pathname === "/dashboard/invoices?status=overdue"}
+                          >
                             <Link href="/dashboard/invoices?status=overdue">
                               <AlertTriangle className="size-4" />
                               <span>Overdue</span>
                             </Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
-                        
                       </SidebarMenuSub>
                     </Collapsible.Content>
                   )}
@@ -172,44 +179,25 @@ export const DashboardSidebar = () => {
 
               {/* Clients */}
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/dashboard/clients")} tooltip="Clients">
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/dashboard/clients")}
+                  tooltip="Clients"
+                >
                   <Link href="/dashboard/clients">
                     <Users className="size-4" />
                     <span>Clients</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
 
-        <SidebarSeparator />
-
-        {/* ── Account ── */}
-        <SidebarGroup>
-          <SidebarGroupLabel className={cn("text-xs uppercase", !showSubmenu && "sr-only")}>
-            Account
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
+              {/* Invoice Templates */}
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/dashboard/settings/profile")} tooltip="Profile">
-                  <Link href="/dashboard/settings/profile">
-                    <User className="size-4" />
-                    <span>Profile</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/dashboard/settings/businesses")} tooltip="Businesses">
-                  <Link href="/dashboard/settings/businesses">
-                    <Building2 className="size-4" />
-                    <span>Businesses</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/dashboard/settings/templates")} tooltip="Invoice Templates">
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/dashboard/settings/templates")}
+                  tooltip="Invoice Templates"
+                >
                   <Link href="/dashboard/settings/templates">
                     <Palette className="size-4" />
                     <span>Invoice Templates</span>
@@ -219,10 +207,49 @@ export const DashboardSidebar = () => {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* <SidebarSeparator /> */}
+
+        {/* ── Account ── */}
+        <SidebarGroup>
+          <SidebarGroupLabel className={cn("text-xs uppercase", !showSubmenu && "sr-only")}>
+            Account
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/dashboard/settings/profile")}
+                  tooltip="Profile"
+                >
+                  <Link href="/dashboard/settings/profile">
+                    <User className="size-4" />
+                    <span>Profile</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/dashboard/settings/businesses")}
+                  tooltip="Businesses"
+                >
+                  <Link href="/dashboard/settings/businesses">
+                    <Building2 className="size-4" />
+                    <span>Businesses</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-2 group-data-[collapsible=icon]:hidden">
-        <p className="text-xs font-brand text-sidebar-foreground/50 text-center">{APP_NAME}</p>
+      <SidebarFooter className="border-sidebar-border border-t p-2 group-data-[collapsible=icon]:hidden">
+        <p className="text-sidebar-foreground/50 text-center text-xs">
+          Copyright © {new Date().getFullYear()} All rights reserved.
+        </p>
       </SidebarFooter>
     </Sidebar>
   );
