@@ -21,13 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -139,7 +133,7 @@ const BusinessesSettingsPage = () => {
             setDialogOpen(false);
             refetch();
           },
-        }
+        },
       );
     } else {
       const payload: CreateBusinessPayload = {
@@ -180,9 +174,7 @@ const BusinessesSettingsPage = () => {
   };
 
   const isMutating =
-    createBusiness.isPending ||
-    updateBusiness.isPending ||
-    deleteBusiness.isPending;
+    createBusiness.isPending || updateBusiness.isPending || deleteBusiness.isPending;
 
   if (loading || currenciesLoading) {
     return (
@@ -191,6 +183,9 @@ const BusinessesSettingsPage = () => {
       </div>
     );
   }
+
+  const activeBusiness =
+    businesses.find((b) => b.id === currentBusinessId) ?? businesses[0] ?? null;
 
   return (
     <div className="space-y-6">
@@ -203,13 +198,13 @@ const BusinessesSettingsPage = () => {
             </CardDescription>
           </div>
           <Button size="sm" onClick={openCreate}>
-            <Plus className="size-4 mr-1" />
+            <Plus className="mr-1 size-4" />
             Add Business
           </Button>
         </CardHeader>
         <CardContent>
           {businesses.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-8 text-center">
+            <p className="text-muted-foreground py-8 text-center text-sm">
               No businesses yet. Create one to get started.
             </p>
           ) : (
@@ -219,9 +214,9 @@ const BusinessesSettingsPage = () => {
                 return (
                   <div
                     key={biz.id}
-                    className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50"
+                    className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-4 transition-colors"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex min-w-0 items-center gap-3">
                       <button
                         type="button"
                         onClick={() => setCurrentBusiness(biz.id)}
@@ -236,25 +231,20 @@ const BusinessesSettingsPage = () => {
                       </button>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className="font-medium truncate">{biz.name}</p>
+                          <p className="truncate font-medium">{biz.name}</p>
                           {isActive && (
-                            <Badge variant="secondary" className="text-xs shrink-0">
+                            <Badge variant="secondary" className="shrink-0 text-xs">
                               Active
                             </Badge>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {[biz.currency, biz.address].filter(Boolean).join(" · ") ||
-                            "No details"}
+                        <p className="text-muted-foreground truncate text-xs">
+                          {[biz.currency, biz.address].filter(Boolean).join(" · ") || "No details"}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 shrink-0 ml-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openEdit(biz)}
-                      >
+                    <div className="ml-2 flex shrink-0 items-center gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(biz)}>
                         <Pencil className="size-4" />
                       </Button>
                       <Button
@@ -279,13 +269,90 @@ const BusinessesSettingsPage = () => {
         </CardContent>
       </Card>
 
+      {activeBusiness && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Business details</CardTitle>
+            <CardDescription>
+              Full details for <span className="font-medium">{activeBusiness.name}</span>.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-6 md:grid-cols-2">
+            <div className="space-y-2 text-sm">
+              <div>
+                <p className="text-muted-foreground text-xs font-semibold uppercase">Name</p>
+                <p>{activeBusiness.name}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs font-semibold uppercase">Currency</p>
+                <p>{activeBusiness.currency}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs font-semibold uppercase">Address</p>
+                <p>{activeBusiness.address || "Not set"}</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <p className="text-muted-foreground text-xs font-semibold uppercase">
+                    Tax number
+                  </p>
+                  <p>{activeBusiness.tax_number || "Not set"}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs font-semibold uppercase">Capacity</p>
+                  <p>{activeBusiness.capacity || "Not set"}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <p className="text-muted-foreground text-xs font-semibold uppercase">
+                  Logo preview
+                </p>
+                <div className="bg-muted/30 flex h-20 items-center justify-center rounded-md border px-4">
+                  {activeBusiness.logo_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={activeBusiness.logo_url}
+                      alt={activeBusiness.name}
+                      className="h-12 w-auto max-w-[200px] object-contain"
+                    />
+                  ) : activeBusiness.logo_text ? (
+                    <span className="text-lg font-semibold">{activeBusiness.logo_text}</span>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">No logo configured</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-muted-foreground text-xs font-semibold uppercase">Brand color</p>
+                {activeBusiness.brand_color ? (
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="h-8 w-8 rounded-full border"
+                      style={{ backgroundColor: activeBusiness.brand_color }}
+                    />
+                    <span className="text-sm">{activeBusiness.brand_color}</span>
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-xs">Not set</p>
+                )}
+                <p className="text-muted-foreground text-xs">
+                  Used as the accent color on Bold Brand template invoices.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>
-              {editingBusiness ? "Edit Business" : "Add Business"}
-            </DialogTitle>
+            <DialogTitle>{editingBusiness ? "Edit Business" : "Add Business"}</DialogTitle>
             <DialogDescription>
               {editingBusiness
                 ? "Update your business details."
@@ -336,9 +403,7 @@ const BusinessesSettingsPage = () => {
                 <Input
                   id="biz-tax"
                   value={form.tax_number}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, tax_number: e.target.value }))
-                  }
+                  onChange={(e) => setForm((p) => ({ ...p, tax_number: e.target.value }))}
                   placeholder="TIN / VAT"
                 />
               </div>
@@ -347,9 +412,7 @@ const BusinessesSettingsPage = () => {
                 <Input
                   id="biz-capacity"
                   value={form.capacity}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, capacity: e.target.value }))
-                  }
+                  onChange={(e) => setForm((p) => ({ ...p, capacity: e.target.value }))}
                   placeholder="e.g. 1-10 employees"
                 />
               </div>
@@ -365,7 +428,9 @@ const BusinessesSettingsPage = () => {
                   type="button"
                   onClick={() => setForm((p) => ({ ...p, logo_mode: "text" }))}
                   className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
-                    form.logo_mode === "text" ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40"
+                    form.logo_mode === "text"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:border-primary/40"
                   }`}
                 >
                   <Type className="size-3.5" /> Text Logo
@@ -374,7 +439,9 @@ const BusinessesSettingsPage = () => {
                   type="button"
                   onClick={() => setForm((p) => ({ ...p, logo_mode: "image" }))}
                   className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
-                    form.logo_mode === "image" ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40"
+                    form.logo_mode === "image"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:border-primary/40"
                   }`}
                 >
                   <ImageIcon className="size-3.5" /> Image URL
@@ -389,7 +456,7 @@ const BusinessesSettingsPage = () => {
                     placeholder="e.g. Acme Corp"
                   />
                   {form.logo_text && (
-                    <div className="rounded-md border bg-muted/30 px-4 py-3">
+                    <div className="bg-muted/30 rounded-md border px-4 py-3">
                       <p className="text-lg font-bold">{form.logo_text}</p>
                     </div>
                   )}
@@ -402,13 +469,15 @@ const BusinessesSettingsPage = () => {
                     placeholder="https://example.com/logo.png"
                   />
                   {form.logo_url && (
-                    <div className="rounded-md border bg-muted/30 px-4 py-3 flex items-center justify-center">
+                    <div className="bg-muted/30 flex items-center justify-center rounded-md border px-4 py-3">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={form.logo_url}
                         alt="Logo preview"
                         className="h-10 w-auto max-w-[200px] object-contain"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
                       />
                     </div>
                   )}
@@ -434,18 +503,14 @@ const BusinessesSettingsPage = () => {
                   className="flex-1"
                 />
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Used as the accent color on Bold Brand template invoices
               </p>
             </div>
           </div>
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDialogOpen(false)}
-              disabled={isMutating}
-            >
+            <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={isMutating}>
               Cancel
             </Button>
             <Button onClick={handleSubmit} disabled={!form.name.trim()} isLoading={isMutating}>
@@ -462,8 +527,8 @@ const BusinessesSettingsPage = () => {
             <DialogTitle>Delete Business</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete{" "}
-              <span className="font-medium">{deletingBusiness?.name}</span>? This
-              action cannot be undone.
+              <span className="font-medium">{deletingBusiness?.name}</span>? This action cannot be
+              undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
