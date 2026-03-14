@@ -1,43 +1,49 @@
 import React from "react";
 import Link from "next/link";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import Image from "next/image";
 import { APP_NAME } from "@/constants/values";
 import { cn } from "@/lib/utils";
+
+const LOGO_ICON = "/ankaara_logo_icon.png";
+const LOGO_FULL = "/ankaara_logo.png";
 
 interface LogoProps {
   className?: string;
   size?: "xs" | "sm" | "md" | "lg";
-  textSize?: "sm" | "md" | "lg";
   showText?: boolean;
 }
 
-const Logo = ({ className, size = "md", textSize = "md", showText = true }: LogoProps) => {
-  const sizeClass = {
-    xs: "size-4",
-    sm: "size-6",
-    md: "size-8",
-    lg: "size-10",
+const Logo = ({ className, size = "md", showText = true }: LogoProps) => {
+  const iconSize = {
+    xs: 16,
+    sm: 24,
+    md: 32,
+    lg: 40,
   };
 
-  const textSizeClass = {
-    xs: "text-sm",
-    sm: "text-xl",
-    md: "text-2xl",
-    lg: "text-3xl",
-  };
+  const px = iconSize[size];
 
   return (
-    <Link href={"/"} className="flex items-center gap-1">
-      <Avatar className={cn("bg-primary mt-2.5 border-0", sizeClass[size])}>
-        <AvatarImage src="/person-working.png" alt="logo" />
-        <AvatarFallback className="font-brand -mt-[4px] bg-transparent text-2xl font-bold text-white">
-          {APP_NAME.charAt(0)}
-        </AvatarFallback>
-      </Avatar>
-      {showText && (
-        <span className={cn("font-brand text-foreground", textSizeClass[textSize])}>
-          {APP_NAME}
-        </span>
+    <Link href="/" className={cn("flex items-center gap-2", className)}>
+      {showText ? (
+        <Image
+          src={LOGO_FULL}
+          alt={APP_NAME}
+          width={px * 3}
+          height={px}
+          className="h-auto w-auto object-contain"
+          style={{ height: px }}
+          priority
+        />
+      ) : (
+        <Image
+          src={LOGO_ICON}
+          alt={APP_NAME}
+          width={px}
+          height={px}
+          className="object-contain"
+          priority
+        />
       )}
     </Link>
   );
