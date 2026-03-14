@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import {
   useBusinesses,
   useCreateBusiness,
@@ -11,6 +12,8 @@ import {
 } from "@/hooks/use-businesses";
 import { useCurrentBusinessId } from "@/lib/stores/business-store";
 import { useCurrencies } from "@/hooks/use-currencies";
+import { uploadBusinessLogo, validateBusinessLogoFile } from "@/lib/storage/business-logo";
+import { ToastAlert } from "@/config/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,7 +36,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Pencil, Trash2, Check, ImageIcon, Type } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, ImageIcon, Type, Upload, X } from "lucide-react";
+import Image from "next/image";
 
 type LogoMode = "image" | "text";
 
@@ -71,9 +75,12 @@ const BusinessesSettingsPage = () => {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [editingBusiness, setEditingBusiness] = useState<Business | null>(null);
   const [deletingBusiness, setDeletingBusiness] = useState<Business | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
+  const [logoError, setLogoError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-select first business if none selected
   useEffect(() => {
@@ -83,25 +90,37 @@ const BusinessesSettingsPage = () => {
   }, [businesses, currentBusinessId, setCurrentBusiness]);
 
   const openCreate = () => {
-    setEditingBusiness(null);
     setForm(emptyForm);
+    setLogoFile(null);
+    setLogoPreviewUrl(null);
+    setLogoError(null);
     setDialogOpen(true);
   };
 
-  const openEdit = (biz: Business) => {
-    setEditingBusiness(biz);
-    setForm({
-      name: biz.name || "",
-      currency: biz.currency || "TZS",
-      address: biz.address || "",
-      tax_number: biz.tax_number || "",
-      capacity: biz.capacity || "",
-      logo_mode: biz.logo_url ? "image" : "text",
-      logo_url: biz.logo_url || "",
-      logo_text: biz.logo_text || "",
-      brand_color: biz.brand_color || "",
-    });
-    setDialogOpen(true);
+  const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    setLogoError(null);
+    if (!file) {
+      setLogoFile(null);
+      setLogoPreviewUrl(null);
+      return;
+    }
+    const validation = validateBusinessLogoFile(file);
+    if (!validation.ok) {
+      setLogoError(validation.error);
+      ToastAlert.error(validation.error);
+      return;
+    }
+    setLogoFile(file);
+    setLogoPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const clearLogoFile = () => {
+    setLogoFile(null);
+    if (logoPreviewUrl) URL.revokeObjectURL(logoPreviewUrl);
+    setLogoPreviewUrl(null);
+    setLogoError(null);
   };
 
   const openDelete = (biz: Business) => {
@@ -112,50 +131,38 @@ const BusinessesSettingsPage = () => {
   const handleSubmit = () => {
     if (!form.name.trim()) return;
 
-    const logoUrl = form.logo_mode === "image" ? form.logo_url.trim() || null : null;
     const logoText = form.logo_mode === "text" ? form.logo_text.trim() || null : null;
+    const payload: CreateBusinessPayload = {
+      name: form.name.trim(),
+      currency: form.currency,
+      address: form.address.trim() || undefined,
+      tax_number: form.tax_number.trim() || undefined,
+      capacity: form.capacity.trim() || undefined,
+      logo_url: undefined,
+      logo_text: logoText || undefined,
+      brand_color: form.brand_color.trim() || undefined,
+    };
 
-    if (editingBusiness) {
-      updateBusiness.mutate(
-        {
-          id: editingBusiness.id,
-          name: form.name.trim(),
-          currency: form.currency,
-          address: form.address.trim() || null,
-          tax_number: form.tax_number.trim() || null,
-          capacity: form.capacity.trim() || null,
-          logo_url: logoUrl,
-          logo_text: logoText,
-          brand_color: form.brand_color.trim() || null,
-        },
-        {
-          onSuccess: () => {
-            setDialogOpen(false);
-            refetch();
-          },
-        },
-      );
-    } else {
-      const payload: CreateBusinessPayload = {
-        name: form.name.trim(),
-        currency: form.currency,
-        address: form.address.trim() || undefined,
-        tax_number: form.tax_number.trim() || undefined,
-        capacity: form.capacity.trim() || undefined,
-        logo_url: logoUrl || undefined,
-        logo_text: logoText || undefined,
-        brand_color: form.brand_color.trim() || undefined,
-      };
-      createBusiness.mutate(payload, {
-        onSuccess: (newBiz) => {
-          setDialogOpen(false);
-          refetch();
-          if (!currentBusinessId && newBiz) {
-            setCurrentBusiness(newBiz.id);
+    createBusiness.mutate(payload, {
+      onSuccess: async (newBiz) => {
+        if (newBiz && form.logo_mode === "image" && logoFile) {
+          try {
+            const url = await uploadBusinessLogo(logoFile, newBiz.id);
+            await updateBusiness.mutateAsync({
+              id: newBiz.id,
+              logo_url: url,
+            });
+          } catch (err) {
+            ToastAlert.error(err instanceof Error ? err.message : "Logo upload failed");
           }
-        },
-      });
-    }
+        }
+        setDialogOpen(false);
+        refetch();
+        if (!currentBusinessId && newBiz) {
+          setCurrentBusiness(newBiz.id);
+        }
+      },
+    });
   };
 
   const handleDelete = () => {
@@ -244,8 +251,10 @@ const BusinessesSettingsPage = () => {
                       </div>
                     </div>
                     <div className="ml-2 flex shrink-0 items-center gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(biz)}>
-                        <Pencil className="size-4" />
+                      <Button variant="ghost" size="icon" asChild title="Edit business">
+                        <Link href={`/dashboard/settings/businesses/edit/${biz.id}`}>
+                          <Pencil className="size-4" />
+                        </Link>
                       </Button>
                       <Button
                         variant="ghost"
@@ -306,22 +315,30 @@ const BusinessesSettingsPage = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="space-y-1">
+              <div className="space-y-3">
                 <p className="text-muted-foreground text-xs font-semibold uppercase">
                   Logo preview
                 </p>
-                <div className="bg-muted/30 flex h-20 items-center justify-center rounded-md border px-4">
-                  {activeBusiness.logo_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={activeBusiness.logo_url}
-                      alt={activeBusiness.name}
-                      className="h-12 w-auto max-w-[200px] object-contain"
-                    />
-                  ) : activeBusiness.logo_text ? (
-                    <span className="text-lg font-semibold">{activeBusiness.logo_text}</span>
-                  ) : (
-                    <span className="text-muted-foreground text-xs">No logo configured</span>
+                <div className="flex items-center gap-2">
+                  {activeBusiness.logo_text && (
+                    <div className="bg-muted/30 flex min-h-10 items-center rounded-md border px-4 py-3">
+                      <span className="text-lg font-semibold">{activeBusiness.logo_text}</span>
+                    </div>
+                  )}
+                  {activeBusiness.logo_url && (
+                    <div className="bg-muted/30 relative flex h-14 w-40 items-center justify-center rounded-md border">
+                      <Image
+                        src={activeBusiness.logo_url}
+                        alt={activeBusiness.name}
+                        fill
+                        className="object-contain px-1"
+                      />
+                    </div>
+                  )}
+                  {!activeBusiness.logo_url && !activeBusiness.logo_text && (
+                    <div className="bg-muted/30 flex h-20 items-center justify-center rounded-md border px-4">
+                      <span className="text-muted-foreground text-xs">No logo configured</span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -348,15 +365,13 @@ const BusinessesSettingsPage = () => {
         </Card>
       )}
 
-      {/* Create / Edit Dialog */}
+      {/* Create Business Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editingBusiness ? "Edit Business" : "Add Business"}</DialogTitle>
+            <DialogTitle>Add Business</DialogTitle>
             <DialogDescription>
-              {editingBusiness
-                ? "Update your business details."
-                : "Create a new business to manage clients and invoices."}
+              Create a new business to manage clients and invoices.
             </DialogDescription>
           </DialogHeader>
 
@@ -444,7 +459,7 @@ const BusinessesSettingsPage = () => {
                       : "text-muted-foreground hover:border-primary/40"
                   }`}
                 >
-                  <ImageIcon className="size-3.5" /> Image URL
+                  <ImageIcon className="size-3.5" /> Upload image
                 </button>
               </div>
 
@@ -463,16 +478,45 @@ const BusinessesSettingsPage = () => {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Input
-                    value={form.logo_url}
-                    onChange={(e) => setForm((p) => ({ ...p, logo_url: e.target.value }))}
-                    placeholder="https://example.com/logo.png"
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    onChange={handleLogoFileChange}
                   />
-                  {form.logo_url && (
+                  <p className="text-muted-foreground text-xs">
+                    JPEG, PNG, WebP or GIF. Max 1MB. Stored in your secure Supabase storage.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload className="mr-1.5 size-3.5" />
+                      Choose image
+                    </Button>
+                    {(logoFile || logoPreviewUrl) && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearLogoFile}
+                        className="text-muted-foreground"
+                      >
+                        <X className="mr-1.5 size-3.5" />
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                  {logoError && <p className="text-destructive text-sm">{logoError}</p>}
+                  {logoPreviewUrl && (
                     <div className="bg-muted/30 flex items-center justify-center rounded-md border px-4 py-3">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={form.logo_url}
+                        src={logoPreviewUrl}
                         alt="Logo preview"
                         className="h-10 w-auto max-w-[200px] object-contain"
                         onError={(e) => {
@@ -514,7 +558,7 @@ const BusinessesSettingsPage = () => {
               Cancel
             </Button>
             <Button onClick={handleSubmit} disabled={!form.name.trim()} isLoading={isMutating}>
-              {editingBusiness ? "Save" : "Create"}
+              Create
             </Button>
           </DialogFooter>
         </DialogContent>

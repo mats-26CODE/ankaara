@@ -5,7 +5,6 @@ import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { useProfile, useUpdateProfile } from "@/hooks/use-profile";
 import { useUser } from "@/hooks/use-user";
 import { useCurrencies } from "@/hooks/use-currencies";
-import { useBusinesses, useUpdateBusiness, type Business } from "@/hooks/use-businesses";
 import { useTheme, useLanguage } from "@/lib/stores/preferences-store";
 import {
   useSendOtpForOnboarding,
@@ -47,7 +46,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ImageIcon, Type } from "lucide-react";
 
 const ProfileSettingsPage = () => {
   const { user } = useUser();
@@ -56,10 +54,6 @@ const ProfileSettingsPage = () => {
   const updateProfile = useUpdateProfile();
   const { theme, setTheme } = useTheme();
   const { language, setLanguage } = useLanguage();
-
-  const { businesses, loading: bizLoading, refetch: refetchBiz } = useBusinesses();
-  const updateBusiness = useUpdateBusiness();
-  const myBusiness: Business | undefined = businesses[0];
 
   const sendOtp = useSendOtpForOnboarding();
   const verifyOtp = useVerifyOtpForOnboarding();
@@ -70,17 +64,6 @@ const ProfileSettingsPage = () => {
     phone: "",
     avatar_url: "",
     preferred_currency: "TZS",
-  });
-
-  type BizLogoMode = "image" | "text";
-  const [bizForm, setBizForm] = useState({
-    name: "",
-    address: "",
-    tax_number: "",
-    logo_mode: "text" as BizLogoMode,
-    logo_url: "",
-    logo_text: "",
-    brand_color: "",
   });
 
   const [prefilled, setPrefilled] = useState(false);
@@ -99,19 +82,8 @@ const ProfileSettingsPage = () => {
       avatar_url: profile.avatar_url || "",
       preferred_currency: profile.preferred_currency || "TZS",
     });
-    if (myBusiness) {
-      setBizForm({
-        name: myBusiness.name || "",
-        address: myBusiness.address || "",
-        tax_number: myBusiness.tax_number || "",
-        logo_mode: myBusiness.logo_url ? "image" : "text",
-        logo_url: myBusiness.logo_url || "",
-        logo_text: myBusiness.logo_text || "",
-        brand_color: myBusiness.brand_color || "",
-      });
-    }
     setPrefilled(true);
-  }, [profile, myBusiness, prefilled]);
+  }, [profile, prefilled]);
 
   const phoneChanged = () => {
     const newPhone = addCountryCode(form.phone.trim());
@@ -171,22 +143,6 @@ const ProfileSettingsPage = () => {
     );
   };
 
-  const handleSaveBusiness = () => {
-    if (!myBusiness) return;
-    updateBusiness.mutate(
-      {
-        id: myBusiness.id,
-        name: bizForm.name.trim() || myBusiness.name,
-        address: bizForm.address.trim() || null,
-        tax_number: bizForm.tax_number.trim() || null,
-        logo_url: bizForm.logo_mode === "image" ? bizForm.logo_url.trim() || null : null,
-        logo_text: bizForm.logo_mode === "text" ? bizForm.logo_text.trim() || null : null,
-        brand_color: bizForm.brand_color.trim() || null,
-      },
-      { onSuccess: () => refetchBiz() }
-    );
-  };
-
   const handleResendOtp = () => {
     if (!canResend) return;
     setOtpError(null);
@@ -196,7 +152,7 @@ const ProfileSettingsPage = () => {
     );
   };
 
-  if (profileLoading || currenciesLoading || bizLoading) {
+  if (profileLoading || currenciesLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <Spinner className="size-6" />
@@ -307,139 +263,6 @@ const ProfileSettingsPage = () => {
           </div>
         </CardContent>
       </Card>
-
-      {/* Business Details — for individual accounts (or any account with a business) */}
-      {myBusiness && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Business Details</CardTitle>
-            <CardDescription>
-              Logo, address, and branding shown on your invoices.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="biz-name">Business Name</Label>
-                <Input
-                  id="biz-name"
-                  value={bizForm.name}
-                  onChange={(e) => setBizForm((p) => ({ ...p, name: e.target.value }))}
-                  placeholder="Your business name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="biz-address">Address</Label>
-                <Input
-                  id="biz-address"
-                  value={bizForm.address}
-                  onChange={(e) => setBizForm((p) => ({ ...p, address: e.target.value }))}
-                  placeholder="Business address"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="biz-tax">TIN / VAT Number</Label>
-                <Input
-                  id="biz-tax"
-                  value={bizForm.tax_number}
-                  onChange={(e) => setBizForm((p) => ({ ...p, tax_number: e.target.value }))}
-                  placeholder="Tax identification number"
-                />
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Logo */}
-            <div className="space-y-3">
-              <Label>Logo</Label>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setBizForm((p) => ({ ...p, logo_mode: "text" }))}
-                  className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
-                    bizForm.logo_mode === "text" ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40"
-                  }`}
-                >
-                  <Type className="size-3.5" /> Text Logo
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBizForm((p) => ({ ...p, logo_mode: "image" }))}
-                  className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
-                    bizForm.logo_mode === "image" ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40"
-                  }`}
-                >
-                  <ImageIcon className="size-3.5" /> Image URL
-                </button>
-              </div>
-
-              {bizForm.logo_mode === "text" ? (
-                <div className="space-y-2">
-                  <Input
-                    value={bizForm.logo_text}
-                    onChange={(e) => setBizForm((p) => ({ ...p, logo_text: e.target.value }))}
-                    placeholder="e.g. Acme Corp"
-                  />
-                  {bizForm.logo_text && (
-                    <div className="rounded-md border bg-muted/30 px-4 py-3">
-                      <p className="text-lg font-bold">{bizForm.logo_text}</p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Input
-                    value={bizForm.logo_url}
-                    onChange={(e) => setBizForm((p) => ({ ...p, logo_url: e.target.value }))}
-                    placeholder="https://example.com/logo.png"
-                  />
-                  {bizForm.logo_url && (
-                    <div className="rounded-md border bg-muted/30 px-4 py-3 flex items-center justify-center">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={bizForm.logo_url}
-                        alt="Logo preview"
-                        className="h-10 w-auto max-w-[200px] object-contain"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Brand Color */}
-            <div className="space-y-2">
-              <Label htmlFor="biz-brand-color">Brand Color</Label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="color"
-                  id="biz-brand-color"
-                  value={bizForm.brand_color || "#2563eb"}
-                  onChange={(e) => setBizForm((p) => ({ ...p, brand_color: e.target.value }))}
-                  className="h-9 w-12 cursor-pointer rounded border p-0.5"
-                />
-                <Input
-                  value={bizForm.brand_color}
-                  onChange={(e) => setBizForm((p) => ({ ...p, brand_color: e.target.value }))}
-                  placeholder="#2563eb"
-                  className="flex-1"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Used as the accent on your invoice templates
-              </p>
-            </div>
-
-            <div className="flex justify-end">
-              <Button onClick={handleSaveBusiness} isLoading={updateBusiness.isPending}>
-                Save Business Details
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Preferences */}
       <Card>

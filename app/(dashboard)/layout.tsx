@@ -11,11 +11,7 @@ import { useProfile } from "@/hooks/use-profile";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import { Spinner } from "@/components/ui/spinner";
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { user, loading: userLoading } = useUser();
   const { profile, loading: profileLoading } = useProfile();
@@ -37,22 +33,20 @@ export default function DashboardLayout({
 
   if (userLoading || profileLoading || !user || profileIncomplete) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="bg-background flex min-h-screen items-center justify-center">
         <Spinner className="size-8" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="bg-background flex min-h-screen flex-col">
       <NavBar />
-      <div className="dashboard-sidebar flex flex-1 min-h-0">
+      <div className="dashboard-sidebar flex min-h-0 flex-1">
         <SidebarProvider>
           <DashboardSidebar />
-          <SidebarInset className="flex flex-col w-full">
-            <main className="flex-1 overflow-auto w-full p-4 pb-10">
-              {children}
-            </main>
+          <SidebarInset className="flex w-full flex-col">
+            <main className="w-full flex-1 overflow-auto p-4 pb-10">{children}</main>
             <Footer />
           </SidebarInset>
         </SidebarProvider>

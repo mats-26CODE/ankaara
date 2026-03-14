@@ -6,6 +6,7 @@ export const ReceiptTemplate = (props: InvoiceTemplateProps) => {
   const taxLabel = Number(tax) > 0 && (taxPercent != null && taxPercent > 0) ? `Tax (${Number(taxPercent) % 1 === 0 ? taxPercent : Number(taxPercent).toFixed(1)}%)` : "Tax";
 
   const renderLogo = () => {
+    // Prioritize image (logo_url) over text; invoices display image when set
     if (business?.logo_url) {
       // eslint-disable-next-line @next/next/no-img-element
       return <img src={business.logo_url} alt={business.name} className="h-10 w-auto mx-auto mb-2" />;
