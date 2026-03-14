@@ -6,20 +6,17 @@ import { createClient } from "@/lib/supabase/client";
 import { ToastAlert } from "@/config/toast";
 import type { Tables } from "@/database.types";
 
-export type InvoiceStatus =
-  | "draft"
-  | "sent"
-  | "viewed"
-  | "paid"
-  | "overdue"
-  | "cancelled";
+export type InvoiceStatus = "draft" | "sent" | "viewed" | "paid" | "overdue" | "cancelled";
 
 export type InvoiceItem = Tables<"invoice_items">;
 
 export type Invoice = Tables<"invoices"> & {
   status: InvoiceStatus;
   client?: Pick<Tables<"clients">, "id" | "name" | "email" | "phone" | "address">;
-  business?: Pick<Tables<"businesses">, "id" | "name" | "address" | "logo_url" | "logo_text" | "tax_number" | "brand_color" | "currency">;
+  business?: Pick<
+    Tables<"businesses">,
+    "id" | "name" | "address" | "logo_url" | "logo_text" | "tax_number" | "brand_color" | "currency"
+  >;
   items?: InvoiceItem[];
 };
 
@@ -61,53 +58,64 @@ export type UpdateInvoicePayload = {
 };
 
 const computeTotals = (items: InvoiceItemInput[], tax: number) => {
-  const subtotal = items.reduce(
-    (sum, item) => sum + item.quantity * item.unit_price,
-    0
-  );
+  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
   return { subtotal, tax, total: subtotal + tax };
 };
 
+const DEFAULT_PAGE_SIZE = 10;
+
 export const useInvoices = (
   businessId: string | null,
-  statusFilter?: InvoiceStatus | null
+  statusFilter?: InvoiceStatus | null,
+  page: number = 1,
+  pageSize: number = DEFAULT_PAGE_SIZE,
 ) => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refetch = useCallback(async () => {
     if (!businessId) {
       setInvoices([]);
+      setTotalCount(null);
       setLoading(false);
       return;
     }
     const supabase = createClient();
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
     let query = supabase
       .from("invoices")
-      .select("*, client:clients(id, name, email, phone, address)")
+      .select("*, client:clients(id, name, email, phone, address)", {
+        count: "exact",
+      })
       .eq("organization_id", businessId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
     if (statusFilter) {
       query = query.eq("status", statusFilter);
     }
 
-    const { data, error } = await query;
+    const { data, error, count } = await query;
 
     if (error) {
       setInvoices([]);
+      setTotalCount(null);
     } else {
       setInvoices((data as unknown as Invoice[]) ?? []);
+      setTotalCount(count ?? null);
     }
     setLoading(false);
-  }, [businessId, statusFilter]);
+  }, [businessId, statusFilter, page, pageSize]);
 
   useEffect(() => {
     setLoading(true);
     refetch();
   }, [refetch]);
 
-  return { invoices, loading, refetch };
+  return { invoices, loading, refetch, totalCount };
 };
 
 export const useInvoice = (invoiceId: string | null) => {
@@ -123,7 +131,9 @@ export const useInvoice = (invoiceId: string | null) => {
     const supabase = createClient();
     const { data, error } = await supabase
       .from("invoices")
-      .select("*, client:clients(id, name, email, phone, address), business:businesses!invoices_organization_id_fkey(id, name, address, logo_url, logo_text, tax_number, brand_color, currency)")
+      .select(
+        "*, client:clients(id, name, email, phone, address), business:businesses!invoices_organization_id_fkey(id, name, address, logo_url, logo_text, tax_number, brand_color, currency)",
+      )
       .eq("id", invoiceId)
       .single();
 
@@ -160,10 +170,9 @@ export const useCreateInvoice = () => {
       const supabase = createClient();
       const { subtotal, tax, total } = computeTotals(payload.items, payload.tax);
 
-      const { data: invNumData, error: invNumError } = await supabase.rpc(
-        "next_invoice_number",
-        { p_organization_id: payload.organization_id }
-      );
+      const { data: invNumData, error: invNumError } = await supabase.rpc("next_invoice_number", {
+        p_organization_id: payload.organization_id,
+      });
       if (invNumError) throw invNumError;
 
       const { data, error } = await supabase
@@ -198,9 +207,7 @@ export const useCreateInvoice = () => {
           unit_price: item.unit_price,
           total: item.quantity * item.unit_price,
         }));
-        const { error: itemsError } = await supabase
-          .from("invoice_items")
-          .insert(rows);
+        const { error: itemsError } = await supabase.from("invoice_items").insert(rows);
         if (itemsError) throw itemsError;
       }
 
@@ -226,15 +233,14 @@ export const useUpdateInvoice = () => {
       if (payload.due_date) updates.due_date = payload.due_date;
       if (payload.currency) updates.currency = payload.currency;
       if (payload.template_id) updates.template_id = payload.template_id;
-      if (payload.accent_color !== undefined) updates.accent_color = payload.accent_color?.trim() || null;
-      if (payload.footer_note !== undefined) updates.footer_note = payload.footer_note?.trim() || null;
+      if (payload.accent_color !== undefined)
+        updates.accent_color = payload.accent_color?.trim() || null;
+      if (payload.footer_note !== undefined)
+        updates.footer_note = payload.footer_note?.trim() || null;
       if (payload.notes !== undefined) updates.notes = payload.notes?.trim() || null;
 
       if (payload.items) {
-        const { subtotal, tax, total } = computeTotals(
-          payload.items,
-          payload.tax ?? 0
-        );
+        const { subtotal, tax, total } = computeTotals(payload.items, payload.tax ?? 0);
         updates.subtotal = subtotal;
         updates.tax = tax;
         updates.total = total;
@@ -263,9 +269,7 @@ export const useUpdateInvoice = () => {
             unit_price: item.unit_price,
             total: item.quantity * item.unit_price,
           }));
-          const { error: itemsError } = await supabase
-            .from("invoice_items")
-            .insert(rows);
+          const { error: itemsError } = await supabase.from("invoice_items").insert(rows);
           if (itemsError) throw itemsError;
         }
       }
@@ -310,10 +314,7 @@ export const useDeleteInvoice = () => {
       const supabase = createClient();
 
       await supabase.from("invoice_items").delete().eq("invoice_id", invoiceId);
-      const { error } = await supabase
-        .from("invoices")
-        .delete()
-        .eq("id", invoiceId);
+      const { error } = await supabase.from("invoices").delete().eq("id", invoiceId);
       if (error) throw error;
     },
     onSuccess: () => {

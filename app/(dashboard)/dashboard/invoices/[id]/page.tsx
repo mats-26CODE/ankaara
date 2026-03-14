@@ -93,6 +93,19 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
   }
 
   const isDraft = invoice.status === "draft";
+  const draftHasRequiredDetails =
+    !!invoice.client_id &&
+    !!invoice.issue_date &&
+    !!invoice.due_date &&
+    !!invoice.currency &&
+    (invoice.items?.length ?? 0) > 0 &&
+    (invoice.items ?? []).every(
+      (item) =>
+        !!String(item.description).trim() &&
+        Number(item.quantity) > 0 &&
+        Number(item.unit_price) > 0,
+    );
+  const canShare = !isDraft || draftHasRequiredDetails;
   const shareUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/invoice/${invoice.id}`;
 
   const handleDelete = () => {
@@ -135,11 +148,14 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
           )}
           <Button
             size="sm"
-            onClick={() => {
-              if (!isDraft) setShareDialogOpen(true);
-            }}
-            disabled={isDraft}
-            variant={isDraft ? "outline" : "default"}
+            onClick={() => canShare && setShareDialogOpen(true)}
+            disabled={!canShare}
+            variant={!canShare ? "outline" : "default"}
+            title={
+              !canShare && isDraft
+                ? "Complete client, dates, currency, and line items to share"
+                : undefined
+            }
           >
             <Share2 className="size-4 mr-1" />
             Share

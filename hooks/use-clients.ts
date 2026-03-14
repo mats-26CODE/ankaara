@@ -11,37 +11,57 @@ export type CreateClientPayload = Pick<TablesInsert<"clients">, "organization_id
   Partial<Pick<TablesInsert<"clients">, "email" | "phone" | "address">>;
 export type UpdateClientPayload = TablesUpdate<"clients"> & { id: string };
 
-export const useClients = (businessId: string | null) => {
+const DEFAULT_PAGE_SIZE = 10;
+
+export const useClients = (
+  businessId: string | null,
+  page?: number,
+  pageSize: number = DEFAULT_PAGE_SIZE,
+) => {
   const [clients, setClients] = useState<Client[]>([]);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const usePagination = page != null && page >= 1 && pageSize >= 1;
 
   const refetch = useCallback(async () => {
     if (!businessId) {
       setClients([]);
+      setTotalCount(null);
       setLoading(false);
       return;
     }
     const supabase = createClient();
-    const { data, error } = await supabase
+    let query = supabase
       .from("clients")
-      .select("*")
+      .select("*", usePagination ? { count: "exact" } : undefined)
       .eq("organization_id", businessId)
       .order("created_at", { ascending: false });
 
+    if (usePagination) {
+      const from = (page! - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+    }
+
+    const { data, error, count } = await query;
+
     if (error) {
       setClients([]);
+      setTotalCount(null);
     } else {
       setClients(data ?? []);
+      setTotalCount(usePagination ? count ?? null : (data?.length ?? 0));
     }
     setLoading(false);
-  }, [businessId]);
+  }, [businessId, usePagination, page, pageSize]);
 
   useEffect(() => {
     setLoading(true);
     refetch();
   }, [refetch]);
 
-  return { clients, loading, refetch };
+  return { clients, loading, refetch, totalCount };
 };
 
 export const useCreateClient = () => {

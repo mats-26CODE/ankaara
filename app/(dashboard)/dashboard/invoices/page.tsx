@@ -58,6 +58,8 @@ import {
   Building2,
   Share2,
   FileText,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import dayjs from "dayjs";
 import { ShareInvoiceDialog } from "@/components/shared/share-invoice-dialog";
@@ -103,15 +105,30 @@ const InvoicesContent = () => {
   const { businesses, loading: bizLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "all">(statusParam || "all");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   useEffect(() => {
     setStatusFilter(statusParam || "all");
   }, [statusParam]);
 
-  const { invoices, loading, refetch } = useInvoices(
+  useEffect(() => {
+    setPage(1);
+  }, [currentBusinessId, statusFilter]);
+
+  const { invoices, loading, refetch, totalCount } = useInvoices(
     currentBusinessId,
     statusFilter === "all" ? null : statusFilter,
+    page,
+    pageSize,
   );
+
+  const total = totalCount ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const hasPrev = page > 1;
+  const hasNext = page < totalPages;
+  const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, total);
   const deleteInvoice = useDeleteInvoice();
   const sendInvoice = useSendInvoice();
   const { format } = useFormatAmount();
@@ -356,6 +373,34 @@ const InvoicesContent = () => {
                 ))}
               </TableBody>
             </Table>
+          )}
+
+          {!loading && total > 0 && (
+            <div className="mt-4 flex flex-col items-center justify-between gap-3 border-t pt-4 sm:flex-row">
+              <p className="text-muted-foreground text-sm">
+                Showing {from}–{to} of {total}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={!hasPrev}
+                >
+                  <ChevronLeft className="size-4" />
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={!hasNext}
+                >
+                  Next
+                  <ChevronRight className="size-4" />
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

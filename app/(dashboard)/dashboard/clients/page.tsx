@@ -51,6 +51,8 @@ import {
   Pencil,
   Trash2,
   Building2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 type FormState = {
@@ -62,10 +64,17 @@ type FormState = {
 
 const emptyForm: FormState = { name: "", email: "", phone: "", address: "" };
 
+const PAGE_SIZE = 10;
+
 const ClientsPage = () => {
   const { businesses, loading: bizLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
-  const { clients, loading, refetch } = useClients(currentBusinessId);
+  const [page, setPage] = useState(1);
+  const { clients, loading, refetch, totalCount } = useClients(
+    currentBusinessId,
+    page,
+    PAGE_SIZE,
+  );
   const createClient = useCreateClient();
   const updateClient = useUpdateClient();
   const deleteClient = useDeleteClient();
@@ -77,12 +86,22 @@ const ClientsPage = () => {
   const [deletingClient, setDeletingClient] = useState<Client | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
 
+  const total = totalCount ?? 0;
+  const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const to = Math.min(page * PAGE_SIZE, total);
+
   // Auto-select first business
   useEffect(() => {
     if (!currentBusinessId && businesses.length > 0) {
       setCurrentBusiness(businesses[0].id);
     }
   }, [businesses, currentBusinessId, setCurrentBusiness]);
+
+  // Reset to first page when business changes
+  useEffect(() => {
+    setPage(1);
+  }, [currentBusinessId]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return clients;
@@ -295,6 +314,33 @@ const ClientsPage = () => {
                 ))}
               </TableBody>
             </Table>
+          )}
+          {total > 0 && (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-t pt-4 mt-4">
+              <p className="text-sm text-muted-foreground">
+                Showing {from}–{to} of {total}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1 || loading}
+                >
+                  <ChevronLeft className="size-4 mr-1" />
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
+                  disabled={page >= lastPage || loading}
+                >
+                  Next
+                  <ChevronRight className="size-4 ml-1" />
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
