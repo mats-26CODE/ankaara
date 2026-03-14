@@ -20,7 +20,7 @@ export const translations = {
         greetingSubtitle: "Tayari kutungia ankara na kupokea malipo.",
         completeProfileTitle: "Kamilisha wasifu wako",
         completeProfileDescription:
-          "Ongeza aina ya akaunti, jina na maelezo ili kuanza kutumia ankara na kudhibiti biashara yako.",
+          "Malizia kuongeza maelezo ili kuanza kutumia ankara na kudhibiti biashara yako.",
         completeProfileCta: "Kamilisha wasifu",
       },
     },
@@ -359,7 +359,7 @@ export const translations = {
         greetingSubtitle: "Ready to create invoices and get paid.",
         completeProfileTitle: "Complete your profile",
         completeProfileDescription:
-          "Add your account type, name and details to start using invoices and manage your business.",
+          "Finalize adding your details to start creating invoices and manage your business.",
         completeProfileCta: "Complete profile",
       },
     },

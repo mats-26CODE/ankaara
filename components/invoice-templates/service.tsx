@@ -1,20 +1,10 @@
 import type { InvoiceTemplateProps } from "@/lib/invoice-templates/types";
 import dayjs from "dayjs";
+import { BusinessLogo } from "./business-logo";
 
 export const ServiceTemplate = (props: InvoiceTemplateProps) => {
   const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, tax, taxPercent, total, notes, footerNote, business, client, items, isPaid } = props;
   const taxLabel = Number(tax) > 0 && (taxPercent != null && taxPercent > 0) ? `Tax (${Number(taxPercent) % 1 === 0 ? taxPercent : Number(taxPercent).toFixed(1)}%)` : "Tax";
-
-  const renderLogo = () => {
-    if (business?.logo_url) {
-      // eslint-disable-next-line @next/next/no-img-element
-      return <img src={business.logo_url} alt={business.name} className="h-8 w-auto mb-1" />;
-    }
-    if (business?.logo_text) {
-      return <p className="font-bold text-gray-900">{business.logo_text}</p>;
-    }
-    return <p className="font-bold text-gray-900">{business?.name}</p>;
-  };
 
   return (
     <div className="bg-white text-gray-900 rounded-lg border border-gray-200 overflow-hidden">
@@ -23,7 +13,9 @@ export const ServiceTemplate = (props: InvoiceTemplateProps) => {
         {/* Left — Business */}
         <div className="px-6 py-5 border-r border-gray-200">
           <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-2">From</p>
-          {renderLogo()}
+          <div className="mb-1">
+            <BusinessLogo business={business} imageClassName="h-8 w-auto" textClassName="font-bold text-gray-900" />
+          </div>
           {business?.address && <p className="text-xs text-gray-500 mt-0.5">{business.address}</p>}
           {business?.tax_number && <p className="text-xs text-gray-400">TIN: {business.tax_number}</p>}
         </div>

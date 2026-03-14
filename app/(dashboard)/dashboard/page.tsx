@@ -99,7 +99,7 @@ const DashboardPage = () => {
       <div className="space-y-1">
         <h1 className="text-3xl font-bold tracking-tight">
           {getCasualGreeting()}
-          {profile?.full_name?.trim() ? `, ${profile.full_name.trim().split(/\s+/)[0]}` : ""}
+          {profile?.full_name?.trim() ? ` ${profile.full_name.trim().split(/\s+/)[0]}` : ""}
         </h1>
         <p className="text-muted-foreground">{t("dashboard.home.greetingSubtitle")}</p>
         {activeBusiness && (
@@ -129,7 +129,6 @@ const DashboardPage = () => {
                   <CardDescription className="text-base">
                     {t("dashboard.home.completeProfileDescription")}
                   </CardDescription>
-                  <p className="text-muted-foreground text-xs">Missing: {missing.join(", ")}</p>
                 </div>
               </div>
               <Button asChild className="shrink-0">

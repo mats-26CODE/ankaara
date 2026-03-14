@@ -44,21 +44,23 @@ const NavBar = () => {
           <Logo size="sm" />
 
           {/* Desktop Navigation */}
-          <div className="hidden items-center gap-6 md:flex">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`text-sm transition-colors xl:text-base ${
-                  pathname === link.href
-                    ? "text-primary font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
+          {pathname === "/" && (
+            <div className="hidden items-center gap-6 md:flex">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`text-sm transition-colors xl:text-base ${
+                    pathname === link.href
+                      ? "text-primary font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Desktop Actions */}
@@ -79,9 +81,9 @@ const NavBar = () => {
                   <span>{t("nav.dashboard")}</span>
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-64" align="end">
-                <div className="space-y-4">
-                  <div className="space-y-1">
+              <PopoverContent className="w-56 rounded-xl" align="end">
+                <div className="space-y-3">
+                  <div className="flex flex-col items-center space-y-0.5">
                     <p className="text-sm font-semibold">
                       {user.user_metadata?.name || user.email || user.phone || "User"}
                     </p>
@@ -89,7 +91,7 @@ const NavBar = () => {
                       <p className="text-muted-foreground text-xs">{user.email || user.phone}</p>
                     )}
                   </div>
-                  <div className="flex flex-col gap-1 border-t pt-2">
+                  <div className="flex flex-col gap-2 border-t pt-2">
                     <Button
                       variant="outline"
                       className="w-full justify-start text-sm font-light"
@@ -97,7 +99,7 @@ const NavBar = () => {
                       asChild
                     >
                       <Link href="/dashboard" className="w-full">
-                        {t("nav.dashboard")}
+                        Go to {t("nav.dashboard")}
                       </Link>
                     </Button>
                     <Button

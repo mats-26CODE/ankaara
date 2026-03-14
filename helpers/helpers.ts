@@ -41,7 +41,7 @@ export function getGreeting(): string {
  * ```
  */
 export function getCasualGreeting(): string {
-  return `Hi, ${getGreeting()}`;
+  return `${getGreeting()}`;
 }
 
 /**
@@ -77,7 +77,7 @@ export function formatPhoneForDisplay(phoneNumber: string): string {
 export const formatCurrency = (
   amount: number,
   config: CurrencyConfig = {},
-  locale: string = navigator.language
+  locale: string = navigator.language,
 ): string => {
   const {
     code,
@@ -170,13 +170,11 @@ const simpleFormat = (
     decimalDigits: number;
     symbolPosition: "left" | "right";
     spaceBetween: boolean;
-  }
+  },
 ): string => {
   const fixed = amount.toFixed(decimalDigits);
   const space = spaceBetween ? " " : "";
-  return symbolPosition === "left"
-    ? `${symbol}${space}${fixed}`
-    : `${fixed}${space}${symbol}`;
+  return symbolPosition === "left" ? `${symbol}${space}${fixed}` : `${fixed}${space}${symbol}`;
 };
 
 // -> Minimal currency symbol lookup (unchanged)
@@ -206,22 +204,19 @@ export const formatCompact = (
     symbolPosition: "left" | "right";
     spaceBetween: boolean;
     locale: string;
-  }
+  },
 ): string => {
   const { value, suffix } = getCompactValueAndSuffix(amount);
 
   if (config) {
     // -> Get the currency symbol (prefer explicit symbol, fallback to code symbol)
-    const currencySymbol =
-      config.symbol || (config.code ? getSymbolFromCode(config.code) : "");
+    const currencySymbol = config.symbol || (config.code ? getSymbolFromCode(config.code) : "");
 
     // -> Format the base numeric value (without currency symbols)
     const formattedValue = value.toFixed(config.decimalDigits);
 
     // -> Always place symbol on left for compact format
-    return `${currencySymbol}${
-      config.spaceBetween ? " " : ""
-    }${formattedValue}${suffix}`;
+    return `${currencySymbol}${config.spaceBetween ? " " : ""}${formattedValue}${suffix}`;
   } else {
     // -> Format the base numeric value (without currency symbols)
     const formattedValue = value.toFixed(1);
@@ -235,12 +230,8 @@ export const formatCompact = (
  * @param value number to format
  * @param decimals number of decimal places to include (default 0)
  */
-export function formatNumberAddCommas(
-  value: number | null | undefined,
-  decimals = 0
-): string {
-  if (value === null || value === undefined || !Number.isFinite(value))
-    return "0";
+export function formatNumberAddCommas(value: number | null | undefined, decimals = 0): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) return "0";
   // Use toFixed to normalize decimal places, then add comma separators
   const parts = value.toFixed(decimals).split(".");
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -251,7 +242,7 @@ export function formatNumberAddCommas(
  * Determines the appropriate compact suffix
  */
 const getCompactValueAndSuffix = (
-  amount: number
+  amount: number,
 ): {
   value: number;
   suffix: string;
@@ -294,7 +285,7 @@ export const formatMap: Record<string, string> = {
 export const formatDate = (
   dateInput: string | number | Date | null | Dayjs | undefined,
   format: DateFormatPreset = "HUMAN_READABLE",
-  options: FormatDateOptions = {}
+  options: FormatDateOptions = {},
 ): string => {
   const { inputFormat, timezone = "UTC", fallback = "Invalid date" } = options;
 

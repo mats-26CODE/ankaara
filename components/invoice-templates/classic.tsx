@@ -1,5 +1,6 @@
 import type { InvoiceTemplateProps } from "@/lib/invoice-templates/types";
 import dayjs from "dayjs";
+import { BusinessLogo } from "./business-logo";
 
 const StatusLabel = ({ status, isPaid }: { status: string; isPaid: boolean }) => {
   if (isPaid) return <span className="inline-block rounded bg-emerald-100 px-3 py-1 text-xs font-bold uppercase text-emerald-700">Paid</span>;
@@ -11,24 +12,15 @@ export const ClassicTemplate = (props: InvoiceTemplateProps) => {
   const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, tax, taxPercent, total, notes, accentColor, footerNote, business, client, items, isPaid } = props;
   const taxLabel = Number(tax) > 0 && (taxPercent != null && taxPercent > 0) ? `Tax (${Number(taxPercent) % 1 === 0 ? taxPercent : Number(taxPercent).toFixed(1)}%)` : "Tax";
 
-  const renderLogo = () => {
-    if (business?.logo_url) {
-      // eslint-disable-next-line @next/next/no-img-element
-      return <img src={business.logo_url} alt={business.name} className="h-10 w-auto mb-2" />;
-    }
-    if (business?.logo_text) {
-      return <p className="text-xl font-bold text-gray-900">{business.logo_text}</p>;
-    }
-    return <p className="text-xl font-bold text-gray-900">{business?.name}</p>;
-  };
-
   return (
     <div className="bg-white text-gray-900 rounded-lg border border-gray-200 shadow-sm overflow-hidden">
       {/* Header */}
       <div className="border-b border-gray-200 bg-gray-50 px-8 py-6">
         <div className="flex justify-between items-start">
           <div>
-            {renderLogo()}
+            <div className="mb-2">
+              <BusinessLogo business={business} imageClassName="h-10 w-auto" textClassName="text-xl font-bold text-gray-900" />
+            </div>
             {business?.address && <p className="text-sm text-gray-500 mt-1">{business.address}</p>}
             {business?.tax_number && <p className="text-xs text-gray-400">TIN: {business.tax_number}</p>}
           </div>
