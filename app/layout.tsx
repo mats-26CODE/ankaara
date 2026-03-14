@@ -28,6 +28,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta name="apple-mobile-web-app-title" content="Ankaara" />
+      </head>
       <body className={`${figtree.variable} ${pacifico.variable} antialiased`}>
         <script
           dangerouslySetInnerHTML={{
