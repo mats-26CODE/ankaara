@@ -24,12 +24,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { InvoiceTemplate } from "@/lib/invoice-templates/registry";
 import { ShareInvoiceDialog } from "@/components/shared/share-invoice-dialog";
 import { INVOICE_ELEMENT_ID } from "@/components/shared/invoice-export-buttons";
-import {
-  ArrowLeft,
-  Pencil,
-  Trash2,
-  Share2,
-} from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, Share2 } from "lucide-react";
 import dayjs from "dayjs";
 
 const STATUS_CONFIG: Record<
@@ -118,7 +113,7 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-3">
@@ -127,12 +122,10 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
           </Button>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold tracking-tight">
-                {invoice.invoice_number}
-              </h1>
+              <h1 className="text-2xl font-bold tracking-tight">{invoice.invoice_number}</h1>
               <StatusBadge status={invoice.status} />
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Created {dayjs(invoice.created_at).format("MMM D, YYYY")}
             </p>
           </div>
@@ -141,7 +134,7 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
           {isDraft && (
             <Button variant="outline" size="sm" asChild>
               <Link href={`/dashboard/invoices/${invoice.id}/edit`}>
-                <Pencil className="size-4 mr-1" />
+                <Pencil className="mr-1 size-4" />
                 Edit
               </Link>
             </Button>
@@ -157,7 +150,7 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
                 : undefined
             }
           >
-            <Share2 className="size-4 mr-1" />
+            <Share2 className="mr-1 size-4" />
             Share
           </Button>
           <Button
@@ -174,36 +167,36 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
       {/* Invoice Preview — rendered with selected template */}
       <div id={INVOICE_ELEMENT_ID}>
         <InvoiceTemplate
-        templateId={invoice.template_id ?? "classic"}
-        invoiceNumber={invoice.invoice_number}
-        status={invoice.status}
-        issueDate={invoice.issue_date}
-        dueDate={invoice.due_date}
-        currency={invoice.currency}
-        subtotal={Number(invoice.subtotal)}
-        tax={Number(invoice.tax)}
-        taxPercent={
-          invoice.tax_percentage != null && Number(invoice.tax_percentage) > 0
-            ? Number(invoice.tax_percentage)
-            : Number(invoice.subtotal) > 0
-              ? (Number(invoice.tax) / Number(invoice.subtotal)) * 100
-              : null
-        }
-        total={Number(invoice.total)}
-        notes={invoice.notes}
-        accentColor={invoice.accent_color}
-        footerNote={invoice.footer_note}
-        isPaid={invoice.status === "paid"}
-        business={invoice.business ?? null}
-        client={invoice.client ?? null}
-        items={(invoice.items ?? []).map((item) => ({
-          id: item.id,
-          description: item.description,
-          quantity: Number(item.quantity),
-          unit_price: Number(item.unit_price),
-          total: Number(item.total),
-        }))}
-      />
+          templateId={invoice.template_id ?? "classic"}
+          invoiceNumber={invoice.invoice_number}
+          status={invoice.status}
+          issueDate={invoice.issue_date}
+          dueDate={invoice.due_date}
+          currency={invoice.currency}
+          subtotal={Number(invoice.subtotal)}
+          tax={Number(invoice.tax)}
+          taxPercent={
+            invoice.tax_percentage != null && Number(invoice.tax_percentage) > 0
+              ? Number(invoice.tax_percentage)
+              : Number(invoice.subtotal) > 0
+                ? (Number(invoice.tax) / Number(invoice.subtotal)) * 100
+                : null
+          }
+          total={Number(invoice.total)}
+          notes={invoice.notes}
+          accentColor={invoice.accent_color}
+          footerNote={invoice.footer_note}
+          isPaid={invoice.status === "paid"}
+          business={invoice.business ?? null}
+          client={invoice.client ?? null}
+          items={(invoice.items ?? []).map((item) => ({
+            id: item.id,
+            description: item.description,
+            quantity: Number(item.quantity),
+            unit_price: Number(item.unit_price),
+            total: Number(item.total),
+          }))}
+        />
       </div>
 
       {/* Share Dialog */}
@@ -227,8 +220,7 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
             <DialogTitle>Delete Invoice</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete{" "}
-              <span className="font-medium">{invoice.invoice_number}</span>? This
-              cannot be undone.
+              <span className="font-medium">{invoice.invoice_number}</span>? This cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

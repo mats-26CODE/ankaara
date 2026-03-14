@@ -172,7 +172,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
   }
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="space-y-6">
       <div className="space-y-3">
         <Button variant="outline" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="size-4" />

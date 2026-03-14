@@ -37,6 +37,12 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 export const DashboardSidebar = () => {
@@ -61,7 +67,7 @@ export const DashboardSidebar = () => {
   return (
     <Sidebar variant="floating" collapsible="icon">
       <SidebarHeader className="border-sidebar-border flex flex-row items-center justify-between border-b p-4">
-        Dashboard
+        <span className={cn("font-semibold", state === "collapsed" && "hidden")}>Dashboard</span>
         <SidebarTrigger className="shrink-0 group-data-[collapsible=icon]:-ml-1.5" />
       </SidebarHeader>
 
@@ -83,29 +89,26 @@ export const DashboardSidebar = () => {
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
-              {/* Invoices — collapsible */}
-              <Collapsible.Root open={invoicesOpen} onOpenChange={setInvoicesOpen} asChild>
-                <SidebarMenuItem>
-                  <Collapsible.Trigger asChild>
-                    <SidebarMenuButton
-                      isActive={isInvoicesActive}
-                      tooltip="Invoices"
-                      className={cn(showSubmenu && "cursor-pointer")}
-                    >
-                      <FileText className="size-4 shrink-0" />
-                      <span>Invoices</span>
-                      {showSubmenu && (
+              {/* Invoices — collapsible when expanded, dropdown when collapsed */}
+              {showSubmenu ? (
+                <Collapsible.Root open={invoicesOpen} onOpenChange={setInvoicesOpen} asChild>
+                  <SidebarMenuItem>
+                    <Collapsible.Trigger asChild>
+                      <SidebarMenuButton
+                        isActive={isInvoicesActive}
+                        tooltip="Invoices"
+                        className="cursor-pointer"
+                      >
+                        <FileText className="size-4 shrink-0" />
+                        <span>Invoices</span>
                         <ChevronRight
                           className={cn(
                             "ml-auto size-4 shrink-0 transition-transform duration-200",
                             invoicesOpen && "rotate-90",
                           )}
                         />
-                      )}
-                    </SidebarMenuButton>
-                  </Collapsible.Trigger>
-
-                  {showSubmenu && (
+                      </SidebarMenuButton>
+                    </Collapsible.Trigger>
                     <Collapsible.Content>
                       <SidebarMenuSub>
                         <SidebarMenuSubItem>
@@ -173,9 +176,70 @@ export const DashboardSidebar = () => {
                         </SidebarMenuSubItem>
                       </SidebarMenuSub>
                     </Collapsible.Content>
-                  )}
+                  </SidebarMenuItem>
+                </Collapsible.Root>
+              ) : (
+                <SidebarMenuItem>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <SidebarMenuButton isActive={isInvoicesActive} tooltip="Invoices">
+                        <FileText className="size-4 shrink-0" />
+                        <span>Invoices</span>
+                      </SidebarMenuButton>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent side="right" align="start" className="min-w-44">
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard/invoices" className="flex items-center gap-2">
+                          <FileText className="size-4" />
+                          All Invoices
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard/invoices/create" className="flex items-center gap-2">
+                          <Plus className="size-4" />
+                          Create Invoice
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href="/dashboard/invoices?status=draft"
+                          className="flex items-center gap-2"
+                        >
+                          <Clock className="size-4" />
+                          Drafts
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href="/dashboard/invoices?status=sent"
+                          className="flex items-center gap-2"
+                        >
+                          <Send className="size-4" />
+                          Sent
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href="/dashboard/invoices?status=paid"
+                          className="flex items-center gap-2"
+                        >
+                          <CheckCircle2 className="size-4" />
+                          Paid
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href="/dashboard/invoices?status=overdue"
+                          className="flex items-center gap-2"
+                        >
+                          <AlertTriangle className="size-4" />
+                          Overdue
+                        </Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </SidebarMenuItem>
-              </Collapsible.Root>
+              )}
 
               {/* Clients */}
               <SidebarMenuItem>
