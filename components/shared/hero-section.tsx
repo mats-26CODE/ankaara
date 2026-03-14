@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/use-translation";
+import { useUser } from "@/hooks/use-user";
 import Link from "next/link";
 import { Star } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage, AvatarGroup } from "../ui/avatar";
@@ -9,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 const HeroSection = () => {
   const { t } = useTranslation();
+  const { user } = useUser();
 
   return (
     <section className="relative overflow-hidden">
@@ -42,9 +44,13 @@ const HeroSection = () => {
               size="lg"
               className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-10 py-4 text-base font-medium shadow-lg"
             >
-              <Link href="#pricing">{t("landing.cta")}</Link>
+              {user ? (
+                <Link href="/dashboard">{t("landing.ctaDashboard")}</Link>
+              ) : (
+                <Link href="/login">{t("landing.cta")}</Link>
+              )}
             </Button>
-            <p className="text-muted-foreground text-sm">{t("landing.noCreditCard")}</p>
+            {!user && <p className="text-muted-foreground text-sm">{t("landing.noCreditCard")}</p>}
           </div>
 
           {/* Social proof */}
