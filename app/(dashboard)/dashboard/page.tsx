@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Card,
@@ -11,10 +12,19 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 import { ProfileAvatar } from "@/components/shared/profile-avatar";
 import { useProfile } from "@/hooks/use-profile";
 import { useUser } from "@/hooks/use-user";
 import { useTranslation } from "@/hooks/use-translation";
+import { useBusinesses } from "@/hooks/use-businesses";
+import { useCurrentBusinessId } from "@/lib/stores/business-store";
 import { getCasualGreeting } from "@/helpers/helpers";
 import { useFormatAmount } from "@/hooks/use-format-amount";
 import { useDashboardStats } from "@/hooks/use-dashboard-stats";
@@ -29,6 +39,9 @@ import {
   Clock,
   AlertTriangle,
   Send,
+  Building2,
+  Check,
+  ChevronDown,
 } from "lucide-react";
 
 /**
@@ -37,9 +50,7 @@ import {
  * treat the profile as incomplete when key data is missing.
  * Phone is optional so it's excluded from the essential check.
  */
-const checkProfileCompleteness = (
-  profile: ReturnType<typeof useProfile>["profile"]
-) => {
+const checkProfileCompleteness = (profile: ReturnType<typeof useProfile>["profile"]) => {
   if (!profile) return { complete: false, missing: [] as string[] };
 
   const missing: string[] = [];
@@ -52,24 +63,30 @@ const DashboardPage = () => {
   const { t } = useTranslation();
   const { user } = useUser();
   const { profile, loading: profileLoading } = useProfile();
+  const { businesses, loading: businessesLoading } = useBusinesses();
+  const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
   const { format: formatAmount } = useFormatAmount();
-  const {
-    invoiceStats,
-    clientCount,
-    loading: statsLoading,
-  } = useDashboardStats(user?.id);
+  const { invoiceStats, clientCount, loading: statsLoading } = useDashboardStats(user?.id);
 
-  const { complete: isProfileComplete, missing } =
-    checkProfileCompleteness(profile);
+  const activeBusiness =
+    businesses.find((b) => b.id === currentBusinessId) ?? businesses[0] ?? null;
+
+  useEffect(() => {
+    if (!currentBusinessId && businesses.length > 0) {
+      setCurrentBusiness(businesses[0].id);
+    }
+  }, [businesses, currentBusinessId, setCurrentBusiness]);
+
+  const { complete: isProfileComplete, missing } = checkProfileCompleteness(profile);
 
   if (profileLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-10 w-64 animate-pulse rounded bg-muted" />
-        <div className="h-40 animate-pulse rounded-xl bg-muted" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-muted h-10 w-64 animate-pulse rounded" />
+        <div className="bg-muted h-40 animate-pulse rounded-xl" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-28 animate-pulse rounded-xl bg-muted" />
+            <div key={i} className="bg-muted h-28 animate-pulse rounded-xl" />
           ))}
         </div>
       </div>
@@ -82,13 +99,18 @@ const DashboardPage = () => {
       <div className="space-y-1">
         <h1 className="text-3xl font-bold tracking-tight">
           {getCasualGreeting()}
-          {profile?.full_name?.trim()
-            ? `, ${profile.full_name.trim().split(/\s+/)[0]}`
-            : ""}
+          {profile?.full_name?.trim() ? `, ${profile.full_name.trim().split(/\s+/)[0]}` : ""}
         </h1>
-        <p className="text-muted-foreground">
-          {t("dashboard.home.greetingSubtitle")}
-        </p>
+        <p className="text-muted-foreground">{t("dashboard.home.greetingSubtitle")}</p>
+        {activeBusiness && (
+          <div className="flex items-center gap-2 pt-1">
+            <span className="text-muted-foreground text-sm">Viewing:</span>
+            <Badge variant="secondary" className="font-medium">
+              <Building2 className="mr-1 size-3.5" />
+              {activeBusiness.name}
+            </Badge>
+          </div>
+        )}
       </div>
 
       {/* ────── Complete your profile banner ────── */}
@@ -97,8 +119,8 @@ const DashboardPage = () => {
           <CardHeader>
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-4">
-                <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                  <UserRound className="size-6 text-primary" />
+                <div className="bg-primary/10 flex size-12 shrink-0 items-center justify-center rounded-full">
+                  <UserRound className="text-primary size-6" />
                 </div>
                 <div className="space-y-1.5">
                   <CardTitle className="text-xl">
@@ -107,9 +129,7 @@ const DashboardPage = () => {
                   <CardDescription className="text-base">
                     {t("dashboard.home.completeProfileDescription")}
                   </CardDescription>
-                  <p className="text-xs text-muted-foreground">
-                    Missing: {missing.join(", ")}
-                  </p>
+                  <p className="text-muted-foreground text-xs">Missing: {missing.join(", ")}</p>
                 </div>
               </div>
               <Button asChild className="shrink-0">
@@ -132,13 +152,13 @@ const DashboardPage = () => {
                 name={profile?.full_name || undefined}
                 image={profile?.avatar_url}
                 size="xl"
-                className="border-2 border-border"
+                className="border-border border-2"
               />
               <div className="space-y-1">
                 <CardTitle className="text-2xl">
                   {profile?.full_name || profile?.email || "Your Account"}
                 </CardTitle>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="text-muted-foreground flex items-center gap-2 text-sm">
                   {profile?.email && <span>{profile.email}</span>}
                   {profile?.phone && (
                     <>
@@ -149,18 +169,49 @@ const DashboardPage = () => {
                 </div>
               </div>
             </div>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/dashboard/settings">
-                <Settings className="mr-2 size-4" />
-                Settings
-              </Link>
-            </Button>
+
+            <div className="flex items-center gap-2">
+              {!businessesLoading && businesses.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="min-w-40 justify-between">
+                      <span className="flex items-center gap-2 truncate">
+                        <Building2 className="size-4 shrink-0" />
+                        {activeBusiness?.name ?? "Select business"}
+                      </span>
+                      <ChevronDown className="size-4 shrink-0 opacity-50" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="min-w-48">
+                    {businesses.map((biz) => {
+                      const isActive = biz.id === currentBusinessId;
+                      return (
+                        <DropdownMenuItem
+                          key={biz.id}
+                          onClick={() => setCurrentBusiness(biz.id)}
+                          className="flex items-center justify-between gap-2"
+                        >
+                          <span className="truncate">{biz.name}</span>
+                          {isActive && <Check className="size-4 shrink-0" />}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+              <Button asChild variant="outline" size="sm">
+                <Link href="/dashboard/settings">
+                  <Settings className="mr-2 size-4" />
+                  Settings
+                </Link>
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Total Revenue</p>
+              <p className="text-muted-foreground text-sm">Total Revenue</p>
               <p className="text-lg font-bold">
                 {statsLoading
                   ? "—"
@@ -170,19 +221,15 @@ const DashboardPage = () => {
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Invoices</p>
-              <p className="text-lg font-bold">
-                {statsLoading ? "—" : invoiceStats.total}
-              </p>
+              <p className="text-muted-foreground text-sm">Invoices</p>
+              <p className="text-lg font-bold">{statsLoading ? "—" : invoiceStats.total}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Clients</p>
-              <p className="text-lg font-bold">
-                {statsLoading ? "—" : clientCount}
-              </p>
+              <p className="text-muted-foreground text-sm">Clients</p>
+              <p className="text-lg font-bold">{statsLoading ? "—" : clientCount}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Member Since</p>
+              <p className="text-muted-foreground text-sm">Member Since</p>
               <p className="text-sm font-medium">
                 {profile?.created_at
                   ? new Date(profile.created_at).toLocaleDateString("en-US", {
@@ -197,19 +244,15 @@ const DashboardPage = () => {
       </Card>
 
       {/* ────── Stats Grid ────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Paid</CardTitle>
             <CheckCircle2 className="size-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {statsLoading ? "—" : invoiceStats.paid}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Invoices collected
-            </p>
+            <div className="text-2xl font-bold">{statsLoading ? "—" : invoiceStats.paid}</div>
+            <p className="text-muted-foreground mt-1 text-xs">Invoices collected</p>
           </CardContent>
           <CardFooter>
             <Button variant="outline" size="sm" asChild className="w-full">
@@ -224,12 +267,8 @@ const DashboardPage = () => {
             <Send className="size-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {statsLoading ? "—" : invoiceStats.sent}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Awaiting payment
-            </p>
+            <div className="text-2xl font-bold">{statsLoading ? "—" : invoiceStats.sent}</div>
+            <p className="text-muted-foreground mt-1 text-xs">Awaiting payment</p>
           </CardContent>
           <CardFooter>
             <Button variant="outline" size="sm" asChild className="w-full">
@@ -241,13 +280,11 @@ const DashboardPage = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Overdue</CardTitle>
-            <AlertTriangle className="size-4 text-destructive" />
+            <AlertTriangle className="text-destructive size-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {statsLoading ? "—" : invoiceStats.overdue}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Need follow-up</p>
+            <div className="text-2xl font-bold">{statsLoading ? "—" : invoiceStats.overdue}</div>
+            <p className="text-muted-foreground mt-1 text-xs">Need follow-up</p>
           </CardContent>
           <CardFooter>
             <Button variant="outline" size="sm" asChild className="w-full">
@@ -262,10 +299,8 @@ const DashboardPage = () => {
             <Clock className="size-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {statsLoading ? "—" : invoiceStats.draft}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Not yet sent</p>
+            <div className="text-2xl font-bold">{statsLoading ? "—" : invoiceStats.draft}</div>
+            <p className="text-muted-foreground mt-1 text-xs">Not yet sent</p>
           </CardContent>
           <CardFooter>
             <Button variant="outline" size="sm" asChild className="w-full">
@@ -276,7 +311,7 @@ const DashboardPage = () => {
       </div>
 
       {/* ────── Quick Actions + Account Summary ────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
@@ -318,16 +353,14 @@ const DashboardPage = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                Phone Verified
-              </span>
+              <span className="text-muted-foreground text-sm">Phone Verified</span>
               <span className="text-sm font-medium">
                 {profile?.phone ? (
-                  <span className="text-green-600 flex items-center gap-1">
+                  <span className="flex items-center gap-1 text-green-600">
                     <CheckCircle2 className="size-3.5" /> Yes
                   </span>
                 ) : (
-                  <span className="text-yellow-600 flex items-center gap-1">
+                  <span className="flex items-center gap-1 text-yellow-600">
                     <Clock className="size-3.5" /> Not yet
                   </span>
                 )}
@@ -335,16 +368,14 @@ const DashboardPage = () => {
             </div>
             <Separator />
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                Profile Complete
-              </span>
+              <span className="text-muted-foreground text-sm">Profile Complete</span>
               <span className="text-sm font-medium">
                 {isProfileComplete ? (
-                  <span className="text-green-600 flex items-center gap-1">
+                  <span className="flex items-center gap-1 text-green-600">
                     <CheckCircle2 className="size-3.5" /> Yes
                   </span>
                 ) : (
-                  <span className="text-yellow-600 flex items-center gap-1">
+                  <span className="flex items-center gap-1 text-yellow-600">
                     <Clock className="size-3.5" /> Incomplete
                   </span>
                 )}
@@ -352,9 +383,7 @@ const DashboardPage = () => {
             </div>
             <Separator />
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                Member Since
-              </span>
+              <span className="text-muted-foreground text-sm">Member Since</span>
               <span className="text-sm font-medium">
                 {profile?.created_at
                   ? new Date(profile.created_at).toLocaleDateString("en-US", {
