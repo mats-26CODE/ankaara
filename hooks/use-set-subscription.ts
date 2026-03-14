@@ -6,10 +6,13 @@ import type { SubscriptionPlanSlug } from "@/hooks/use-subscription-plans";
 
 type SetSubscriptionInput = {
   planSlug: SubscriptionPlanSlug;
-  businessId: string;
+  userId: string;
 };
 
-const setSubscriptionForBusiness = async ({ planSlug, businessId }: SetSubscriptionInput) => {
+const setSubscriptionForUser = async ({
+  planSlug,
+  userId,
+}: SetSubscriptionInput) => {
   const supabase = createClient();
 
   const { data: plan, error: planError } = await supabase
@@ -23,7 +26,7 @@ const setSubscriptionForBusiness = async ({ planSlug, businessId }: SetSubscript
   const { data: existing } = await supabase
     .from("subscriptions")
     .select("id")
-    .eq("business_id", businessId)
+    .eq("user_id", userId)
     .maybeSingle();
 
   if (existing) {
@@ -43,7 +46,7 @@ const setSubscriptionForBusiness = async ({ planSlug, businessId }: SetSubscript
   const { data: inserted, error: insertError } = await supabase
     .from("subscriptions")
     .insert({
-      business_id: businessId,
+      user_id: userId,
       plan: planSlug,
       subscription_plan_id: plan.id,
       status: "active",
@@ -58,7 +61,7 @@ const setSubscriptionForBusiness = async ({ planSlug, businessId }: SetSubscript
 export const useSetSubscription = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: setSubscriptionForBusiness,
+    mutationFn: setSubscriptionForUser,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
       queryClient.invalidateQueries({ queryKey: ["businesses"] });

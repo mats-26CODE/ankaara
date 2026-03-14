@@ -62,20 +62,20 @@ Feature limits per plan (used for enforcement and display).
 
 ---
 
-## 3. Subscriptions (Per Business)
+## 3. Subscriptions (Per User)
 
-Table: `subscriptions` (existing, with new column)
+Table: `subscriptions` — **one row per user (profile)**. Limits apply across all businesses owned by that user.
 
 | Column | Description |
 |--------|-------------|
 | `id` | uuid PK |
-| `business_id` | FK → businesses |
+| `user_id` | FK → profiles.id (unique: one subscription per user) |
 | `plan` | Slug: free \| pro \| business (kept for quick lookups) |
 | `subscription_plan_id` | FK → subscription_plans (source of truth for features) |
 | `status` | active \| cancelled \| expired |
 | `start_date`, `end_date` | Billing window |
 
-When creating or updating a subscription, set both `plan` (slug) and `subscription_plan_id` from the chosen `subscription_plans` row.
+When creating or updating a subscription, set both `plan` (slug) and `subscription_plan_id` from the chosen `subscription_plans` row. **Enforcement:** `invoices_per_month` = total invoices created in the current month across **all** businesses owned by the user; `businesses_count` = number of businesses owned by the user.
 
 ---
 
@@ -105,9 +105,9 @@ Records each payment made **for** a subscription (e.g. Pro monthly charge), sepa
    - Use `slug`, `name`, `price_amount`, `price_currency`, `billing_interval`, `is_contact_sales`, and feature rows.
 
 2. **Enforcement**  
-   - When creating an invoice: check `invoices_per_month` for the business’s current plan (via `subscriptions.subscription_plan_id` → `subscription_plan_features`).  
-   - When creating a business: check `businesses_count` the same way.  
-   - Compare to current usage (count of invoices this month, count of businesses for that user).
+   - Subscriptions are **per user** (`subscriptions.user_id`).  
+   - When creating an invoice: check `invoices_per_month` for the **user’s** plan (via their subscription’s `subscription_plan_id` → `subscription_plan_features`). Compare to **total invoices created this month across all businesses** owned by that user.  
+   - When creating a business: check `businesses_count` for the user’s plan. Compare to **total number of businesses** owned by that user.
 
 3. **Subscription flow (frontend)**  
    - **Landing:** Pricing section fetches `subscription_plans` + features and shows "Choose this plan". Logged-in → `/subscribe?plan=<slug>`; else → `/login?redirect=/subscribe?plan=<slug>`.  

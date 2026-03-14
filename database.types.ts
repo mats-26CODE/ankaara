@@ -639,45 +639,45 @@ export type Database = {
       };
       subscriptions: {
         Row: {
-          business_id: string;
           end_date: string | null;
           id: string;
           plan: string;
           start_date: string;
           status: string;
           subscription_plan_id: string | null;
+          user_id: string;
         };
         Insert: {
-          business_id: string;
           end_date?: string | null;
           id?: string;
           plan: string;
           start_date?: string;
           status?: string;
           subscription_plan_id?: string | null;
+          user_id: string;
         };
         Update: {
-          business_id?: string;
           end_date?: string | null;
           id?: string;
           plan?: string;
           start_date?: string;
           status?: string;
           subscription_plan_id?: string | null;
+          user_id?: string;
         };
         Relationships: [
-          {
-            foreignKeyName: "subscriptions_business_id_fkey";
-            columns: ["business_id"];
-            isOneToOne: false;
-            referencedRelation: "businesses";
-            referencedColumns: ["id"];
-          },
           {
             foreignKeyName: "subscriptions_subscription_plan_id_fkey";
             columns: ["subscription_plan_id"];
             isOneToOne: false;
             referencedRelation: "subscription_plans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "subscriptions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];

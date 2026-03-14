@@ -2,12 +2,10 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import Logo from "@/components/shared/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUser } from "@/hooks/use-user";
-import { useBusinesses } from "@/hooks/use-businesses";
 import {
   useSubscriptionPlans,
   formatPlanFeature,
@@ -40,7 +38,6 @@ const SubscribeContent = () => {
   const fromOnboarding = searchParams.get("from") === "onboarding";
 
   const { user, loading: authLoading } = useUser();
-  const { businesses, loading: businessesLoading } = useBusinesses();
   const { data: plans, isLoading: plansLoading } = useSubscriptionPlans();
   const setSubscription = useSetSubscription();
 
@@ -63,15 +60,14 @@ const SubscribeContent = () => {
     }
   }, [user, authLoading, router, planParam, fromOnboarding]);
 
-  const firstBusiness = businesses[0];
   const selectedPlan = plans?.find((p) => p.slug === selectedSlug);
   const isFree = selectedPlan?.slug === "free";
   const isContactSales = selectedPlan?.is_contact_sales ?? false;
 
-  const handleContinueWithFree = async () => {
-    if (!firstBusiness || !selectedPlan) return;
+  const handleContinueWithFree = () => {
+    if (!user || !selectedPlan) return;
     setSubscription.mutate(
-      { planSlug: "free", businessId: firstBusiness.id },
+      { planSlug: "free", userId: user.id },
       {
         onSuccess: () => {
           ToastAlert.success("You're on the Free plan.");
@@ -85,12 +81,12 @@ const SubscribeContent = () => {
   };
 
   const handleSkip = () => {
-    if (!firstBusiness) {
+    if (!user) {
       router.push("/dashboard");
       return;
     }
     setSubscription.mutate(
-      { planSlug: "free", businessId: firstBusiness.id },
+      { planSlug: "free", userId: user.id },
       {
         onSuccess: () => {
           ToastAlert.success("You can upgrade anytime from settings.");
@@ -117,32 +113,6 @@ const SubscribeContent = () => {
       <div className="bg-muted/30 flex min-h-screen flex-col items-center justify-center p-8">
         <Loader2 className="text-primary h-8 w-8 animate-spin" />
         <p className="text-muted-foreground mt-4">Loading...</p>
-      </div>
-    );
-  }
-
-  if (businessesLoading && !firstBusiness) {
-    return (
-      <div className="bg-muted/30 flex min-h-screen flex-col items-center justify-center p-8">
-        <Loader2 className="text-primary h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
-  if (!firstBusiness) {
-    return (
-      <div className="bg-muted/30 min-h-screen">
-        <div className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
-          <div className="mb-6 flex justify-center">
-            <Logo size="sm" />
-          </div>
-          <div className="bg-background rounded-lg border p-6 text-center">
-            <p className="text-muted-foreground">Create a business first to choose a plan.</p>
-            <Button asChild className="mt-4">
-              <Link href="/dashboard">Go to Dashboard</Link>
-            </Button>
-          </div>
-        </div>
       </div>
     );
   }
