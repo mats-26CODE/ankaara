@@ -389,7 +389,7 @@ export const translations = {
       heroLabel: "Professional invoicing for Africa",
       noCreditCard: "No credit card required",
       socialProof: "Rated 5.0 by freelancers & businesses",
-      trustedBy: "Trusted by freelancers & SMEs",
+      trustedBy: "Trusted by Freelancers & Businesses",
       testimonials: {
         one: {
           quoteStart: "This is hands down the ",

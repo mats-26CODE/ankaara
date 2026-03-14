@@ -191,11 +191,12 @@ total (numeric)
 
 ---
 
-# 6 Payments
+# 6 Invoice Payments
 
-Stores payment records.
+Stores payment records for **customer invoice payments** (payment link / gateway).  
+See also: subscription_payments for SaaS plan billing.
 
-Table: payments
+Table: invoice_payments (formerly payments)
 
 Fields:
 
@@ -216,16 +217,16 @@ failed
 
 ---
 
-# 7 Payment Transactions
+# 7 Invoice Payment Transactions
 
-Stores raw payment gateway responses.
+Stores raw payment gateway responses for invoice payments.
 
-Table: payment_transactions
+Table: invoice_payment_transactions (formerly payment_transactions)
 
 Fields:
 
 id (uuid, primary key)
-payment_id (uuid, foreign key → payments.id)
+invoice_payment_id (uuid, foreign key → invoice_payments.id)
 provider_transaction_id (text)
 raw_payload (jsonb)
 created_at (timestamp)
@@ -266,7 +267,7 @@ is_default (boolean)
 
 # 10 Subscriptions
 
-Stores SaaS subscription status.
+Stores SaaS subscription status. Plans and features are in subscription_plans and subscription_plan_features. Billing for plans is in subscription_payments (separate from invoice_payments).
 
 Table: subscriptions
 
@@ -274,10 +275,17 @@ Fields:
 
 id (uuid, primary key)
 business_id (uuid, foreign key → businesses.id)
-plan (text)
+subscription_plan_id (uuid, foreign key → subscription_plans.id, optional)
+plan (text) — slug: free | pro | business
 status (text)
 start_date (timestamp)
 end_date (timestamp)
+
+Table: subscription_plans — catalog (Free, Pro, Business) with name, price_amount, price_currency, billing_interval, is_contact_sales.
+
+Table: subscription_plan_features — per-plan limits, e.g. invoices_per_month (5 / 50 / unlimited), businesses_count (1 / unlimited / unlimited).
+
+Table: subscription_payments — payments made for the subscription (SaaS billing), separate from invoice_payments.
 
 Allowed plan values:
 

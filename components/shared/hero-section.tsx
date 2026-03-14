@@ -77,7 +77,7 @@ const HeroSection = () => {
 
         {/* Trusted by + Testimonials */}
         <div className="border-border/50 mt-14 border-t pt-8 md:mt-18">
-          <p className="text-muted-foreground font-brand mb-8 text-center font-semibold">
+          <p className="text-muted-foreground mb-8 text-center text-xl font-medium">
             {t("landing.trustedBy")}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
