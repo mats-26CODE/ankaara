@@ -5,9 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/use-translation";
 import Link from "next/link";
 import { Check, Users, Cloud, Zap, Mail } from "lucide-react";
-import { SUPPORT_EMAIL } from "@/constants/values";
-
-const SNIPE_URL = "https://snipe.sh";
+import { PAYMENT_GATEWAY_NAME, PAYMENT_GATEWAY_URL, SUPPORT_EMAIL } from "@/constants/values";
 
 const PricingSection = () => {
   const { t } = useTranslation();
@@ -34,16 +32,13 @@ const PricingSection = () => {
   ] as const;
 
   return (
-    <section
-      id="pricing"
-      className="py-12 md:py-16 px-4 border-t border-border/60 bg-muted/20"
-    >
-      <div className="container w-full md:max-w-6xl mx-auto">
-        <h2 className="capitalize text-2xl md:text-3xl xl:text-5xl font-semibold text-foreground text-center mb-12 md:mb-16">
+    <section id="pricing" className="border-border/60 bg-muted/20 border-t px-4 py-12 md:py-16">
+      <div className="container mx-auto w-full md:max-w-6xl">
+        <h2 className="text-foreground font-brand mb-12 text-center text-2xl font-semibold capitalize md:mb-16 md:text-4xl xl:text-5xl">
           {t("landing.pricing.title")}
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
           {plans.map(({ key, popular, contact, icon: Icon }) => {
             const name = t(`landing.pricing.${key}.name`);
             const description = t(`landing.pricing.${key}.description`);
@@ -60,48 +55,43 @@ const PricingSection = () => {
             return (
               <Card
                 key={key}
-                className={`relative flex flex-col rounded-2xl border-2 overflow-hidden transition-all ${
+                className={`relative flex flex-col overflow-hidden rounded-2xl border-2 transition-all ${
                   popular
-                    ? "border-primary bg-primary/5 shadow-lg shadow-primary/10 md:scale-[1.02]"
-                    : "border bg-card shadow-xs hover:border-primary/30"
+                    ? "border-primary bg-primary/5 shadow-primary/10 shadow-lg md:scale-[1.02]"
+                    : "bg-card hover:border-primary/30 border shadow-xs"
                 }`}
               >
                 {popular && (
-                  <div className="absolute top-0 right-0 px-3 py-1.5 rounded-bl-lg bg-primary text-primary-foreground text-xs font-medium">
+                  <div className="bg-primary text-primary-foreground absolute top-0 right-0 rounded-bl-lg px-3 py-1.5 text-xs font-medium">
                     {t("landing.pricing.mostPopular")}
                   </div>
                 )}
                 <CardHeader className="pb-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-lg">
                       <Icon className="h-5 w-5" />
                     </span>
-                    <CardTitle className="text-xl md:text-2xl font-semibold">
-                      {name}
-                    </CardTitle>
+                    <CardTitle className="text-xl font-semibold md:text-2xl">{name}</CardTitle>
                   </div>
-                  <p className="text-sm text-muted-foreground">{description}</p>
+                  <p className="text-muted-foreground text-sm">{description}</p>
                   {!contact ? (
                     <div className="flex items-baseline gap-1 pt-2">
-                      <span className="text-3xl md:text-4xl font-bold text-foreground">
+                      <span className="text-foreground text-3xl font-bold md:text-4xl">
                         {price}
                       </span>
                       <span className="text-muted-foreground">{period}</span>
                     </div>
                   ) : (
-                    <p className="text-lg font-semibold text-foreground pt-2">
+                    <p className="text-foreground pt-2 text-lg font-semibold">
                       {t("landing.pricing.contactUs")}
                     </p>
                   )}
                 </CardHeader>
-                <CardContent className="flex flex-col flex-1 pt-0">
-                  <ul className="space-y-3 flex-1">
+                <CardContent className="flex flex-1 flex-col pt-0">
+                  <ul className="flex-1 space-y-3">
                     {features.map((feature, i) => (
-                      <li
-                        key={i}
-                        className="flex items-start gap-2 text-sm text-muted-foreground"
-                      >
-                        <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                      <li key={i} className="text-muted-foreground flex items-start gap-2 text-sm">
+                        <Check className="text-primary mt-0.5 h-4 w-4 shrink-0" />
                         <span>{feature}</span>
                       </li>
                     ))}
@@ -109,7 +99,7 @@ const PricingSection = () => {
                   <Button
                     asChild
                     variant={popular ? "default" : "outline"}
-                    className={`w-full mt-6 rounded-lg py-6 font-medium ${
+                    className={`mt-6 w-full rounded-lg py-6 font-medium ${
                       popular ? "bg-primary" : ""
                     }`}
                     size="lg"
@@ -117,7 +107,7 @@ const PricingSection = () => {
                     {contact ? (
                       <a
                         href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
-                          `Business plan inquiry`
+                          `Business plan inquiry`,
                         )}`}
                         className="inline-flex items-center justify-center gap-2"
                       >
@@ -134,21 +124,21 @@ const PricingSection = () => {
           })}
         </div>
 
-        <p className="text-center text-muted-foreground text-md mt-10 uppercase">
+        <p className="text-muted-foreground text-md mt-10 text-center uppercase">
           {t("landing.pricing.noHiddenFees")}
         </p>
 
         {/* Powered by Snipe */}
-        <div className="mt-5 py-4 flex flex-col items-center gap-2">
-          <p className="text-2xl text-muted-foreground">
+        <div className="mt-5 flex flex-col items-center gap-2 py-4">
+          <p className="text-muted-foreground text-center text-2xl">
             {t("landing.pricing.poweredBy")}{" "}
             <a
-              href={SNIPE_URL}
+              href={PAYMENT_GATEWAY_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-medium text-primary hover:underline"
+              className="text-primary font-medium hover:underline"
             >
-              Snipe
+              {PAYMENT_GATEWAY_NAME}
             </a>
           </p>
         </div>

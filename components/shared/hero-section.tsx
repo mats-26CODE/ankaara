@@ -14,24 +14,24 @@ const HeroSection = () => {
     <section className="relative overflow-hidden">
       {/* Gradient overlay - theme-aware (works in light/dark) */}
       <div
-        className="absolute inset-0 -z-10 bg-linear-to-br from-primary/15 via-primary/5 to-accent/10"
+        className="from-primary/15 via-primary/5 to-accent/10 absolute inset-0 -z-10 bg-linear-to-br"
         aria-hidden
       />
-      <div className="container w-full md:max-w-4xl mx-auto px-4 pt-16 pb-16">
-        <div className="flex flex-col items-center text-center space-y-4 md:space-y-7">
+      <div className="container mx-auto w-full px-4 pt-16 pb-16 md:max-w-4xl">
+        <div className="flex flex-col items-center space-y-4 text-center md:space-y-7">
           {/* Small label above headline */}
-          <div className="bg-gray-100 dark:bg-primary/10 rounded-full px-4 py-2 border border-border dark:border-primary/10">
-            <p className="text-sm font-medium text-muted-foreground tracking-wide dark:text-primary-foreground">
+          <div className="dark:bg-primary/10 border-border dark:border-primary/10 rounded-full border bg-gray-100 px-4 py-2">
+            <p className="text-muted-foreground dark:text-primary-foreground text-sm font-medium tracking-wide">
               {t("landing.heroLabel")}
             </p>
           </div>
 
           <div className="space-y-3">
-            <h1 className="capitalize text-4xl md:text-5xl lg:text-7xl 2xl:text-8xl font-bold text-foreground tracking-tight text-balance leading-[1.1]">
+            <h1 className="text-foreground text-4xl leading-[1.1] font-bold tracking-tight text-balance capitalize md:text-5xl lg:text-7xl 2xl:text-8xl">
               {t("landing.headline")}
             </h1>
 
-            <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto text-pretty">
+            <p className="text-muted-foreground mx-auto max-w-xl text-base text-pretty md:text-lg">
               {t("landing.subheadline")}
             </p>
           </div>
@@ -40,79 +40,62 @@ const HeroSection = () => {
             <Button
               asChild
               size="lg"
-              className="rounded-full px-10 py-4 text-base font-medium bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-10 py-4 text-base font-medium shadow-lg"
             >
               <Link href="#pricing">{t("landing.cta")}</Link>
             </Button>
-            <p className="text-sm text-muted-foreground">
-              {t("landing.noCreditCard")}
-            </p>
+            <p className="text-muted-foreground text-sm">{t("landing.noCreditCard")}</p>
           </div>
 
           {/* Social proof */}
-          <div className="flex items-center gap-5 justify-center">
+          <div className="flex flex-col items-center justify-center gap-5 md:flex-row">
             <AvatarGroup className="grayscale">
               <Avatar className="size-10">
-                <AvatarImage
-                  src="https://github.com/shadcn.png"
-                  alt="@shadcn"
-                />
+                <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
                 <AvatarFallback>CN</AvatarFallback>
               </Avatar>
               <Avatar className="size-10">
-                <AvatarImage
-                  src="https://github.com/maxleiter.png"
-                  alt="@maxleiter"
-                />
+                <AvatarImage src="https://github.com/maxleiter.png" alt="@maxleiter" />
                 <AvatarFallback>LR</AvatarFallback>
               </Avatar>
               <Avatar className="size-10">
-                <AvatarImage
-                  src="https://github.com/evilrabbit.png"
-                  alt="@evilrabbit"
-                />
+                <AvatarImage src="https://github.com/evilrabbit.png" alt="@evilrabbit" />
                 <AvatarFallback>ER</AvatarFallback>
               </Avatar>
             </AvatarGroup>
 
-            <div className="space-y-2">
+            <div className="flex flex-col items-center justify-center space-y-2 md:items-start">
               <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <Star
-                    key={i}
-                    className="h-4 w-4 fill-amber-400 text-amber-400"
-                    aria-hidden
-                  />
+                  <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" aria-hidden />
                 ))}
               </div>
-              <p className="text-sm text-muted-foreground">
-                {t("landing.socialProof")}
-              </p>
+              <p className="text-muted-foreground text-sm">{t("landing.socialProof")}</p>
             </div>
           </div>
         </div>
 
         {/* Trusted by + Testimonials */}
-        <div className="mt-14 md:mt-18 pt-8 border-t border-border/50">
-          <p className="text-center text-sm text-muted-foreground mb-8">
+        <div className="border-border/50 mt-14 border-t pt-8 md:mt-18">
+          <p className="text-muted-foreground font-brand mb-8 text-center font-semibold">
             {t("landing.trustedBy")}
           </p>
-          <div className="flex items-center justify-center gap-4 flex-wrap">
+          <div className="flex flex-wrap items-center justify-center gap-4">
             {(["one", "two", "three"] as const).map((key) => (
               <Card
                 key={key}
-                className="p-1 bg-card border border-border rounded-xl shadow-xs"
+                className="bg-card border-border w-full rounded-xl border p-1 shadow-xs md:w-auto"
               >
-                <CardContent className="p-4 md:py-3 md:px-4 flex flex-col gap-4">
-                  <p className="text-sm md:text-base text-foreground leading-relaxed">
+                <CardContent className="flex flex-col gap-4 p-4 md:px-4 md:py-3">
+                  <p className="text-foreground text-sm leading-relaxed md:text-base">
                     &ldquo;{t(`landing.testimonials.${key}.quoteStart`)}
                     <strong className="font-semibold">
                       {t(`landing.testimonials.${key}.quoteHighlight`)}
                     </strong>
                     {t(`landing.testimonials.${key}.quoteEnd`)}&rdquo;
                   </p>
-                  <div className="flex items-center gap-3 mt-auto">
-                    <Avatar className="size-10 shrink-0 border border-border">
+                  <div className="mt-auto flex items-center gap-3">
+                    <Avatar className="border-border size-10 shrink-0 border">
                       <AvatarImage src="" alt="" />
                       <AvatarFallback className="bg-muted text-muted-foreground text-sm font-medium">
                         {t(`landing.testimonials.${key}.name`)
@@ -122,10 +105,10 @@ const HeroSection = () => {
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
+                      <p className="text-foreground truncate text-sm font-medium">
                         {t(`landing.testimonials.${key}.name`)}
                       </p>
-                      <p className="text-xs text-muted-foreground truncate">
+                      <p className="text-muted-foreground truncate text-xs">
                         {t(`landing.testimonials.${key}.affiliation`)}
                       </p>
                     </div>

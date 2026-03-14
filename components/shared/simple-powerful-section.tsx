@@ -1,12 +1,7 @@
 "use client";
 
 import { useTranslation } from "@/hooks/use-translation";
-import {
-  FileText,
-  Send,
-  CreditCard,
-  BarChart3,
-} from "lucide-react";
+import { FileText, Send, CreditCard, BarChart3 } from "lucide-react";
 
 const SimplePowerfulSection = () => {
   const { t } = useTranslation();
@@ -31,26 +26,23 @@ const SimplePowerfulSection = () => {
   ];
 
   return (
-    <section
-      id="features"
-      className="py-12 md:py-16 px-4 border-t border-border/60 bg-muted/20"
-    >
-      <div className="container w-full md:max-w-4xl mx-auto">
-        <h2 className="capitalize text-2xl md:text-4xl xl:text-5xl font-semibold text-foreground text-center mb-12 md:mb-16">
+    <section id="features" className="border-border/60 bg-muted/20 border-t px-4 py-12 md:py-16">
+      <div className="container mx-auto w-full md:max-w-4xl">
+        <h2 className="text-foreground font-brand mb-12 text-center text-2xl font-semibold capitalize md:mb-16 md:text-4xl xl:text-5xl">
           {t("landing.simpleSection.title")}
         </h2>
-        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
+        <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:gap-8">
           {items.map((item, index) => {
             const Icon = item.icon;
             return (
               <li
                 key={index}
-                className="flex items-start gap-4 p-4 rounded-xl bg-white dark:bg-primary/5 border border-border/50 dark:border-primary/10 hover:border-primary/30 transition-colors"
+                className="dark:bg-primary/5 border-border/50 dark:border-primary/10 hover:border-primary/30 flex items-start gap-4 rounded-xl border bg-white p-4 transition-colors"
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <span className="bg-primary/10 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
                   <Icon className="h-5 w-5" />
                 </span>
-                <span className="text-muted-foreground text-base md:text-lg pt-1.5">
+                <span className="text-muted-foreground pt-1.5 text-base md:text-lg">
                   {item.text}
                 </span>
               </li>

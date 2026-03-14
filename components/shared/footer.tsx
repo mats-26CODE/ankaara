@@ -1,39 +1,33 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
-import {
-  TbBrandFacebook,
-  TbBrandInstagram,
-  TbBrandLinkedin,
-} from "react-icons/tb";
+import { TbBrandFacebook, TbBrandInstagram, TbBrandLinkedin } from "react-icons/tb";
 import Logo from "./logo";
 import { useTranslation } from "@/hooks/use-translation";
+import { BsTwitterX } from "react-icons/bs";
 
 export const Footer = () => {
   const { t } = useTranslation();
   return (
-    <footer className="w-full bg-muted/30 border-t border-border">
-      <div className="container mx-auto py-8 md:py-12 px-4 md:px-20">
-        <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-4">
+    <footer className="bg-muted/30 border-border w-full border-t">
+      <div className="container mx-auto px-4 py-8 md:px-20 md:py-12">
+        <div className="space-y-4 md:grid md:grid-cols-4 md:space-y-0">
           {/* Brand */}
-          <div className="space-y-4 flex flex-col">
-            <Logo />
-            <p className="text-sm text-muted-foreground line-clamp-3 w-2/3">
+          <div className="flex flex-col space-y-4">
+            <Logo size="xs" />
+            <p className="text-muted-foreground line-clamp-3 w-2/3 text-sm">
               {t("footer.description")}
             </p>
           </div>
 
           {/* Company */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-foreground">
-              {t("footer.company")}
-            </h3>
+            <h3 className="text-foreground font-semibold">{t("footer.company")}</h3>
             <ul className="space-y-2">
               <li>
                 <a
                   href="/about-us"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-muted-foreground hover:text-foreground text-sm transition-colors"
                 >
                   {t("footer.aboutUs")}
                 </a>
@@ -43,14 +37,12 @@ export const Footer = () => {
 
           {/* Resources */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-foreground">
-              {t("footer.resources")}
-            </h3>
+            <h3 className="text-foreground font-semibold">{t("footer.resources")}</h3>
             <ul className="space-y-2">
               <li>
                 <a
                   href="/support"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-muted-foreground hover:text-foreground text-sm transition-colors"
                 >
                   {t("footer.helpCenter")}
                 </a>
@@ -58,7 +50,7 @@ export const Footer = () => {
               <li>
                 <a
                   href="/terms"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-muted-foreground hover:text-foreground text-sm transition-colors"
                 >
                   {t("footer.termsOfService")}
                 </a>
@@ -66,7 +58,7 @@ export const Footer = () => {
               <li>
                 <a
                   href="/privacy"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-muted-foreground hover:text-foreground text-sm transition-colors"
                 >
                   {t("footer.privacyPolicy")}
                 </a>
@@ -76,25 +68,25 @@ export const Footer = () => {
 
           {/* Social Media Connect */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-foreground">
-              {t("footer.connect")}
-            </h3>
+            <h3 className="text-foreground font-semibold">{t("footer.connect")}</h3>
 
             <div className="space-y-2">
-              <div className="space-y-3 md:space-y-0 md:flex md:gap-3 mt-2">
+              <div className="mt-2 flex gap-2">
                 <Button
                   size="icon"
                   variant="outline"
+                  className="rounded-full"
                   asChild
                   aria-label="Twitter"
                 >
                   <a href="#" target="_blank" rel="noopener noreferrer">
-                    <X className="size-5" />
+                    <BsTwitterX className="size-4" />
                   </a>
                 </Button>
                 <Button
                   size="icon"
                   variant="outline"
+                  className="rounded-full"
                   asChild
                   aria-label="LinkedIn"
                 >
@@ -105,6 +97,7 @@ export const Footer = () => {
                 <Button
                   size="icon"
                   variant="outline"
+                  className="rounded-full"
                   asChild
                   aria-label="Facebook"
                 >
@@ -115,6 +108,7 @@ export const Footer = () => {
                 <Button
                   size="icon"
                   variant="outline"
+                  className="rounded-full"
                   asChild
                   aria-label="Instagram"
                 >
@@ -127,10 +121,8 @@ export const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-border mt-12 pt-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            {t("footer.copyright")}
-          </p>
+        <div className="border-border mt-12 border-t pt-8 text-center">
+          <p className="text-muted-foreground text-sm">{t("footer.copyright")}</p>
         </div>
       </div>
     </footer>
