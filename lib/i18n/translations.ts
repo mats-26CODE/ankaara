@@ -3,7 +3,7 @@ import { APP_NAME } from "@/constants/values";
 export const translations = {
   sw: {
     languageLabel: "Swahili",
-      nav: {
+    nav: {
       brand: `${APP_NAME}`,
       tagline: `${APP_NAME} · Invoicing Sahihi, Rahisi`,
       howItWorks: "Inavyofanya Kazi",
@@ -45,8 +45,7 @@ export const translations = {
       headline: `${APP_NAME} – Invoicing Sahihi, Rahisi`,
       subheadline:
         "Tengeneza ankara za kibiashara, tuma kwa kiungo, fuatia maoni, na upoke malipo kwa pesa za simu. Imejengwa kwa Afrika.",
-      supportingText:
-        `${APP_NAME} ni jukwaa la invoicing linalokuruhusu kuunda, kutuma na kufuatilia ankara kwa urahisi.`,
+      supportingText: `${APP_NAME} ni jukwaa la invoicing linalokuruhusu kuunda, kutuma na kufuatilia ankara kwa urahisi.`,
       cta: "Anza Bure",
       heroLabel: "Invoicing ya Kibiashara kwa Afrika",
       noCreditCard: "Hakuna kadi ya kredi inayohitajika",
@@ -88,13 +87,11 @@ export const translations = {
         subtitle: `${APP_NAME} inakufanya uweze kurekodi na kusimamia rekodi za biashara yako kwa urahisi na uwazi.`,
         recordSales: {
           title: "Rekodi Mauzo",
-          description:
-            "Rekodi mauzo yako haraka na urahisi. Huru na rahisi kutumia.",
+          description: "Rekodi mauzo yako haraka na urahisi. Huru na rahisi kutumia.",
         },
         trackExpenses: {
           title: "Sikiza Gharama",
-          description:
-            "Tunza gharama zako kwa kategoria na usimamie uwekezaji wako.",
+          description: "Tunza gharama zako kwa kategoria na usimamie uwekezaji wako.",
         },
         monthlyReports: {
           title: "Ripoti za Kila Mwezi",
@@ -103,8 +100,7 @@ export const translations = {
         },
         traReady: {
           title: "Tayari kwa TRA",
-          description:
-            "Andaa rekodi zako kwa TRA kwa urahisi. Kukusaidia tu, siyo kufanya malipo.",
+          description: "Andaa rekodi zako kwa TRA kwa urahisi. Kukusaidia tu, siyo kufanya malipo.",
         },
       },
       howItWorks: {
@@ -128,12 +124,10 @@ export const translations = {
       },
       benefits: {
         title: `Kwa Nini Chagua ${APP_NAME}?`,
-        subtitle:
-          "Vifaa vyetu vinakusaidia kufanya kazi yako iwe rahisi na wazi.",
+        subtitle: "Vifaa vyetu vinakusaidia kufanya kazi yako iwe rahisi na wazi.",
         fast: {
           title: "Haraka na Rahisi",
-          description:
-            "Rekodi mauzo yako chini ya sekunde 5. Fomu rahisi na za haraka.",
+          description: "Rekodi mauzo yako chini ya sekunde 5. Fomu rahisi na za haraka.",
         },
         secure: {
           title: "Salama",
@@ -147,8 +141,7 @@ export const translations = {
         },
         transparent: {
           title: "Wazi na Wazi",
-          description:
-            "Angalia muhtasari wako wakati wowote. Kila kitu ni wazi na rahisi kuelewa.",
+          description: "Angalia muhtasari wako wakati wowote. Kila kitu ni wazi na rahisi kuelewa.",
         },
       },
       problem: {
@@ -158,8 +151,7 @@ export const translations = {
           salesNotRecorded: "Mauzo hayajaandikwa vizuri",
           expensesUnknown: "Matumizi hayajulikani wazi",
           noSummary: "Hakuna muhtasari wa kila mwezi",
-          incompleteRecords:
-            "Taarifa zipo kwenye daftari au kumbukumbu zisizo kamili",
+          incompleteRecords: "Taarifa zipo kwenye daftari au kumbukumbu zisizo kamili",
         },
         closing: "Hii husababisha hofu na mkanganyiko usio wa lazima.",
       },
@@ -206,7 +198,7 @@ export const translations = {
       pricing: {
         title: "Bei Rahisi",
         noHiddenFees: "Hakuna ada zisizojulikana.",
-        poweredBy: "Inaendeshwa na kuhifadhiwa na",
+        poweredBy: "Malipo yenye usalama kwa",
         mostPopular: "Inayopendwa zaidi",
         contactUs: "Wasiliana nasi",
         free: {
@@ -215,15 +207,25 @@ export const translations = {
           price: "TZS 0",
           period: "/mwezi",
           cta: "Chagua mpango huu",
-          features: ["Ankara 5 kwa mwezi", "Kiungo cha malipo", "Ufuatiliaji wa maoni", "Malipo ya pesa za simu"],
+          features: [
+            "Ankara 5 kwa mwezi",
+            "Kiungo cha malipo",
+            "Ufuatiliaji wa maoni",
+            "Malipo ya pesa za simu",
+          ],
         },
         pro: {
           name: "Pro",
           description: "Kwa biashara zinazokua. Ankara nyingi na vipengele zaidi.",
-          price: "9,000",
+          price: "24,000",
           period: "/mwezi",
           cta: "Chagua mpango huu",
-          features: ["Ankara 50 kwa mwezi", "Vitengo vya biashara", "Ripoti na tafiti", "Msaada wa kipaumbele"],
+          features: [
+            "Ankara 50 kwa mwezi",
+            "Vitengo vya biashara",
+            "Ripoti na tafiti",
+            "Msaada wa kipaumbele",
+          ],
         },
         business: {
           name: "Biashara",
@@ -231,7 +233,12 @@ export const translations = {
           price: "",
           period: "",
           cta: "Wasiliana nasi",
-          features: ["Ankara zisizo na kikomo", "Vitengo vingi", "API na uunganishaji", "Meneja akaunti"],
+          features: [
+            "Ankara zisizo na kikomo",
+            "Vitengo vingi",
+            "API na uunganishaji",
+            "Meneja akaunti",
+          ],
         },
       },
       trustCompliance: {
@@ -290,8 +297,7 @@ export const translations = {
         signIn: "Ingia",
         noAccount: "Huna akaunti?",
         signUp: "Jisajili",
-        terms:
-          `Kwa kuendelea, unakubali Vigezo vya Huduma na Sera ya Faragha ya ${APP_NAME}.`,
+        terms: `Kwa kuendelea, unakubali Vigezo vya Huduma na Sera ya Faragha ya ${APP_NAME}.`,
         error: "Barua pepe/simu au nenosiri si sahihi",
       },
       signup: {
@@ -309,8 +315,7 @@ export const translations = {
         signUp: "Jisajili",
         haveAccount: "Tayari una akaunti?",
         signIn: "Ingia",
-        terms:
-          `Kwa kuendelea, unakubali Vigezo vya Huduma na Sera ya Faragha ya ${APP_NAME}.`,
+        terms: `Kwa kuendelea, unakubali Vigezo vya Huduma na Sera ya Faragha ya ${APP_NAME}.`,
         error: "Haikuweza kusajili. Tafadhali jaribu tena.",
         fillAllFields: "Tafadhali jaza sehemu zote",
         emailRequired: "Barua pepe inahitajika",
@@ -413,7 +418,7 @@ export const translations = {
         title: "Simple, but powerful",
         createInvoices: "Create professional invoices with a clean layout",
         sendAndTrack: "Send invoices via link and track when they’re viewed",
-        acceptPayments: "Accept payments through mobile money",
+        acceptPayments: "Accept payments through mobile money, cards or qr codes",
         monitorStatus: "Monitor invoice status — paid, overdue, and more",
       },
       features: {
@@ -421,13 +426,11 @@ export const translations = {
         subtitle: `${APP_NAME} makes it easy to record and manage your business records with clarity and transparency.`,
         recordSales: {
           title: "Record Sales",
-          description:
-            "Record your sales quickly and easily. Free and simple to use.",
+          description: "Record your sales quickly and easily. Free and simple to use.",
         },
         trackExpenses: {
           title: "Track Expenses",
-          description:
-            "Store your expenses by category and manage your spending.",
+          description: "Store your expenses by category and manage your spending.",
         },
         monthlyReports: {
           title: "Monthly Reports",
@@ -436,8 +439,7 @@ export const translations = {
         },
         traReady: {
           title: "TRA Ready",
-          description:
-            "Prepare your records for TRA with ease. We help you prepare, not file.",
+          description: "Prepare your records for TRA with ease. We help you prepare, not file.",
         },
       },
       howItWorks: {
@@ -464,8 +466,7 @@ export const translations = {
         subtitle: "Our tools help make your work easier and more transparent.",
         fast: {
           title: "Fast & Easy",
-          description:
-            "Record your sales in under 5 seconds. Simple and quick forms.",
+          description: "Record your sales in under 5 seconds. Simple and quick forms.",
         },
         secure: {
           title: "Secure",
@@ -479,8 +480,7 @@ export const translations = {
         },
         transparent: {
           title: "Clear & Transparent",
-          description:
-            "View your summary anytime. Everything is clear and easy to understand.",
+          description: "View your summary anytime. Everything is clear and easy to understand.",
         },
       },
       problem: {
@@ -490,8 +490,7 @@ export const translations = {
           salesNotRecorded: "Sales are not properly recorded",
           expensesUnknown: "Expenses are not clearly known",
           noSummary: "There is no monthly summary",
-          incompleteRecords:
-            "Information is in notebooks or incomplete records",
+          incompleteRecords: "Information is in notebooks or incomplete records",
         },
         closing: "This causes unnecessary fear and confusion.",
       },
@@ -538,7 +537,7 @@ export const translations = {
       pricing: {
         title: "Simple pricing",
         noHiddenFees: "No hidden fees.",
-        poweredBy: "Powered and secured by",
+        poweredBy: "Secure payments by",
         mostPopular: "Most popular",
         contactUs: "Contact us",
         free: {
@@ -547,7 +546,12 @@ export const translations = {
           price: "$0",
           period: "/month",
           cta: "Choose this plan",
-          features: ["5 invoices per month", "Payment links", "View tracking", "Mobile money payments"],
+          features: [
+            "5 invoices per month",
+            "Payment links",
+            "View & track invoices",
+            "Accept invoice payments",
+          ],
         },
         pro: {
           name: "Pro",
@@ -555,7 +559,12 @@ export const translations = {
           price: "$9",
           period: "/month",
           cta: "Choose this plan",
-          features: ["50 invoices per month", "Multiple businesses", "Reports & analytics", "Priority support"],
+          features: [
+            "50 invoices per month",
+            "Multiple businesses",
+            "Reports & analytics",
+            "Priority support",
+          ],
         },
         business: {
           name: "Business",
@@ -563,7 +572,7 @@ export const translations = {
           price: "",
           period: "",
           cta: "Contact us",
-          features: ["Unlimited invoices", "Multiple businesses", "API & integrations", "Account manager"],
+          features: ["All Pro features", "Unlimited invoices", "Customizations", "Account manager"],
         },
       },
       trustCompliance: {
@@ -571,8 +580,7 @@ export const translations = {
         statements: {
           noTaxEvasion: `${APP_NAME} does not help evade taxes.`,
           noBankConnection: "We do not connect bank or MNO accounts.",
-          helpsRecords:
-            "We help businesses have accurate and transparent records.",
+          helpsRecords: "We help businesses have accurate and transparent records.",
         },
       },
       faq: {
@@ -623,8 +631,7 @@ export const translations = {
         signIn: "Sign in",
         noAccount: "Don't have an account?",
         signUp: "Sign up",
-        terms:
-          `By continuing, you agree to ${APP_NAME}'s Terms of Service and Privacy Policy.`,
+        terms: `By continuing, you agree to ${APP_NAME}'s Terms of Service and Privacy Policy.`,
         error: "Incorrect email/phone or password",
       },
       signup: {
@@ -642,8 +649,7 @@ export const translations = {
         signUp: "Sign Up",
         haveAccount: "Already have an account?",
         signIn: "Sign in",
-        terms:
-          `By continuing, you agree to ${APP_NAME}'s Terms of Service and Privacy Policy.`,
+        terms: `By continuing, you agree to ${APP_NAME}'s Terms of Service and Privacy Policy.`,
         error: "Unable to register. Please try again.",
         fillAllFields: "Please complete all fields",
         emailRequired: "Email is required",
@@ -679,10 +685,7 @@ const replaceVariables = (value: string, vars: Record<string, string> = {}) => {
 };
 
 // Helper function to resolve nested keys (e.g., "nav.findJobs")
-const resolveKey = (
-  lang: keyof typeof translations,
-  key: string
-): string | undefined => {
+const resolveKey = (lang: keyof typeof translations, key: string): string | undefined => {
   if (!key) return undefined;
   const parts = key.split(".");
   let current: unknown = translations[lang];
@@ -704,12 +707,9 @@ const resolveKey = (
 export const t = (
   lang: keyof typeof translations,
   key: string,
-  vars: Record<string, string> = {}
+  vars: Record<string, string> = {},
 ): string => {
   const resolved = resolveKey(lang, key);
   const value = resolved !== undefined ? resolved : key;
-  return replaceVariables(
-    typeof value === "string" ? value : String(value),
-    vars
-  );
+  return replaceVariables(typeof value === "string" ? value : String(value), vars);
 };

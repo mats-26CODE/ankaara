@@ -155,14 +155,14 @@ const NavBar = () => {
                 <Languages className="h-4 w-4" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-40 p-1">
+            <PopoverContent align="end" className="w-40 space-y-1 p-1">
               {Object.keys(translations).map((lang) => (
                 <button
                   key={lang}
                   type="button"
                   onClick={() => setLanguage(lang as keyof typeof translations)}
-                  className={`hover:bg-accent focus:bg-accent w-full rounded-sm px-2 py-1.5 text-left text-sm outline-none ${
-                    language === lang ? "bg-accent font-medium" : ""
+                  className={`hover:bg-accent/5 w-full rounded-sm px-2 py-1.5 text-left text-sm outline-none ${
+                    language === lang ? "bg-accent/10 font-medium" : ""
                   }`}
                 >
                   {translations[lang as keyof typeof translations].languageLabel}
