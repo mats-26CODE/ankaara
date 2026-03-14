@@ -55,10 +55,12 @@ export const useSendOtp = (resendOtp: boolean) => {
 };
 
 /**
- * Hook to verify OTP sent to user's phone
+ * Hook to verify OTP sent to user's phone.
+ * @param options.redirect - URL to redirect to after successful verification (e.g. /subscribe?plan=pro)
  */
-export const useVerifyOtp = () => {
+export const useVerifyOtp = (options?: { redirect?: string }) => {
   const router = useRouter();
+  const redirectTo = options?.redirect;
 
   return useMutation({
     mutationFn: async (payload: { phone: string; otp: string }) => {
@@ -73,9 +75,8 @@ export const useVerifyOtp = () => {
       return data;
     },
     onSuccess: async (data) => {
-      // Session is automatically stored in cookies by Supabase
       if (data.user && data.session) {
-        router.push("/dashboard");
+        router.push(redirectTo ?? "/dashboard");
         ToastAlert.success("Phone verified successfully! 🎉");
       }
     },

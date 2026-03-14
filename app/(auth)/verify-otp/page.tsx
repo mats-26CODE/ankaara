@@ -36,8 +36,11 @@ const VerifyOtpContent = () => {
   const [error, setError] = useState<string | null>(null);
   const intent = searchParams.get("intent");
   const isOnboarding = intent === "onboarding";
+  const redirect = searchParams.get("redirect");
 
-  const verifyOtpMutation = useVerifyOtp();
+  const verifyOtpMutation = useVerifyOtp({
+    redirect: redirect ?? undefined,
+  });
   const sendOtpMutation = useSendOtp(true);
   const verifyOtpForOnboardingMutation = useVerifyOtpForOnboarding();
   const sendOtpForOnboardingMutation = useSendOtpForOnboarding();
@@ -104,7 +107,7 @@ const VerifyOtpContent = () => {
                 onSuccess: async () => {
                   sessionStorage.removeItem(ONBOARDING_PENDING_KEY);
                   await refetchProfile();
-                  router.replace("/dashboard");
+                  router.replace("/subscribe?from=onboarding");
                 },
               }
             );

@@ -109,7 +109,13 @@ Records each payment made **for** a subscription (e.g. Pro monthly charge), sepa
    - When creating a business: check `businesses_count` the same way.  
    - Compare to current usage (count of invoices this month, count of businesses for that user).
 
-3. **After migrations**  
+3. **Subscription flow (frontend)**  
+   - **Landing:** Pricing section fetches `subscription_plans` + features and shows "Choose this plan". Logged-in → `/subscribe?plan=<slug>`; else → `/login?redirect=/subscribe?plan=<slug>`.  
+   - **Subscribe page (`/subscribe`):** Requires auth. Query `?plan=free|pro|business` pre-selects plan; `?from=onboarding` shows "Skip for now". Free → set subscription and go to dashboard; Pro → "Continue to payment" (Snippe integration); Business → contact mailto.  
+   - **After sign-up/onboarding:** Verify OTP success redirects to `/subscribe?from=onboarding` (paywall with skip).  
+   - **Payment:** Pro/Business payments will use Snippe (POST /v1/payments, webhook, then insert `subscription_payments` and set subscription). See [Snippe docs](https://docs.snippe.sh/docs/2026-01-25).
+
+4. **After migrations**  
    - Run `supabase gen types typescript --local` (or your project ID) and replace `database.types.ts` so types match `invoice_payments`, `invoice_payment_transactions`, `subscription_plans`, `subscription_plan_features`, `subscription_payments`.  
    - Any code that referenced `payments` or `payment_transactions` should use `invoice_payments` and `invoice_payment_transactions`.
 

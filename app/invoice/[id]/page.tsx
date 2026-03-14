@@ -5,7 +5,10 @@ import { createClient } from "@/lib/supabase/server";
 import { APP_NAME } from "@/constants/values";
 import { Button } from "@/components/ui/button";
 import { InvoiceTemplate } from "@/lib/invoice-templates/registry";
-import { InvoiceExportButtons, INVOICE_ELEMENT_ID } from "@/components/shared/invoice-export-buttons";
+import {
+  InvoiceExportButtons,
+  INVOICE_ELEMENT_ID,
+} from "@/components/shared/invoice-export-buttons";
 import Logo from "@/components/shared/logo";
 import { CheckCircle2, Clock, CreditCard } from "lucide-react";
 
@@ -53,7 +56,7 @@ const InvoiceContent = async ({ id }: { id: string }) => {
   const { data: invoice, error } = await supabase
     .from("invoices")
     .select(
-      "*, client:clients(id, name, email, phone, address), business:businesses!invoices_business_id_fkey(id, name, address, logo_url, logo_text, tax_number, brand_color, currency)"
+      "*, client:clients(id, name, email, phone, address), business:businesses!invoices_business_id_fkey(id, name, address, logo_url, logo_text, tax_number, brand_color, currency)",
     )
     .eq("id", id)
     .single();
@@ -82,11 +85,7 @@ const InvoiceContent = async ({ id }: { id: string }) => {
   });
 
   if (invoice.status === "sent") {
-    await supabase
-      .from("invoices")
-      .update({ status: "viewed" })
-      .eq("id", id)
-      .eq("status", "sent");
+    await supabase.from("invoices").update({ status: "viewed" }).eq("id", id).eq("status", "sent");
   }
 
   const client = invoice.client as {
@@ -110,57 +109,57 @@ const InvoiceContent = async ({ id }: { id: string }) => {
   const total = Number(invoice.total);
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="bg-muted/30 min-h-screen">
       <div className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
         <div className="mb-6 flex justify-center">
-          <Logo />
+          <Logo size="sm" />
         </div>
         {/* Status banner */}
         {isPaid && (
-          <div className="mb-6 flex items-center justify-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 p-4 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400">
+          <div className="mb-6 flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400">
             <CheckCircle2 className="size-5" />
             <span className="font-medium">This invoice has been paid</span>
           </div>
         )}
         {isOverdue && (
-          <div className="mb-6 flex items-center justify-center gap-2 rounded-lg bg-red-50 border border-red-200 p-4 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+          <div className="mb-6 flex items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
             <Clock className="size-5" />
             <span className="font-medium">This invoice is overdue</span>
           </div>
         )}
 
-        <div id={INVOICE_ELEMENT_ID} className="bg-white rounded-lg">
+        <div id={INVOICE_ELEMENT_ID} className="rounded-xl bg-white">
           <InvoiceTemplate
-          templateId={invoice.template_id ?? "classic"}
-          invoiceNumber={invoice.invoice_number}
-          status={invoice.status}
-          issueDate={invoice.issue_date}
-          dueDate={invoice.due_date}
-          currency={invoice.currency}
-          subtotal={Number(invoice.subtotal)}
-          tax={Number(invoice.tax)}
-          taxPercent={
-            invoice.tax_percentage != null && Number(invoice.tax_percentage) > 0
-              ? Number(invoice.tax_percentage)
-              : Number(invoice.subtotal) > 0
-                ? (Number(invoice.tax) / Number(invoice.subtotal)) * 100
-                : null
-          }
-          total={total}
-          notes={invoice.notes}
-          accentColor={invoice.accent_color}
-          footerNote={invoice.footer_note}
-          isPaid={isPaid}
-          business={business}
-          client={client}
-          items={(items ?? []).map((item) => ({
-            id: item.id,
-            description: item.description,
-            quantity: Number(item.quantity),
-            unit_price: Number(item.unit_price),
-            total: Number(item.total),
-          }))}
-        />
+            templateId={invoice.template_id ?? "classic"}
+            invoiceNumber={invoice.invoice_number}
+            status={invoice.status}
+            issueDate={invoice.issue_date}
+            dueDate={invoice.due_date}
+            currency={invoice.currency}
+            subtotal={Number(invoice.subtotal)}
+            tax={Number(invoice.tax)}
+            taxPercent={
+              invoice.tax_percentage != null && Number(invoice.tax_percentage) > 0
+                ? Number(invoice.tax_percentage)
+                : Number(invoice.subtotal) > 0
+                  ? (Number(invoice.tax) / Number(invoice.subtotal)) * 100
+                  : null
+            }
+            total={total}
+            notes={invoice.notes}
+            accentColor={invoice.accent_color}
+            footerNote={invoice.footer_note}
+            isPaid={isPaid}
+            business={business}
+            client={client}
+            items={(items ?? []).map((item) => ({
+              id: item.id,
+              description: item.description,
+              quantity: Number(item.quantity),
+              unit_price: Number(item.unit_price),
+              total: Number(item.total),
+            }))}
+          />
         </div>
 
         <div className="mt-6 flex items-center justify-center">
@@ -169,18 +168,18 @@ const InvoiceContent = async ({ id }: { id: string }) => {
 
         {/* Pay section */}
         {!isPaid && (
-          <div className="mt-6 rounded-lg border bg-background p-6 text-center space-y-3">
+          <div className="bg-background mt-6 space-y-3 rounded-lg border p-6 text-center">
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Amount Due</p>
+              <p className="text-muted-foreground text-sm">Amount Due</p>
               <p className="text-3xl font-bold tracking-tight">
                 {invoice.currency} {total.toLocaleString()}
               </p>
             </div>
             <Button size="lg" disabled className="min-w-[220px]">
-              <CreditCard className="size-4 mr-2" />
+              <CreditCard className="mr-2 size-4" />
               Pay Now — Coming Soon
             </Button>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Online payments will be available soon via Snipe Payment Gateway.
             </p>
           </div>

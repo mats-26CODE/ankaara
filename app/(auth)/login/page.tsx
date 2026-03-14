@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/shared/logo";
 import { Button } from "@/components/ui/button";
@@ -18,9 +18,11 @@ import { useTranslation } from "@/hooks/use-translation";
 import { validatePhoneNumber } from "@/helpers/helpers"; 
 
 
-const LoginPage = () => {
+const LoginContent = () => {
   const { t } = useTranslation();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect");
   const [formData, setFormData] = useState({
     phone: "",
   });
@@ -48,14 +50,15 @@ const LoginPage = () => {
       return;
     }
 
-    // Send OTP and navigate to verify-otp page
+    // Send OTP and navigate to verify-otp page (preserve redirect for after login)
     sendOtpMutation.mutate(
       { phone: formData.phone },
       {
         onSuccess: () => {
-          router.push(
-            `/verify-otp?phone=${encodeURIComponent(formData.phone)}`
-          );
+          const verifyUrl = new URL("/verify-otp", window.location.origin);
+          verifyUrl.searchParams.set("phone", formData.phone);
+          if (redirect) verifyUrl.searchParams.set("redirect", redirect);
+          router.push(verifyUrl.pathname + verifyUrl.search);
         },
         onError: (err) => {
           setError(err instanceof Error ? err.message : t("auth.login.error"));
@@ -237,5 +240,11 @@ const LoginPage = () => {
     </div>
   );
 };
+
+const LoginPage = () => (
+  <Suspense fallback={null}>
+    <LoginContent />
+  </Suspense>
+);
 
 export default LoginPage;
