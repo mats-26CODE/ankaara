@@ -159,7 +159,7 @@ const ClientsPage = () => {
       if (!currentBusinessId) return;
       createClient.mutate(
         {
-          organization_id: currentBusinessId,
+          business_id: currentBusinessId,
           name: form.name.trim(),
           email: form.email.trim() || undefined,
           phone: form.phone.trim() || undefined,

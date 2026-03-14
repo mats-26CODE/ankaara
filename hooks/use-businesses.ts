@@ -121,7 +121,7 @@ export const useDeleteBusiness = () => {
       const { count } = await supabase
         .from("clients")
         .select("id", { count: "exact", head: true })
-        .eq("organization_id", id);
+        .eq("business_id", id);
 
       if (count && count > 0) {
         throw new Error(
@@ -132,7 +132,7 @@ export const useDeleteBusiness = () => {
       const { count: invoiceCount } = await supabase
         .from("invoices")
         .select("id", { count: "exact", head: true })
-        .eq("organization_id", id);
+        .eq("business_id", id);
 
       if (invoiceCount && invoiceCount > 0) {
         throw new Error(

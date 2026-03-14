@@ -183,7 +183,7 @@ const CreateInvoicePage = () => {
     setSavingMode("submit");
     createInvoice.mutate(
       {
-        organization_id: currentBusinessId,
+        business_id: currentBusinessId,
         client_id: clientId,
         issue_date: issueDate,
         due_date: dueDate,
@@ -210,7 +210,7 @@ const CreateInvoicePage = () => {
     setSavingMode("draft");
     createInvoice.mutate(
       {
-        organization_id: currentBusinessId,
+        business_id: currentBusinessId,
         client_id: clientId,
         issue_date: issueDate,
         due_date: dueDate,

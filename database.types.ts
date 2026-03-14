@@ -74,7 +74,7 @@ export type Database = {
           email: string | null
           id: string
           name: string
-          organization_id: string
+          business_id: string
           phone: string | null
           updated_at: string
         }
@@ -84,7 +84,7 @@ export type Database = {
           email?: string | null
           id?: string
           name: string
-          organization_id: string
+          business_id: string
           phone?: string | null
           updated_at?: string
         }
@@ -94,14 +94,14 @@ export type Database = {
           email?: string | null
           id?: string
           name?: string
-          organization_id?: string
+          business_id?: string
           phone?: string | null
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "clients_organization_id_fkey"
-            columns: ["organization_id"]
+            foreignKeyName: "clients_business_id_fkey"
+            columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
             referencedColumns: ["id"]
@@ -182,26 +182,26 @@ export type Database = {
           is_default: boolean
           layout: Json | null
           name: string
-          organization_id: string
+          business_id: string
         }
         Insert: {
           id?: string
           is_default?: boolean
           layout?: Json | null
           name: string
-          organization_id: string
+          business_id: string
         }
         Update: {
           id?: string
           is_default?: boolean
           layout?: Json | null
           name?: string
-          organization_id?: string
+          business_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "invoice_templates_organization_id_fkey"
-            columns: ["organization_id"]
+            foreignKeyName: "invoice_templates_business_id_fkey"
+            columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
             referencedColumns: ["id"]
@@ -252,7 +252,7 @@ export type Database = {
           invoice_number: string
           issue_date: string
           notes: string | null
-          organization_id: string
+          business_id: string
           payment_link: string | null
           status: string
           subtotal: number
@@ -273,7 +273,7 @@ export type Database = {
           invoice_number: string
           issue_date: string
           notes?: string | null
-          organization_id: string
+          business_id: string
           payment_link?: string | null
           status?: string
           subtotal?: number
@@ -294,7 +294,7 @@ export type Database = {
           invoice_number?: string
           issue_date?: string
           notes?: string | null
-          organization_id?: string
+          business_id?: string
           payment_link?: string | null
           status?: string
           subtotal?: number
@@ -313,8 +313,8 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "invoices_organization_id_fkey"
-            columns: ["organization_id"]
+            foreignKeyName: "invoices_business_id_fkey"
+            columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
             referencedColumns: ["id"]
@@ -523,7 +523,7 @@ export type Database = {
         Row: {
           end_date: string | null
           id: string
-          organization_id: string
+          business_id: string
           plan: string
           start_date: string
           status: string
@@ -531,7 +531,7 @@ export type Database = {
         Insert: {
           end_date?: string | null
           id?: string
-          organization_id: string
+          business_id: string
           plan: string
           start_date?: string
           status?: string
@@ -539,15 +539,15 @@ export type Database = {
         Update: {
           end_date?: string | null
           id?: string
-          organization_id?: string
+          business_id?: string
           plan?: string
           start_date?: string
           status?: string
         }
         Relationships: [
           {
-            foreignKeyName: "subscriptions_organization_id_fkey"
-            columns: ["organization_id"]
+            foreignKeyName: "subscriptions_business_id_fkey"
+            columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
             referencedColumns: ["id"]
@@ -567,7 +567,7 @@ export type Database = {
         }[]
       }
       next_invoice_number: {
-        Args: { p_organization_id: string }
+        Args: { p_business_id: string }
         Returns: string
       }
       set_confirmation: {

@@ -53,7 +53,7 @@ const InvoiceContent = async ({ id }: { id: string }) => {
   const { data: invoice, error } = await supabase
     .from("invoices")
     .select(
-      "*, client:clients(id, name, email, phone, address), business:businesses!invoices_organization_id_fkey(id, name, address, logo_url, logo_text, tax_number, brand_color, currency)"
+      "*, client:clients(id, name, email, phone, address), business:businesses!invoices_business_id_fkey(id, name, address, logo_url, logo_text, tax_number, brand_color, currency)"
     )
     .eq("id", id)
     .single();

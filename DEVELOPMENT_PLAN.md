@@ -39,7 +39,7 @@ Schema support (already in migration `20260310130000`):
 - **Tables:** profiles (if missing), businesses, clients, invoices, invoice_items, payments, payment_transactions, invoice_views, invoice_templates, subscriptions.
 - **Conventions:** UUID PKs, FKs, `created_at` (and `updated_at` where useful), RLS on all tables.
 - **Storage:** buckets `logos`, `invoice_pdfs` with RLS.
-- **Improvements:** Add `updated_at` on businesses, clients, invoices; index on `invoices.organization_id`, `invoices.status`, `invoices.due_date` for dashboard queries.
+- **Improvements:** Add `updated_at` on businesses, clients, invoices; index on `invoices.business_id`, `invoices.status`, `invoices.due_date` for dashboard queries.
 
 ### 1.2 Dashboard shell (kazy_web structure)
 

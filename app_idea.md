@@ -131,7 +131,7 @@ Table: clients
 Fields:
 
 id (uuid, primary key)
-organization_id (uuid, foreign key → businesses.id)
+business_id (uuid, foreign key → businesses.id)
 name (text)
 email (text)
 phone (text)
@@ -149,7 +149,7 @@ Table: invoices
 Fields:
 
 id (uuid, primary key)
-organization_id (uuid, foreign key → businesses.id)
+business_id (uuid, foreign key → businesses.id)
 client_id (uuid, foreign key → clients.id)
 invoice_number (text)
 status (text)
@@ -257,7 +257,7 @@ Table: invoice_templates
 Fields:
 
 id (uuid, primary key)
-organization_id (uuid, foreign key → businesses.id)
+business_id (uuid, foreign key → businesses.id)
 name (text)
 layout (jsonb)
 is_default (boolean)
@@ -273,7 +273,7 @@ Table: subscriptions
 Fields:
 
 id (uuid, primary key)
-organization_id (uuid, foreign key → businesses.id)
+business_id (uuid, foreign key → businesses.id)
 plan (text)
 status (text)
 start_date (timestamp)

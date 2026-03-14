@@ -28,7 +28,7 @@ export type InvoiceItemInput = {
 };
 
 export type CreateInvoicePayload = {
-  organization_id: string;
+  business_id: string;
   client_id: string;
   issue_date: string;
   due_date: string;
@@ -90,7 +90,7 @@ export const useInvoices = (
       .select("*, client:clients(id, name, email, phone, address)", {
         count: "exact",
       })
-      .eq("organization_id", businessId)
+      .eq("business_id", businessId)
       .order("created_at", { ascending: false })
       .range(from, to);
 
@@ -132,7 +132,7 @@ export const useInvoice = (invoiceId: string | null) => {
     const { data, error } = await supabase
       .from("invoices")
       .select(
-        "*, client:clients(id, name, email, phone, address), business:businesses!invoices_organization_id_fkey(id, name, address, logo_url, logo_text, tax_number, brand_color, currency)",
+        "*, client:clients(id, name, email, phone, address), business:businesses!invoices_business_id_fkey(id, name, address, logo_url, logo_text, tax_number, brand_color, currency)",
       )
       .eq("id", invoiceId)
       .single();
@@ -171,14 +171,14 @@ export const useCreateInvoice = () => {
       const { subtotal, tax, total } = computeTotals(payload.items, payload.tax);
 
       const { data: invNumData, error: invNumError } = await supabase.rpc("next_invoice_number", {
-        p_organization_id: payload.organization_id,
+        p_business_id: payload.business_id,
       });
       if (invNumError) throw invNumError;
 
       const { data, error } = await supabase
         .from("invoices")
         .insert({
-          organization_id: payload.organization_id,
+          business_id: payload.business_id,
           client_id: payload.client_id,
           invoice_number: invNumData as string,
           issue_date: payload.issue_date,

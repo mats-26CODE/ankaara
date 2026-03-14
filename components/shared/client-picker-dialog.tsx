@@ -93,7 +93,7 @@ const ClientPickerDialog = ({
   const handleAddClient = () => {
     if (!addForm.name.trim() || !businessId) return;
     const payload: CreateClientPayload = {
-      organization_id: businessId,
+      business_id: businessId,
       name: addForm.name.trim(),
       email: addForm.email.trim() || undefined,
       phone: addForm.phone.trim() || undefined,

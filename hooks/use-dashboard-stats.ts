@@ -48,7 +48,7 @@ export const useDashboardStats = (userId: string | undefined) => {
     const { data: invoices } = await supabase
       .from("invoices")
       .select("status, total")
-      .in("organization_id", bizIds);
+      .in("business_id", bizIds);
 
     const stats: InvoiceStats = { ...defaultStats, currency };
 
@@ -69,7 +69,7 @@ export const useDashboardStats = (userId: string | undefined) => {
     const { count } = await supabase
       .from("clients")
       .select("id", { count: "exact", head: true })
-      .in("organization_id", bizIds);
+      .in("business_id", bizIds);
 
     setClientCount(count || 0);
     setLoading(false);

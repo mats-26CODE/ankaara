@@ -42,7 +42,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
     clients,
     loading: clientsLoading,
     refetch: refetchClients,
-  } = useClients(invoice?.organization_id ?? null);
+  } = useClients(invoice?.business_id ?? null);
 
   const [clientId, setClientId] = useState("");
   const [issueDate, setIssueDate] = useState("");
@@ -194,7 +194,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
               <div className="space-y-2">
                 <Label>Client *</Label>
                 <ClientPickerDialog
-                  businessId={invoice?.organization_id ?? null}
+                  businessId={invoice?.business_id ?? null}
                   value={clientId}
                   onChange={setClientId}
                   clients={clients}

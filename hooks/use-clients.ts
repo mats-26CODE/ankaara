@@ -7,7 +7,7 @@ import { ToastAlert } from "@/config/toast";
 import type { Tables, TablesInsert, TablesUpdate } from "@/database.types";
 
 export type Client = Tables<"clients">;
-export type CreateClientPayload = Pick<TablesInsert<"clients">, "organization_id" | "name"> &
+export type CreateClientPayload = Pick<TablesInsert<"clients">, "business_id" | "name"> &
   Partial<Pick<TablesInsert<"clients">, "email" | "phone" | "address">>;
 export type UpdateClientPayload = TablesUpdate<"clients"> & { id: string };
 
@@ -35,7 +35,7 @@ export const useClients = (
     let query = supabase
       .from("clients")
       .select("*", usePagination ? { count: "exact" } : undefined)
-      .eq("organization_id", businessId)
+      .eq("business_id", businessId)
       .order("created_at", { ascending: false });
 
     if (usePagination) {
@@ -71,7 +71,7 @@ export const useCreateClient = () => {
       const { data, error } = await supabase
         .from("clients")
         .insert({
-          organization_id: payload.organization_id,
+          business_id: payload.business_id,
           name: payload.name,
           email: payload.email?.trim() || null,
           phone: payload.phone?.trim() || null,
