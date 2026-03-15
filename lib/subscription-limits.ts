@@ -39,17 +39,21 @@ export const getSubscribeUrlForPlanLimit = (error: unknown): string => {
   return SUBSCRIBE_PATH;
 };
 
-/** Plan order for upgrade suggestion. */
-export const PLAN_ORDER = ["free", "pro", "business"] as const;
+/** Plan tiers for upgrade suggestion. */
+export const PLAN_TIER_ORDER = ["free", "pro", "business"] as const;
 
 /**
  * Returns the next plan slug to suggest when the user hits a limit on current plan.
- * free → pro, pro → business, business → business (already max).
+ * free → pro-monthly, any pro → business, business → business (already max).
  */
 export const getNextPlanSlug = (
   currentSlug: string,
-): "free" | "pro" | "business" => {
-  const idx = PLAN_ORDER.indexOf(currentSlug as (typeof PLAN_ORDER)[number]);
-  if (idx < 0 || idx >= PLAN_ORDER.length - 1) return "pro";
-  return PLAN_ORDER[idx + 1];
+): "free" | "pro-monthly" | "pro-6month" | "pro-yearly" | "business" => {
+  const isPro =
+    currentSlug === "pro" ||
+    currentSlug === "pro-monthly" ||
+    currentSlug === "pro-6month" ||
+    currentSlug === "pro-yearly";
+  if (currentSlug === "business" || isPro) return "business";
+  return "pro-monthly";
 };

@@ -5,11 +5,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Logo from "@/components/shared/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useUser } from "@/hooks/use-user";
 import { useCurrentSubscription } from "@/hooks/use-current-subscription";
 import {
   useSubscriptionPlans,
   formatPlanFeature,
+  getPlanTier,
+  groupPlansByTier,
   type SubscriptionPlanSlug,
 } from "@/hooks/use-subscription-plans";
 import { useSetSubscription } from "@/hooks/use-set-subscription";
@@ -19,7 +22,7 @@ import { Check, Loader2, ArrowRight, Mail, Users, Cloud, Zap } from "lucide-reac
 import { SUPPORT_EMAIL } from "@/constants/values";
 import { ToastAlert } from "@/config/toast";
 
-const PLAN_ICONS: Record<SubscriptionPlanSlug, typeof Users> = {
+const PLAN_TIER_ICONS: Record<ReturnType<typeof getPlanTier>, typeof Users> = {
   free: Users,
   pro: Zap,
   business: Cloud,
@@ -30,6 +33,20 @@ const formatPriceDisplay = (amount: number | null, currency: string | null) => {
   if (amount === 0) return "$0";
   const symbol = currency === "USD" ? "$" : (currency ?? "$");
   return `${symbol}${Number(amount).toFixed(2)}`;
+};
+
+const getIntervalLabel = (interval: string | null) => {
+  if (interval === "monthly") return "Monthly";
+  if (interval === "6_month") return "6 Month";
+  if (interval === "yearly") return "Yearly";
+  return "";
+};
+
+const getPeriodSuffix = (interval: string | null) => {
+  if (interval === "monthly") return "/month";
+  if (interval === "6_month") return "/6 months";
+  if (interval === "yearly") return "/year";
+  return "";
 };
 
 const SubscribeContent = () => {
@@ -45,18 +62,21 @@ const SubscribeContent = () => {
   const { data: plans, isLoading: plansLoading } = useSubscriptionPlans();
   const setSubscription = useSetSubscription();
 
-  const [selectedSlug, setSelectedSlug] = useState<SubscriptionPlanSlug | null>(
-    planParam && ["free", "pro", "business"].includes(planParam) ? planParam : null,
-  );
+  const [selectedSlug, setSelectedSlug] = useState<SubscriptionPlanSlug | null>(null);
 
   useEffect(() => {
-    if (planParam && ["free", "pro", "business"].includes(planParam)) {
-      setSelectedSlug(planParam as SubscriptionPlanSlug);
+    if (planParam) {
+      const slug =
+        planParam === "pro"
+          ? "pro-monthly"
+          : (["free", "pro-monthly", "pro-6month", "pro-yearly", "business", "business-monthly", "business-6month", "business-yearly"].includes(planParam)
+              ? planParam
+              : null);
+      if (slug) setSelectedSlug(slug as SubscriptionPlanSlug);
       return;
     }
     if (limitParam && subscription?.planSlug) {
-      const nextSlug = getNextPlanSlug(subscription.planSlug);
-      setSelectedSlug(nextSlug);
+      setSelectedSlug(getNextPlanSlug(subscription.planSlug));
     }
   }, [planParam, limitParam, subscription?.planSlug]);
 
@@ -167,36 +187,32 @@ const SubscribeContent = () => {
               <Loader2 className="text-primary h-8 w-8 animate-spin" />
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
-              {plans?.map((plan) => {
+            (() => {
+              const grouped = groupPlansByTier(plans ?? []);
+              const renderPlanCard = (
+                plan: (typeof plans)[number],
+                tier: ReturnType<typeof getPlanTier>,
+                isSelected: boolean,
+                onSelect: () => void,
+              ) => {
                 const slug = plan.slug as SubscriptionPlanSlug;
-                const Icon = PLAN_ICONS[slug];
-                const popular = slug === "pro";
-                const isSelected = selectedSlug === slug;
+                const Icon = PLAN_TIER_ICONS[tier];
+                const popular = tier === "pro";
                 const contact = plan.is_contact_sales;
                 const priceStr = formatPriceDisplay(plan.price_amount, plan.price_currency);
-                const period =
-                  plan.billing_interval === "monthly"
-                    ? "/month"
-                    : plan.billing_interval === "yearly"
-                      ? "/year"
-                      : "";
-
+                const period = getPeriodSuffix(plan.billing_interval);
                 return (
                   <Card
-                    key={plan.id}
                     role="button"
                     tabIndex={0}
                     className={`relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border-2 transition-all ${
-                      isSelected
-                        ? "border-primary ring-primary/20 ring-2"
-                        : "bg-card hover:border-primary/30 shadow-xs"
+                      isSelected ? "border-primary ring-primary/20 ring-2" : "bg-card hover:border-primary/30 shadow-xs"
                     }`}
-                    onClick={() => setSelectedSlug(slug)}
+                    onClick={onSelect}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
-                        setSelectedSlug(slug);
+                        onSelect();
                       }
                     }}
                   >
@@ -205,23 +221,20 @@ const SubscribeContent = () => {
                         {t("landing.pricing.mostPopular")}
                       </div>
                     )}
-
                     <CardHeader className="pb-4">
                       <div className="mb-2 flex items-center gap-2">
                         <span className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-lg">
                           <Icon className="h-5 w-5" />
                         </span>
-                        <CardTitle className="text-xl font-semibold md:text-2xl">
-                          {plan.name}
-                        </CardTitle>
+                        <CardTitle className="text-xl font-semibold md:text-2xl">{plan.name}</CardTitle>
                       </div>
                       <p className="text-muted-foreground text-sm">
-                        {plan.description ?? t(`landing.pricing.${slug}.description`)}
+                        {plan.description ?? t(`landing.pricing.${tier}.description`)}
                       </p>
                       {!contact ? (
                         <div className="flex items-baseline gap-1 pt-2">
                           <span className="text-foreground text-3xl font-bold md:text-4xl">
-                            {priceStr ?? t(`landing.pricing.${slug}.price`)}
+                            {priceStr ?? t(`landing.pricing.${tier}.price`)}
                           </span>
                           <span className="text-muted-foreground">{period}</span>
                         </div>
@@ -244,10 +257,10 @@ const SubscribeContent = () => {
                               </li>
                             ))
                           : [
-                              t(`landing.pricing.${slug}.features.0`),
-                              t(`landing.pricing.${slug}.features.1`),
-                              t(`landing.pricing.${slug}.features.2`),
-                              t(`landing.pricing.${slug}.features.3`),
+                              t(`landing.pricing.${tier}.features.0`),
+                              t(`landing.pricing.${tier}.features.1`),
+                              t(`landing.pricing.${tier}.features.2`),
+                              t(`landing.pricing.${tier}.features.3`),
                             ].map((feature, i) => (
                               <li
                                 key={i}
@@ -261,24 +274,154 @@ const SubscribeContent = () => {
                     </CardContent>
                   </Card>
                 );
-              })}
-            </div>
+              };
+
+              const renderTierCardWithTabs = (
+                tier: "pro" | "business",
+                tierPlans: (typeof plans)[number][],
+                tierLabel: string,
+              ) => {
+                if (tierPlans.length === 0) return null;
+                const activeSlug =
+                  selectedSlug && tierPlans.some((p) => p.slug === selectedSlug)
+                    ? selectedSlug
+                    : (tierPlans[0]?.slug as SubscriptionPlanSlug);
+                const activePlan = tierPlans.find((p) => p.slug === activeSlug) ?? tierPlans[0]!;
+                const Icon = PLAN_TIER_ICONS[tier];
+                const popular = tier === "pro";
+                return (
+                  <Card
+                    key={tier}
+                    className={`relative flex flex-col overflow-hidden rounded-2xl border-2 transition-all ${
+                      selectedSlug && getPlanTier(selectedSlug) === tier
+                        ? "border-primary ring-primary/20 ring-2"
+                        : "bg-card hover:border-primary/30 shadow-xs"
+                    }`}
+                  >
+                    {popular && (
+                      <div className="bg-primary text-primary-foreground absolute top-0 right-0 rounded-bl-lg px-3 py-1.5 text-xs font-medium">
+                        {t("landing.pricing.mostPopular")}
+                      </div>
+                    )}
+                    <CardHeader className="pb-4">
+                      <div className="mb-2 flex items-center gap-2">
+                        <span className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-lg">
+                          <Icon className="h-5 w-5" />
+                        </span>
+                        <CardTitle className="text-xl font-semibold md:text-2xl">{tierLabel}</CardTitle>
+                      </div>
+                      <p className="text-muted-foreground text-sm">
+                        {t(`landing.pricing.${tier}.description`)}
+                      </p>
+                      <Tabs
+                        value={activeSlug}
+                        onValueChange={(v) => setSelectedSlug(v as SubscriptionPlanSlug)}
+                        className="mt-3 w-full"
+                      >
+                        <TabsList className="grid w-full grid-cols-3">
+                          {tierPlans.map((p) => (
+                            <TabsTrigger key={p.id} value={p.slug} className="text-xs sm:text-sm">
+                              {getIntervalLabel(p.billing_interval)}
+                            </TabsTrigger>
+                          ))}
+                        </TabsList>
+                        {tierPlans.map((p) => (
+                          <TabsContent key={p.id} value={p.slug} className="mt-3 focus-visible:outline-none">
+                            {p.is_contact_sales ? (
+                              <p className="text-foreground text-lg font-semibold">
+                                {t("landing.pricing.contactUs")}
+                              </p>
+                            ) : (
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-foreground text-2xl font-bold md:text-3xl">
+                                  {formatPriceDisplay(p.price_amount, p.price_currency) ??
+                                    t(`landing.pricing.${tier}.price`)}
+                                </span>
+                                <span className="text-muted-foreground">{getPeriodSuffix(p.billing_interval)}</span>
+                              </div>
+                            )}
+                          </TabsContent>
+                        ))}
+                      </Tabs>
+                    </CardHeader>
+                    <CardContent className="flex flex-1 flex-col pt-0">
+                      <ul className="flex-1 space-y-3">
+                        {activePlan.features.length > 0
+                          ? activePlan.features.map((f) => (
+                              <li
+                                key={f.id}
+                                className="text-muted-foreground flex items-start gap-2 text-sm"
+                              >
+                                <Check className="text-primary mt-0.5 h-4 w-4 shrink-0" />
+                                <span>{formatPlanFeature(f)}</span>
+                              </li>
+                            ))
+                          : [
+                              t(`landing.pricing.${tier}.features.0`),
+                              t(`landing.pricing.${tier}.features.1`),
+                              t(`landing.pricing.${tier}.features.2`),
+                              t(`landing.pricing.${tier}.features.3`),
+                            ].map((feature, i) => (
+                              <li
+                                key={i}
+                                className="text-muted-foreground flex items-start gap-2 text-sm"
+                              >
+                                <Check className="text-primary mt-0.5 h-4 w-4 shrink-0" />
+                                <span>{feature}</span>
+                              </li>
+                            ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                );
+              };
+
+              return (
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
+                  {grouped.free && (
+                    <div key="free">
+                      {renderPlanCard(
+                        grouped.free,
+                        "free",
+                        selectedSlug === "free",
+                        () => setSelectedSlug("free"),
+                      )}
+                    </div>
+                  )}
+                  {grouped.pro.length > 0 &&
+                    renderTierCardWithTabs("pro", grouped.pro, t("landing.pricing.pro.name") ?? "Pro Plan")}
+                  {grouped.business.length > 0 &&
+                    renderTierCardWithTabs("business", grouped.business, t("landing.pricing.business.name") ?? "Business Plan")}
+                </div>
+              );
+            })()
           )}
 
           {selectedPlan && (
             <div className="mt-6 flex flex-col gap-3">
               {isContactSales ? (
-                <Button asChild size="lg" className="w-full">
-                  <a
-                    href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
-                      "Business plan inquiry",
-                    )}`}
-                    className="inline-flex items-center justify-center gap-2"
-                  >
-                    <Mail className="h-4 w-4" />
-                    Contact us for Business plan
-                  </a>
-                </Button>
+                (() => {
+                  const intervalLabel =
+                    selectedPlan?.billing_interval === "monthly"
+                      ? " (Monthly)"
+                      : selectedPlan?.billing_interval === "6_month"
+                        ? " (6 months)"
+                        : selectedPlan?.billing_interval === "yearly"
+                          ? " (Yearly)"
+                          : "";
+                  const subject = `Business plan inquiry${intervalLabel}`.trim();
+                  return (
+                    <Button asChild size="lg" className="w-full">
+                      <a
+                        href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}`}
+                        className="inline-flex items-center justify-center gap-2"
+                      >
+                        <Mail className="h-4 w-4" />
+                        Contact us for Business plan{intervalLabel}
+                      </a>
+                    </Button>
+                  );
+                })()
               ) : isFree ? (
                 <div className="rounded-lg border border-muted bg-muted/30 px-4 py-3 text-center">
                   <p className="text-muted-foreground text-sm">

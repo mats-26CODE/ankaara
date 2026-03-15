@@ -657,6 +657,7 @@ export type Database = {
           id: string;
           is_contact_sales: boolean;
           name: string;
+          plan_tier: string;
           price_amount: number | null;
           price_currency: string | null;
           slug: string;
@@ -670,6 +671,7 @@ export type Database = {
           id?: string;
           is_contact_sales?: boolean;
           name: string;
+          plan_tier?: string;
           price_amount?: number | null;
           price_currency?: string | null;
           slug: string;
@@ -683,6 +685,7 @@ export type Database = {
           id?: string;
           is_contact_sales?: boolean;
           name?: string;
+          plan_tier?: string;
           price_amount?: number | null;
           price_currency?: string | null;
           slug?: string;

@@ -75,7 +75,7 @@ const DashboardPage = () => {
   const currentPlanSlug = (subscription?.planSlug ?? "free") as SubscriptionPlanSlug;
   const currentPlan = plans?.find((p) => p.slug === currentPlanSlug);
   const isFreePlan = currentPlanSlug === "free";
-  const upgradeHref = "/subscribe?plan=pro";
+  const upgradeHref = "/subscribe?plan=pro-monthly";
 
   const activeBusiness =
     businesses.find((b) => b.id === currentBusinessId) ?? businesses[0] ?? null;

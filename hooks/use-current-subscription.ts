@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import type { SubscriptionPlanSlug } from "@/hooks/use-subscription-plans";
+import { VALID_PLAN_SLUGS } from "@/hooks/use-subscription-plans";
 
 const SUBSCRIPTION_QUERY_KEY = ["subscriptions"] as const;
 
@@ -19,9 +20,16 @@ const fetchCurrentSubscription = async (
     .maybeSingle();
 
   if (error) throw error;
-  const slug = data?.plan as SubscriptionPlanSlug | undefined;
-  const valid = slug && ["free", "pro", "business"].includes(slug);
-  return valid ? { planSlug: slug as SubscriptionPlanSlug } : { planSlug: "free" };
+  const slug = data?.plan as string | undefined;
+  const valid = slug && VALID_PLAN_SLUGS.includes(slug);
+  const normalizedSlug: SubscriptionPlanSlug = valid
+    ? (slug === "pro"
+        ? "pro-monthly"
+        : slug === "business"
+          ? "business-monthly"
+          : (slug as SubscriptionPlanSlug))
+    : "free";
+  return { planSlug: normalizedSlug };
 };
 
 export const useCurrentSubscription = (userId: string | undefined) => {
