@@ -422,10 +422,18 @@ const ProductsPage = () => {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setDialogOpen(false)}
+              disabled={createProduct.isPending || updateProduct.isPending}
+            >
               Cancel
             </Button>
-            <Button onClick={handleSubmit} disabled={!form.name.trim() || isMutating}>
+            <Button
+              onClick={handleSubmit}
+              disabled={!form.name.trim() || isMutating}
+              isLoading={editingProduct ? updateProduct.isPending : createProduct.isPending}
+            >
               {editingProduct ? "Save" : "Add"}
             </Button>
           </DialogFooter>

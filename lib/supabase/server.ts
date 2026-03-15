@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import type { Database } from "@/database.types";
 
@@ -31,5 +32,18 @@ export async function createClient() {
         },
       },
     }
+  );
+}
+
+/**
+ * Server-side client that always uses the anon key with no session.
+ * Use for public routes (e.g. /invoice/[id]) so RLS "TO anon" policies apply
+ * regardless of whether the visitor is logged in.
+ */
+export function createAnonClient() {
+  return createSupabaseClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    { auth: { persistSession: false } }
   );
 }

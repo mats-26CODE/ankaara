@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
+import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
 import type { Tables, TablesInsert, TablesUpdate } from "@/database.types";
@@ -48,6 +49,7 @@ export const useBusinesses = () => {
 };
 
 export const useCreateBusiness = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: CreateBusinessPayload) => {
       const supabase = createClient();
@@ -76,6 +78,7 @@ export const useCreateBusiness = () => {
       return data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
       ToastAlert.success("Business created successfully");
     },
     onError: (error: Error) => {

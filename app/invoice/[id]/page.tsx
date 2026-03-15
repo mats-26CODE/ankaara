@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { connection } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAnonClient } from "@/lib/supabase/server";
 import { APP_NAME } from "@/constants/values";
 import { Button } from "@/components/ui/button";
 import { InvoiceTemplate } from "@/lib/invoice-templates/registry";
@@ -18,7 +18,7 @@ type Props = {
 
 export const generateMetadata = async ({ params }: Props) => {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = createAnonClient();
   const { data } = await supabase
     .from("invoices")
     .select("invoice_number, client:clients(name)")
@@ -51,7 +51,7 @@ export const generateMetadata = async ({ params }: Props) => {
 
 const InvoiceContent = async ({ id }: { id: string }) => {
   await connection();
-  const supabase = await createClient();
+  const supabase = createAnonClient();
 
   const { data: invoice, error } = await supabase
     .from("invoices")
