@@ -6,12 +6,14 @@ import Logo from "@/components/shared/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUser } from "@/hooks/use-user";
+import { useCurrentSubscription } from "@/hooks/use-current-subscription";
 import {
   useSubscriptionPlans,
   formatPlanFeature,
   type SubscriptionPlanSlug,
 } from "@/hooks/use-subscription-plans";
 import { useSetSubscription } from "@/hooks/use-set-subscription";
+import { getNextPlanSlug } from "@/lib/subscription-limits";
 import { useTranslation } from "@/hooks/use-translation";
 import { Check, Loader2, ArrowRight, Mail, Users, Cloud, Zap } from "lucide-react";
 import { SUPPORT_EMAIL } from "@/constants/values";
@@ -35,9 +37,11 @@ const SubscribeContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const planParam = searchParams.get("plan") as SubscriptionPlanSlug | null;
+  const limitParam = searchParams.get("limit");
   const fromOnboarding = searchParams.get("from") === "onboarding";
 
   const { user, loading: authLoading } = useUser();
+  const { data: subscription } = useCurrentSubscription(user?.id);
   const { data: plans, isLoading: plansLoading } = useSubscriptionPlans();
   const setSubscription = useSetSubscription();
 
@@ -48,17 +52,27 @@ const SubscribeContent = () => {
   useEffect(() => {
     if (planParam && ["free", "pro", "business"].includes(planParam)) {
       setSelectedSlug(planParam as SubscriptionPlanSlug);
+      return;
     }
-  }, [planParam]);
+    if (limitParam && subscription?.planSlug) {
+      const nextSlug = getNextPlanSlug(subscription.planSlug);
+      setSelectedSlug(nextSlug);
+    }
+  }, [planParam, limitParam, subscription?.planSlug]);
 
   // Redirect unauthenticated users to login, preserving return URL
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
-      const redirect = `/subscribe${planParam ? `?plan=${planParam}` : ""}${fromOnboarding ? `${planParam ? "&" : "?"}from=onboarding` : ""}`;
+      const params = new URLSearchParams();
+      if (planParam) params.set("plan", planParam);
+      if (limitParam) params.set("limit", limitParam);
+      if (fromOnboarding) params.set("from", "onboarding");
+      const qs = params.toString();
+      const redirect = `/subscribe${qs ? `?${qs}` : ""}`;
       router.replace(`/login?redirect=${encodeURIComponent(redirect)}`);
     }
-  }, [user, authLoading, router, planParam, fromOnboarding]);
+  }, [user, authLoading, router, planParam, limitParam, fromOnboarding]);
 
   const selectedPlan = plans?.find((p) => p.slug === selectedSlug);
   const isFree = selectedPlan?.slug === "free";
@@ -141,6 +155,12 @@ const SubscribeContent = () => {
               ? "Get started with the right plan for your business. You can change or skip for now."
               : "Select a plan to continue. You can change it anytime."}
           </p>
+
+          {limitParam && (
+            <div className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 mb-6 rounded-lg border px-4 py-3 text-center text-sm text-amber-800 dark:text-amber-200">
+              You&apos;ve reached your plan limit. Upgrade to a higher plan to continue.
+            </div>
+          )}
 
           {plansLoading ? (
             <div className="flex justify-center py-12">

@@ -30,6 +30,7 @@ import { Plus, Trash2, ArrowLeft, Eye } from "lucide-react";
 import dayjs from "dayjs";
 import { InvoiceTemplate } from "@/lib/invoice-templates/registry";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 
 const CreateInvoicePage = () => {
   const router = useRouter();
@@ -272,7 +273,10 @@ const CreateInvoicePage = () => {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">New Invoice</h1>
           <p className="text-muted-foreground text-sm">
-            Create an invoice for {currentBusiness?.name ?? "your business"}.
+            Create an invoice for your business{" "}
+            <Badge variant="secondary" className="font-normal">
+              {currentBusiness?.name ?? "—"}
+            </Badge>
           </p>
         </div>
       </div>

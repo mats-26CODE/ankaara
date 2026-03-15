@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { ToastAlert } from "@/config/toast";
-import { isPlanLimitError, SUBSCRIBE_PATH } from "@/lib/subscription-limits";
+import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
 import type { Tables, TablesInsert, TablesUpdate } from "@/database.types";
 
 export type Client = Tables<"clients">;
@@ -90,7 +90,7 @@ export const useCreateClient = () => {
     onError: (error: Error) => {
       if (isPlanLimitError(error)) {
         ToastAlert.error("Plan limit reached. Upgrade to add more clients.");
-        if (typeof window !== "undefined") window.location.assign(SUBSCRIBE_PATH);
+        if (typeof window !== "undefined") window.location.assign(getSubscribeUrlForPlanLimit(error));
         return;
       }
       ToastAlert.error(error.message || "Failed to add client");
