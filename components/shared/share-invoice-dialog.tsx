@@ -11,22 +11,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ToastAlert } from "@/config/toast";
-import {
-  Copy,
-  Check,
-  Mail,
-  Phone,
-  ExternalLink,
-  Share2,
-  FileDown,
-  FileImage,
-} from "lucide-react";
+import { Copy, Check, Mail, Phone, ExternalLink, Share2, FileDown, FileImage } from "lucide-react";
 import { jsPDF } from "jspdf";
-import {
-  captureElementAsCanvas,
-  downloadAsPng,
-  downloadAsPdf,
-} from "@/lib/capture-invoice";
+import { captureElementAsCanvas, downloadAsPng, downloadAsPdf } from "@/lib/capture-invoice";
 
 type ShareInvoiceDialogProps = {
   open: boolean;
@@ -80,8 +67,7 @@ const ShareInvoiceDialog = ({
         </svg>
       ),
       color: "bg-[#25D366] hover:bg-[#1da851] text-white",
-      getUrl: (url, msg) =>
-        `https://wa.me/?text=${encodeURIComponent(msg)}`,
+      getUrl: (url, msg) => `https://wa.me/?text=${encodeURIComponent(msg)}`,
     },
     {
       id: "email",
@@ -118,7 +104,8 @@ const ShareInvoiceDialog = ({
           <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
         </svg>
       ),
-      color: "bg-black hover:bg-gray-800 text-white dark:bg-white dark:text-black dark:hover:bg-gray-200",
+      color:
+        "bg-black hover:bg-gray-800 text-white dark:bg-white dark:text-black dark:hover:bg-gray-200",
       getUrl: (url, msg) =>
         `https://twitter.com/intent/tweet?text=${encodeURIComponent(`Invoice ${invoiceNumber} for ${currency} ${total}`)}&url=${encodeURIComponent(url)}`,
     },
@@ -131,8 +118,7 @@ const ShareInvoiceDialog = ({
         </svg>
       ),
       color: "bg-[#1877F2] hover:bg-[#0d65d9] text-white",
-      getUrl: (url) =>
-        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+      getUrl: (url) => `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
     },
   ];
 
@@ -158,6 +144,7 @@ const ShareInvoiceDialog = ({
   };
 
   const handleExportImage = async () => {
+    markAsSentIfDraft();
     setExporting("image");
     try {
       const canvas = await captureInvoiceCanvas();
@@ -174,6 +161,7 @@ const ShareInvoiceDialog = ({
   };
 
   const handleExportPdf = async () => {
+    markAsSentIfDraft();
     setExporting("pdf");
     try {
       const canvas = await captureInvoiceCanvas();
@@ -210,8 +198,8 @@ const ShareInvoiceDialog = ({
         <DialogHeader>
           <DialogTitle>Share Invoice</DialogTitle>
           <DialogDescription>
-            Share invoice <span className="font-medium">{invoiceNumber}</span>{" "}
-            with {clientName} via any channel.
+            Share invoice <span className="font-medium">{invoiceNumber}</span> with {clientName} via
+            any channel.
           </DialogDescription>
         </DialogHeader>
 
@@ -226,7 +214,7 @@ const ShareInvoiceDialog = ({
                 onClick={handleExportImage}
                 disabled={!!exporting}
               >
-                <FileImage className="size-4 mr-2" />
+                <FileImage className="mr-2 size-4" />
                 {exporting === "image" ? "Exporting..." : "Export as Image"}
               </Button>
               <Button
@@ -236,7 +224,7 @@ const ShareInvoiceDialog = ({
                 onClick={handleExportPdf}
                 disabled={!!exporting}
               >
-                <FileDown className="size-4 mr-2" />
+                <FileDown className="mr-2 size-4" />
                 {exporting === "pdf" ? "Exporting..." : "Export as PDF"}
               </Button>
             </div>
@@ -249,15 +237,10 @@ const ShareInvoiceDialog = ({
               <Input
                 readOnly
                 value={shareUrl}
-                className="text-xs bg-muted"
+                className="bg-muted text-xs"
                 onClick={(e) => (e.target as HTMLInputElement).select()}
               />
-              <Button
-                variant="outline"
-                size="icon"
-                className="shrink-0"
-                onClick={handleCopy}
-              >
+              <Button variant="outline" size="icon" className="shrink-0" onClick={handleCopy}>
                 {copied ? (
                   <Check className="size-4 text-emerald-600" />
                 ) : (
@@ -287,12 +270,8 @@ const ShareInvoiceDialog = ({
 
           {/* Native share (mobile) */}
           {typeof navigator !== "undefined" && "share" in navigator && (
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={handleNativeShare}
-            >
-              <Share2 className="size-4 mr-2" />
+            <Button variant="outline" className="w-full" onClick={handleNativeShare}>
+              <Share2 className="mr-2 size-4" />
               More sharing options...
             </Button>
           )}
@@ -300,7 +279,7 @@ const ShareInvoiceDialog = ({
           {/* Open public page */}
           <Button variant="outline" className="w-full" asChild>
             <a href={shareUrl} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="size-4 mr-2" />
+              <ExternalLink className="mr-2 size-4" />
               Open Public Invoice Page
             </a>
           </Button>
