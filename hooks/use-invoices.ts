@@ -23,9 +23,11 @@ export type Invoice = Tables<"invoices"> & {
 
 export type InvoiceItemInput = {
   id?: string;
+  product_id?: string | null;
   description: string;
   quantity: number;
   unit_price: number;
+  discount?: number;
 };
 
 export type CreateInvoicePayload = {
@@ -58,9 +60,13 @@ export type UpdateInvoicePayload = {
   items?: InvoiceItemInput[];
 };
 
+const lineTotal = (item: InvoiceItemInput) =>
+  item.quantity * item.unit_price - (item.discount ?? 0);
+
 const computeTotals = (items: InvoiceItemInput[], tax: number) => {
-  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
-  return { subtotal, tax, total: subtotal + tax };
+  const subtotal = items.reduce((sum, item) => sum + lineTotal(item), 0);
+  const totalDiscount = items.reduce((sum, item) => sum + (item.discount ?? 0), 0);
+  return { subtotal, tax, total: subtotal + tax, totalDiscount };
 };
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -203,10 +209,12 @@ export const useCreateInvoice = () => {
       if (payload.items.length > 0) {
         const rows = payload.items.map((item) => ({
           invoice_id: invoice.id,
+          product_id: item.product_id ?? null,
           description: item.description,
           quantity: item.quantity,
           unit_price: item.unit_price,
-          total: item.quantity * item.unit_price,
+          discount: item.discount ?? 0,
+          total: item.quantity * item.unit_price - (item.discount ?? 0),
         }));
         const { error: itemsError } = await supabase.from("invoice_items").insert(rows);
         if (itemsError) throw itemsError;
@@ -270,10 +278,12 @@ export const useUpdateInvoice = () => {
         if (payload.items.length > 0) {
           const rows = payload.items.map((item) => ({
             invoice_id: payload.id,
+            product_id: item.product_id ?? null,
             description: item.description,
             quantity: item.quantity,
             unit_price: item.unit_price,
-            total: item.quantity * item.unit_price,
+            discount: item.discount ?? 0,
+            total: item.quantity * item.unit_price - (item.discount ?? 0),
           }));
           const { error: itemsError } = await supabase.from("invoice_items").insert(rows);
           if (itemsError) throw itemsError;

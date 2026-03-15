@@ -20,6 +20,8 @@ export type TemplateLineItem = {
   description: string;
   quantity: number;
   unit_price: number;
+  /** Per-line discount (optional). When present and > 0, templates may show a Discount column. */
+  discount?: number;
   total: number;
 };
 
@@ -30,6 +32,8 @@ export type InvoiceTemplateProps = {
   dueDate: string;
   currency: string;
   subtotal: number;
+  /** Total discount across all lines. When > 0, templates show a discount row in the totals section. */
+  totalDiscount?: number;
   tax: number;
   /** Tax rate in percent (e.g. 15 for 15%). Optional for backward compatibility. */
   taxPercent?: number | null;

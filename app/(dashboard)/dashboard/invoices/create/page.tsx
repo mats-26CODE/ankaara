@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useClients } from "@/hooks/use-clients";
+import { useProducts } from "@/hooks/use-products";
 import { useBusinesses, type Business } from "@/hooks/use-businesses";
 import { useCurrentBusinessId } from "@/lib/stores/business-store";
 import { useCreateInvoice, type InvoiceItemInput } from "@/hooks/use-invoices";
@@ -20,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ClientPickerDialog } from "@/components/shared/client-picker-dialog";
+import { ProductPickerDialog } from "@/components/shared/product-picker-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Separator } from "@/components/ui/separator";
@@ -28,12 +30,6 @@ import { Plus, Trash2, ArrowLeft, Eye } from "lucide-react";
 import dayjs from "dayjs";
 import { InvoiceTemplate } from "@/lib/invoice-templates/registry";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-
-const emptyItem = (): InvoiceItemInput => ({
-  description: "",
-  quantity: 1,
-  unit_price: 0,
-});
 
 const CreateInvoicePage = () => {
   const router = useRouter();
@@ -44,6 +40,7 @@ const CreateInvoicePage = () => {
     loading: clientsLoading,
     refetch: refetchClients,
   } = useClients(currentBusinessId);
+  const { products, refetch: refetchProducts } = useProducts(currentBusinessId);
   const { currencies, loading: currenciesLoading } = useCurrencies();
   const createInvoice = useCreateInvoice();
 
@@ -61,7 +58,8 @@ const CreateInvoicePage = () => {
   const [accentColor, setAccentColor] = useState("");
   const [footerNote, setFooterNote] = useState("");
   const [templateId, setTemplateId] = useState<TemplateId>("classic");
-  const [items, setItems] = useState<InvoiceItemInput[]>([emptyItem()]);
+  const [items, setItems] = useState<InvoiceItemInput[]>([]);
+  const [productPickerOpen, setProductPickerOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [savingMode, setSavingMode] = useState<"draft" | "submit" | null>(null);
 
@@ -81,7 +79,12 @@ const CreateInvoicePage = () => {
   }, [currentBusiness, currency, accentColor]);
 
   const subtotal = useMemo(
-    () => items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0),
+    () =>
+      items.reduce((sum, item) => sum + item.quantity * item.unit_price - (item.discount ?? 0), 0),
+    [items],
+  );
+  const totalDiscount = useMemo(
+    () => items.reduce((sum, item) => sum + (item.discount ?? 0), 0),
     [items],
   );
   const taxPercent = Number(tax) || 0;
@@ -99,6 +102,7 @@ const CreateInvoicePage = () => {
       dueDate,
       currency: currency || "TZS",
       subtotal,
+      totalDiscount: totalDiscount > 0 ? totalDiscount : undefined,
       tax: taxAmount,
       taxPercent: taxPercent || null,
       total,
@@ -130,7 +134,8 @@ const CreateInvoicePage = () => {
         description: item.description || "—",
         quantity: item.quantity,
         unit_price: item.unit_price,
-        total: item.quantity * item.unit_price,
+        discount: (item.discount ?? 0) > 0 ? item.discount : undefined,
+        total: item.quantity * item.unit_price - (item.discount ?? 0),
       })),
     }),
     [
@@ -139,6 +144,7 @@ const CreateInvoicePage = () => {
       dueDate,
       currency,
       subtotal,
+      totalDiscount,
       taxAmount,
       taxPercent,
       total,
@@ -159,8 +165,18 @@ const CreateInvoicePage = () => {
     setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const addItem = () => {
-    setItems((prev) => [...prev, emptyItem()]);
+  const addItemFromProduct = (product: { id: string; name: string; unit_price: number }) => {
+    setItems((prev) => [
+      ...prev,
+      {
+        product_id: product.id,
+        description: product.name,
+        quantity: 1,
+        unit_price: product.unit_price,
+        discount: 0,
+      },
+    ]);
+    setProductPickerOpen(false);
   };
 
   const canSubmit =
@@ -360,42 +376,43 @@ const CreateInvoicePage = () => {
 
           {/* Line Items */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle className="text-base">Line Items</CardTitle>
-              <Button variant="outline" size="sm" onClick={addItem}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setProductPickerOpen(true)}
+              >
                 <Plus className="mr-1 size-4" />
-                Add Item
+                Add item
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
               {items.length === 0 && (
                 <p className="text-muted-foreground py-4 text-center text-sm">
-                  Add at least one item to your invoice.
+                  Add at least one item from your products. Click &ldquo;Add item&rdquo; to select
+                  or create a product.
                 </p>
               )}
               {items.map((item, idx) => (
                 <div key={idx} className="space-y-3 rounded-lg border p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 space-y-2">
-                      <Label>Description *</Label>
-                      <Input
-                        value={item.description}
-                        onChange={(e) => updateItem(idx, "description", e.target.value)}
-                        placeholder="Service or product description"
-                      />
+                      <Label>Description</Label>
+                      <Input readOnly value={item.description} className="bg-muted" />
                     </div>
-                    {items.length > 1 && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="mt-6 shrink-0"
-                        onClick={() => removeItem(idx)}
-                      >
-                        <Trash2 className="text-destructive size-4" />
-                      </Button>
-                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="mt-5.5 shrink-0"
+                      onClick={() => removeItem(idx)}
+                      title="Remove item"
+                    >
+                      <Trash2 className="text-destructive size-4" />
+                    </Button>
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <div className="space-y-2">
                       <Label>Qty *</Label>
                       <Input
@@ -408,14 +425,22 @@ const CreateInvoicePage = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Unit Price *</Label>
+                      <Label>Unit Price</Label>
+                      <Input
+                        readOnly
+                        value={Number(item.unit_price).toLocaleString()}
+                        className="bg-muted"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Discount</Label>
                       <Input
                         type="number"
                         min={0}
                         step="any"
-                        value={item.unit_price || ""}
+                        value={item.discount === 0 ? "" : item.discount}
                         placeholder="0"
-                        onChange={(e) => updateItem(idx, "unit_price", Number(e.target.value) || 0)}
+                        onChange={(e) => updateItem(idx, "discount", Number(e.target.value) || 0)}
                       />
                     </div>
                     <div className="space-y-2">
@@ -423,7 +448,10 @@ const CreateInvoicePage = () => {
                       <Input
                         readOnly
                         tabIndex={-1}
-                        value={(item.quantity * item.unit_price).toLocaleString()}
+                        value={(
+                          item.quantity * item.unit_price -
+                          (item.discount ?? 0)
+                        ).toLocaleString()}
                         className="bg-muted"
                       />
                     </div>
@@ -432,6 +460,15 @@ const CreateInvoicePage = () => {
               ))}
             </CardContent>
           </Card>
+
+          <ProductPickerDialog
+            businessId={currentBusinessId}
+            products={products}
+            refetchProducts={refetchProducts}
+            onAddLine={addItemFromProduct}
+            open={productPickerOpen}
+            onOpenChange={setProductPickerOpen}
+          />
 
           {/* Notes & Customization */}
           <Card>
@@ -488,6 +525,14 @@ const CreateInvoicePage = () => {
               <CardTitle className="text-base">Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {totalDiscount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Total discount</span>
+                  <span className="font-medium text-green-600 dark:text-green-400">
+                    -{totalDiscount.toLocaleString()}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="font-medium">{subtotal.toLocaleString()}</span>
@@ -553,7 +598,7 @@ const CreateInvoicePage = () => {
 
       {/* Full preview dialog */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="flex max-h-[90vh] max-w-[95vw] flex-col overflow-hidden">
+        <DialogContent className="flex max-h-[90vh] max-w-[95vw] flex-col overflow-hidden rounded-2xl">
           <DialogHeader>
             <DialogTitle>Invoice preview</DialogTitle>
           </DialogHeader>

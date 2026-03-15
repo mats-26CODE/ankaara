@@ -9,8 +9,9 @@ const StatusLabel = ({ status, isPaid }: { status: string; isPaid: boolean }) =>
 };
 
 export const ClassicTemplate = (props: InvoiceTemplateProps) => {
-  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, tax, taxPercent, total, notes, accentColor, footerNote, business, client, items, isPaid } = props;
+  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, totalDiscount, tax, taxPercent, total, notes, accentColor, footerNote, business, client, items, isPaid } = props;
   const taxLabel = Number(tax) > 0 && (taxPercent != null && taxPercent > 0) ? `Tax (${Number(taxPercent) % 1 === 0 ? taxPercent : Number(taxPercent).toFixed(1)}%)` : "Tax";
+  const showDiscountCol = items.some((i) => Number(i.discount ?? 0) > 0);
 
   return (
     <div className="bg-white text-gray-900 rounded-lg border border-gray-200 shadow-sm overflow-hidden">
@@ -60,6 +61,7 @@ export const ClassicTemplate = (props: InvoiceTemplateProps) => {
               <th className="py-3 text-left font-semibold text-gray-600">Description</th>
               <th className="py-3 text-right font-semibold text-gray-600 w-20">Qty</th>
               <th className="py-3 text-right font-semibold text-gray-600 w-28">Unit Price</th>
+              {showDiscountCol && <th className="py-3 text-right font-semibold text-gray-600 w-24">Discount</th>}
               <th className="py-3 text-right font-semibold text-gray-600 w-28">Amount</th>
             </tr>
           </thead>
@@ -69,6 +71,11 @@ export const ClassicTemplate = (props: InvoiceTemplateProps) => {
                 <td className="py-3">{item.description}</td>
                 <td className="py-3 text-right">{Number(item.quantity)}</td>
                 <td className="py-3 text-right">{Number(item.unit_price).toLocaleString()}</td>
+                {showDiscountCol && (
+                  <td className="py-3 text-right text-gray-500">
+                    {Number(item.discount ?? 0) > 0 ? `-${Number(item.discount).toLocaleString()}` : "—"}
+                  </td>
+                )}
                 <td className="py-3 text-right font-medium">{Number(item.total).toLocaleString()}</td>
               </tr>
             ))}
@@ -80,6 +87,9 @@ export const ClassicTemplate = (props: InvoiceTemplateProps) => {
       <div className="px-8 py-6 flex justify-end">
         <div className="w-64 space-y-1">
           <div className="flex justify-between text-sm"><span className="text-gray-500">Subtotal</span><span>{Number(subtotal).toLocaleString()}</span></div>
+          {Number(totalDiscount ?? 0) > 0 && (
+            <div className="flex justify-between text-sm text-green-600"><span className="text-gray-500">Discount</span><span>-{Number(totalDiscount).toLocaleString()}</span></div>
+          )}
           {Number(tax) > 0 && <div className="flex justify-between text-sm"><span className="text-gray-500">{taxLabel}</span><span>{Number(tax).toLocaleString()}</span></div>}
           <div className="border-t border-gray-300 my-2" />
           <div className="flex justify-between text-lg font-bold"><span>Total</span><span>{currency} {Number(total).toLocaleString()}</span></div>

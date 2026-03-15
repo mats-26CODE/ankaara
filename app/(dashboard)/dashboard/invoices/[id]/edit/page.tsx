@@ -4,7 +4,9 @@ import { use, useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useInvoice, useUpdateInvoice, type InvoiceItemInput } from "@/hooks/use-invoices";
 import { useClients } from "@/hooks/use-clients";
+import { useProducts } from "@/hooks/use-products";
 import { ClientPickerDialog } from "@/components/shared/client-picker-dialog";
+import { ProductPickerDialog } from "@/components/shared/product-picker-dialog";
 import { useCurrencies } from "@/hooks/use-currencies";
 import { TEMPLATES, type TemplateId } from "@/lib/invoice-templates/types";
 import { Button } from "@/components/ui/button";
@@ -22,14 +24,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import { Plus, Trash2, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, Eye } from "lucide-react";
 import Link from "next/link";
-
-const emptyItem = (): InvoiceItemInput => ({
-  description: "",
-  quantity: 1,
-  unit_price: 0,
-});
+import { InvoiceTemplate } from "@/lib/invoice-templates/registry";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import dayjs from "dayjs";
 
 const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params);
@@ -43,6 +42,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
     loading: clientsLoading,
     refetch: refetchClients,
   } = useClients(invoice?.business_id ?? null);
+  const { products, refetch: refetchProducts } = useProducts(invoice?.business_id ?? null);
 
   const [clientId, setClientId] = useState("");
   const [issueDate, setIssueDate] = useState("");
@@ -54,6 +54,8 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
   const [footerNote, setFooterNote] = useState("");
   const [templateId, setTemplateId] = useState<TemplateId>("classic");
   const [items, setItems] = useState<InvoiceItemInput[]>([]);
+  const [productPickerOpen, setProductPickerOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [prefilled, setPrefilled] = useState(false);
 
   useEffect(() => {
@@ -77,17 +79,23 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
     setTemplateId((invoice.template_id as TemplateId) || "classic");
     setItems(
       (invoice.items ?? []).map((item) => ({
-        id: item.id,
+        product_id: item.product_id ?? undefined,
         description: item.description,
         quantity: Number(item.quantity),
         unit_price: Number(item.unit_price),
+        discount: Number(item.discount) || 0,
       })),
     );
     setPrefilled(true);
   }, [invoice, prefilled]);
 
   const subtotal = useMemo(
-    () => items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0),
+    () =>
+      items.reduce((sum, item) => sum + item.quantity * item.unit_price - (item.discount ?? 0), 0),
+    [items],
+  );
+  const totalDiscount = useMemo(
+    () => items.reduce((sum, item) => sum + (item.discount ?? 0), 0),
     [items],
   );
   const taxPercent = Number(tax) || 0;
@@ -102,9 +110,76 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
     setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const addItem = () => {
-    setItems((prev) => [...prev, emptyItem()]);
+  const addItemFromProduct = (product: { id: string; name: string; unit_price: number }) => {
+    setItems((prev) => [
+      ...prev,
+      {
+        product_id: product.id,
+        description: product.name,
+        quantity: 1,
+        unit_price: product.unit_price,
+        discount: 0,
+      },
+    ]);
+    setProductPickerOpen(false);
   };
+
+  const selectedClient = useMemo(() => clients.find((c) => c.id === clientId), [clients, clientId]);
+
+  const previewProps = useMemo(
+    () => ({
+      templateId,
+      invoiceNumber: invoice?.invoice_number ?? "INV-PREVIEW",
+      status: "draft",
+      issueDate: issueDate || dayjs().format("YYYY-MM-DD"),
+      dueDate: dueDate || dayjs().add(14, "day").format("YYYY-MM-DD"),
+      currency: currency || "TZS",
+      subtotal,
+      totalDiscount: totalDiscount > 0 ? totalDiscount : undefined,
+      tax: taxAmount,
+      taxPercent: taxPercent || null,
+      total,
+      notes: notes || null,
+      accentColor: accentColor.trim() || null,
+      footerNote: footerNote.trim() || null,
+      isPaid: false,
+      business: invoice?.business ?? null,
+      client: selectedClient
+        ? {
+            name: selectedClient.name,
+            email: selectedClient.email ?? null,
+            phone: selectedClient.phone ?? null,
+            address: selectedClient.address ?? null,
+          }
+        : { name: "—", email: null, phone: null, address: null },
+      items: items.map((item, i) => ({
+        id: String(i),
+        description: item.description || "—",
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        discount: (item.discount ?? 0) > 0 ? item.discount : undefined,
+        total: item.quantity * item.unit_price - (item.discount ?? 0),
+      })),
+    }),
+    [
+      templateId,
+      invoice?.invoice_number,
+      issueDate,
+      dueDate,
+      currency,
+      subtotal,
+      totalDiscount,
+      taxAmount,
+      taxPercent,
+      total,
+      notes,
+      accentColor,
+      footerNote,
+      invoice?.business,
+      selectedClient,
+      items,
+    ],
+  );
 
   const canSubmit =
     !!clientId &&
@@ -239,35 +314,41 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-base">Line Items</CardTitle>
-              <Button variant="outline" size="sm" onClick={addItem}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setProductPickerOpen(true)}
+              >
                 <Plus className="mr-1 size-4" />
-                Add Item
+                Add item
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
+              {items.length === 0 && (
+                <p className="text-muted-foreground py-4 text-center text-sm">
+                  Add items from your products. Click &ldquo;Add item&rdquo; to select or create a
+                  product.
+                </p>
+              )}
               {items.map((item, idx) => (
                 <div key={idx} className="space-y-3 rounded-lg border p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 space-y-2">
-                      <Label>Description *</Label>
-                      <Input
-                        value={item.description}
-                        onChange={(e) => updateItem(idx, "description", e.target.value)}
-                        placeholder="Service or product description"
-                      />
+                      <Label>Description</Label>
+                      <Input readOnly value={item.description} className="bg-muted" />
                     </div>
-                    {items.length > 1 && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="mt-6 shrink-0"
-                        onClick={() => removeItem(idx)}
-                      >
-                        <Trash2 className="text-destructive size-4" />
-                      </Button>
-                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="mt-5.5 shrink-0"
+                      onClick={() => removeItem(idx)}
+                      title="Remove item"
+                    >
+                      <Trash2 className="text-destructive size-4" />
+                    </Button>
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <div className="space-y-2">
                       <Label>Qty *</Label>
                       <Input
@@ -280,14 +361,22 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Unit Price *</Label>
+                      <Label>Unit Price</Label>
+                      <Input
+                        readOnly
+                        value={Number(item.unit_price).toLocaleString()}
+                        className="bg-muted"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Discount</Label>
                       <Input
                         type="number"
                         min={0}
                         step="any"
-                        value={item.unit_price || ""}
+                        value={item.discount === 0 ? "" : item.discount}
                         placeholder="0"
-                        onChange={(e) => updateItem(idx, "unit_price", Number(e.target.value) || 0)}
+                        onChange={(e) => updateItem(idx, "discount", Number(e.target.value) || 0)}
                       />
                     </div>
                     <div className="space-y-2">
@@ -295,7 +384,10 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
                       <Input
                         readOnly
                         tabIndex={-1}
-                        value={(item.quantity * item.unit_price).toLocaleString()}
+                        value={(
+                          item.quantity * item.unit_price -
+                          (item.discount ?? 0)
+                        ).toLocaleString()}
                         className="bg-muted"
                       />
                     </div>
@@ -304,6 +396,15 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
               ))}
             </CardContent>
           </Card>
+
+          <ProductPickerDialog
+            businessId={invoice?.business_id ?? null}
+            products={products}
+            refetchProducts={refetchProducts}
+            onAddLine={addItemFromProduct}
+            open={productPickerOpen}
+            onOpenChange={setProductPickerOpen}
+          />
 
           {/* Notes & Customization */}
           <Card>
@@ -357,8 +458,17 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
         <div className="space-y-6">
           {/* Template Picker */}
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-base">Template</CardTitle>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setPreviewOpen(true)}
+              >
+                <Eye className="mr-2 size-4" />
+                Preview
+              </Button>
             </CardHeader>
             <CardContent className="grid grid-cols-1 gap-2">
               {TEMPLATES.map((tmpl) => (
@@ -384,6 +494,14 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
               <CardTitle className="text-base">Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {totalDiscount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Total discount</span>
+                  <span className="font-medium text-green-600 dark:text-green-400">
+                    -{totalDiscount.toLocaleString()}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="font-medium">{subtotal.toLocaleString()}</span>
@@ -437,6 +555,20 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
           </Card>
         </div>
       </div>
+
+      {/* Full preview dialog */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="flex max-h-[90vh] max-w-[95vw] flex-col overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Invoice preview</DialogTitle>
+          </DialogHeader>
+          <div className="bg-muted/30 flex-1 overflow-auto rounded-lg border p-4">
+            <div className="w-full min-w-0 rounded-lg bg-white shadow-sm">
+              <InvoiceTemplate {...previewProps} />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

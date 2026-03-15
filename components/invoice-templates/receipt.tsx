@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import { BusinessLogo } from "./business-logo";
 
 export const ReceiptTemplate = (props: InvoiceTemplateProps) => {
-  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, tax, taxPercent, total, notes, footerNote, business, client, items, isPaid } = props;
+  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, totalDiscount, tax, taxPercent, total, notes, footerNote, business, client, items, isPaid } = props;
   const taxLabel = Number(tax) > 0 && (taxPercent != null && taxPercent > 0) ? `Tax (${Number(taxPercent) % 1 === 0 ? taxPercent : Number(taxPercent).toFixed(1)}%)` : "Tax";
 
   return (
@@ -51,7 +51,12 @@ export const ReceiptTemplate = (props: InvoiceTemplateProps) => {
           <div key={item.id} className="flex justify-between py-2 border-b border-gray-50 last:border-0 text-sm">
             <div className="flex-1 min-w-0">
               <p className="truncate">{item.description}</p>
-              <p className="text-xs text-gray-400">{Number(item.quantity)} × {Number(item.unit_price).toLocaleString()}</p>
+              <p className="text-xs text-gray-400">
+                {Number(item.quantity)} × {Number(item.unit_price).toLocaleString()}
+                {Number(item.discount ?? 0) > 0 && (
+                  <span className="text-green-600 ml-1">−{Number(item.discount).toLocaleString()} discount</span>
+                )}
+              </p>
             </div>
             <p className="font-medium ml-4 shrink-0">{Number(item.total).toLocaleString()}</p>
           </div>
@@ -63,6 +68,9 @@ export const ReceiptTemplate = (props: InvoiceTemplateProps) => {
       {/* Totals */}
       <div className="px-6 py-4 space-y-1">
         <div className="flex justify-between text-sm"><span className="text-gray-500">Subtotal</span><span>{Number(subtotal).toLocaleString()}</span></div>
+        {Number(totalDiscount ?? 0) > 0 && (
+          <div className="flex justify-between text-sm text-green-600"><span className="text-gray-500">Discount</span><span>-{Number(totalDiscount).toLocaleString()}</span></div>
+        )}
         {Number(tax) > 0 && <div className="flex justify-between text-sm"><span className="text-gray-500">{taxLabel}</span><span>{Number(tax).toLocaleString()}</span></div>}
         <div className="border-t border-dashed border-gray-300 my-2" />
         <div className="flex justify-between font-bold text-lg"><span>Total</span><span>{currency} {Number(total).toLocaleString()}</span></div>

@@ -102,6 +102,47 @@ export type Database = {
           },
         ];
       };
+      products: {
+        Row: {
+          id: string;
+          business_id: string;
+          name: string;
+          description: string | null;
+          unit_price: number;
+          unit: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          business_id: string;
+          name: string;
+          description?: string | null;
+          unit_price?: number;
+          unit?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          business_id?: string;
+          name?: string;
+          description?: string | null;
+          unit_price?: number;
+          unit?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "products_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       currencies: {
         Row: {
           code: string;
@@ -138,24 +179,30 @@ export type Database = {
       invoice_items: {
         Row: {
           description: string;
+          discount: number;
           id: string;
           invoice_id: string;
+          product_id: string | null;
           quantity: number;
           total: number;
           unit_price: number;
         };
         Insert: {
           description: string;
+          discount?: number;
           id?: string;
           invoice_id: string;
+          product_id?: string | null;
           quantity?: number;
           total?: number;
           unit_price?: number;
         };
         Update: {
           description?: string;
+          discount?: number;
           id?: string;
           invoice_id?: string;
+          product_id?: string | null;
           quantity?: number;
           total?: number;
           unit_price?: number;
@@ -166,6 +213,13 @@ export type Database = {
             columns: ["invoice_id"];
             isOneToOne: false;
             referencedRelation: "invoices";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invoice_items_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
             referencedColumns: ["id"];
           },
         ];

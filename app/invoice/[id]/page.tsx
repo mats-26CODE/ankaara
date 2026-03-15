@@ -137,6 +137,9 @@ const InvoiceContent = async ({ id }: { id: string }) => {
             dueDate={invoice.due_date}
             currency={invoice.currency}
             subtotal={Number(invoice.subtotal)}
+            totalDiscount={
+              (items ?? []).reduce((s, i) => s + Number(i.discount ?? 0), 0) || undefined
+            }
             tax={Number(invoice.tax)}
             taxPercent={
               invoice.tax_percentage != null && Number(invoice.tax_percentage) > 0
@@ -157,6 +160,7 @@ const InvoiceContent = async ({ id }: { id: string }) => {
               description: item.description,
               quantity: Number(item.quantity),
               unit_price: Number(item.unit_price),
+              discount: Number(item.discount ?? 0) > 0 ? Number(item.discount) : undefined,
               total: Number(item.total),
             }))}
           />

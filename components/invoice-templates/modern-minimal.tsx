@@ -10,6 +10,7 @@ export const ModernMinimalTemplate = (props: InvoiceTemplateProps) => {
     dueDate,
     currency,
     subtotal,
+    totalDiscount,
     tax,
     taxPercent,
     total,
@@ -20,6 +21,7 @@ export const ModernMinimalTemplate = (props: InvoiceTemplateProps) => {
     items,
     isPaid,
   } = props;
+  const showDiscountCol = items.some((i) => Number(i.discount ?? 0) > 0);
   const taxLabel =
     Number(tax) > 0 && taxPercent != null && taxPercent > 0
       ? `Tax (${Number(taxPercent) % 1 === 0 ? taxPercent : Number(taxPercent).toFixed(1)}%)`
@@ -106,6 +108,11 @@ export const ModernMinimalTemplate = (props: InvoiceTemplateProps) => {
               <th className="w-24 pb-3 text-right text-[10px] font-medium tracking-widest text-gray-400 uppercase">
                 Rate
               </th>
+              {showDiscountCol && (
+                <th className="w-20 pb-3 text-right text-[10px] font-medium tracking-widest text-gray-400 uppercase">
+                  Discount
+                </th>
+              )}
               <th className="w-24 pb-3 text-right text-[10px] font-medium tracking-widest text-gray-400 uppercase">
                 Amount
               </th>
@@ -119,6 +126,11 @@ export const ModernMinimalTemplate = (props: InvoiceTemplateProps) => {
                 <td className="py-4 text-right text-gray-500">
                   {Number(item.unit_price).toLocaleString()}
                 </td>
+                {showDiscountCol && (
+                  <td className="py-4 text-right text-gray-500">
+                    {Number(item.discount ?? 0) > 0 ? `-${Number(item.discount).toLocaleString()}` : "—"}
+                  </td>
+                )}
                 <td className="py-4 text-right font-medium">
                   {Number(item.total).toLocaleString()}
                 </td>
@@ -135,6 +147,12 @@ export const ModernMinimalTemplate = (props: InvoiceTemplateProps) => {
             <span>Subtotal</span>
             <span>{Number(subtotal).toLocaleString()}</span>
           </div>
+          {Number(totalDiscount ?? 0) > 0 && (
+            <div className="flex justify-between text-sm text-green-600">
+              <span>Discount</span>
+              <span>-{Number(totalDiscount).toLocaleString()}</span>
+            </div>
+          )}
           {Number(tax) > 0 && (
             <div className="flex justify-between text-sm text-gray-500">
               <span>{taxLabel}</span>

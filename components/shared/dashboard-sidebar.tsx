@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   FileText,
   Users,
+  Package,
   Plus,
   ChevronRight,
   Send,
@@ -251,6 +252,20 @@ export const DashboardSidebar = () => {
                   <Link href="/dashboard/clients">
                     <Users className="size-4" />
                     <span>Clients</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              {/* Products */}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/dashboard/products")}
+                  tooltip="Products & Services"
+                >
+                  <Link href="/dashboard/products">
+                    <Package className="size-4" />
+                    <span>Products</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

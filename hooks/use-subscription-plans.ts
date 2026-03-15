@@ -33,6 +33,11 @@ const FEATURE_LABELS: Record<
     plural: "clients",
     unlimited: "Unlimited clients",
   },
+  products_per_business: {
+    singular: "product or service",
+    plural: "products or services",
+    unlimited: "Unlimited products",
+  },
 };
 
 /** Human-readable feature description for display. */

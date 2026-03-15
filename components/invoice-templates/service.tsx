@@ -3,7 +3,8 @@ import dayjs from "dayjs";
 import { BusinessLogo } from "./business-logo";
 
 export const ServiceTemplate = (props: InvoiceTemplateProps) => {
-  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, tax, taxPercent, total, notes, footerNote, business, client, items, isPaid } = props;
+  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, totalDiscount, tax, taxPercent, total, notes, footerNote, business, client, items, isPaid } = props;
+  const showDiscountCol = items.some((i) => Number(i.discount ?? 0) > 0);
   const taxLabel = Number(tax) > 0 && (taxPercent != null && taxPercent > 0) ? `Tax (${Number(taxPercent) % 1 === 0 ? taxPercent : Number(taxPercent).toFixed(1)}%)` : "Tax";
 
   return (
@@ -67,6 +68,7 @@ export const ServiceTemplate = (props: InvoiceTemplateProps) => {
               <th className="pb-2 text-left font-bold text-xs uppercase">Service Description</th>
               <th className="pb-2 text-right font-bold text-xs uppercase w-16">Qty</th>
               <th className="pb-2 text-right font-bold text-xs uppercase w-24">Rate</th>
+              {showDiscountCol && <th className="pb-2 text-right font-bold text-xs uppercase w-20">Discount</th>}
               <th className="pb-2 text-right font-bold text-xs uppercase w-24">Amount</th>
             </tr>
           </thead>
@@ -77,6 +79,11 @@ export const ServiceTemplate = (props: InvoiceTemplateProps) => {
                 <td className="py-3">{item.description}</td>
                 <td className="py-3 text-right text-gray-600">{Number(item.quantity)}</td>
                 <td className="py-3 text-right text-gray-600">{Number(item.unit_price).toLocaleString()}</td>
+                {showDiscountCol && (
+                  <td className="py-3 text-right text-gray-500">
+                    {Number(item.discount ?? 0) > 0 ? `-${Number(item.discount).toLocaleString()}` : "—"}
+                  </td>
+                )}
                 <td className="py-3 text-right font-semibold">{Number(item.total).toLocaleString()}</td>
               </tr>
             ))}
@@ -89,6 +96,9 @@ export const ServiceTemplate = (props: InvoiceTemplateProps) => {
         <div className="flex justify-end">
           <div className="w-64 space-y-1.5">
             <div className="flex justify-between text-sm"><span className="text-gray-500">Subtotal</span><span>{Number(subtotal).toLocaleString()}</span></div>
+            {Number(totalDiscount ?? 0) > 0 && (
+              <div className="flex justify-between text-sm text-green-600"><span className="text-gray-500">Discount</span><span>-{Number(totalDiscount).toLocaleString()}</span></div>
+            )}
             {Number(tax) > 0 && <div className="flex justify-between text-sm"><span className="text-gray-500">{taxLabel}</span><span>{Number(tax).toLocaleString()}</span></div>}
             <div className="border-t-2 border-gray-900 pt-2 mt-2">
               <div className="flex justify-between font-bold text-lg"><span>Total Due</span><span>{currency} {Number(total).toLocaleString()}</span></div>
