@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { ToastAlert } from "@/config/toast";
+import { isPlanLimitError, SUBSCRIBE_PATH } from "@/lib/subscription-limits";
 import type { Tables } from "@/database.types";
 
 export type InvoiceStatus = "draft" | "sent" | "viewed" | "paid" | "overdue" | "cancelled";
@@ -217,6 +218,11 @@ export const useCreateInvoice = () => {
       ToastAlert.success("Invoice created");
     },
     onError: (error: Error) => {
+      if (isPlanLimitError(error)) {
+        ToastAlert.error("Plan limit reached. Upgrade to create more invoices.");
+        if (typeof window !== "undefined") window.location.assign(SUBSCRIBE_PATH);
+        return;
+      }
       ToastAlert.error(error.message || "Failed to create invoice");
     },
   });
