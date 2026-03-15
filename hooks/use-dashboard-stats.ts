@@ -26,6 +26,7 @@ const defaultStats: InvoiceStats = {
 export const useDashboardStats = (userId: string | undefined) => {
   const [invoiceStats, setInvoiceStats] = useState<InvoiceStats>(defaultStats);
   const [clientCount, setClientCount] = useState(0);
+  const [productCount, setProductCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const fetchStats = useCallback(async () => {
@@ -66,12 +67,19 @@ export const useDashboardStats = (userId: string | undefined) => {
     }
     setInvoiceStats(stats);
 
-    const { count } = await supabase
+    const { count: clientCountResult } = await supabase
       .from("clients")
       .select("id", { count: "exact", head: true })
       .in("business_id", bizIds);
 
-    setClientCount(count || 0);
+    setClientCount(clientCountResult || 0);
+
+    const { count: productCountResult } = await supabase
+      .from("products")
+      .select("id", { count: "exact", head: true })
+      .in("business_id", bizIds);
+
+    setProductCount(productCountResult || 0);
     setLoading(false);
   }, [userId]);
 
@@ -79,5 +87,5 @@ export const useDashboardStats = (userId: string | undefined) => {
     fetchStats();
   }, [fetchStats]);
 
-  return { invoiceStats, clientCount, loading, refetch: fetchStats };
+  return { invoiceStats, clientCount, productCount, loading, refetch: fetchStats };
 };

@@ -399,6 +399,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
 
           <ProductPickerDialog
             businessId={invoice?.business_id ?? null}
+            businessName={invoice?.business?.name ?? null}
             products={products}
             refetchProducts={refetchProducts}
             onAddLine={addItemFromProduct}

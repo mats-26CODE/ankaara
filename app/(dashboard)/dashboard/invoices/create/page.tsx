@@ -463,6 +463,7 @@ const CreateInvoicePage = () => {
 
           <ProductPickerDialog
             businessId={currentBusinessId}
+            businessName={currentBusiness?.name ?? null}
             products={products}
             refetchProducts={refetchProducts}
             onAddLine={addItemFromProduct}

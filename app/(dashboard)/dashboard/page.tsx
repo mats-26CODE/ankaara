@@ -28,6 +28,8 @@ import { useCurrentBusinessId } from "@/lib/stores/business-store";
 import { getCasualGreeting } from "@/helpers/helpers";
 import { useFormatAmount } from "@/hooks/use-format-amount";
 import { useDashboardStats } from "@/hooks/use-dashboard-stats";
+import { useCurrentSubscription } from "@/hooks/use-current-subscription";
+import { useSubscriptionPlans, type SubscriptionPlanSlug } from "@/hooks/use-subscription-plans";
 import {
   UserRound,
   ChevronRight,
@@ -42,6 +44,7 @@ import {
   Building2,
   Check,
   ChevronDown,
+  Zap,
 } from "lucide-react";
 
 /**
@@ -66,7 +69,13 @@ const DashboardPage = () => {
   const { businesses, loading: businessesLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
   const { format: formatAmount } = useFormatAmount();
-  const { invoiceStats, clientCount, loading: statsLoading } = useDashboardStats(user?.id);
+  const { invoiceStats, clientCount, productCount, loading: statsLoading } = useDashboardStats(user?.id);
+  const { data: subscription, isLoading: subscriptionLoading } = useCurrentSubscription(user?.id);
+  const { data: plans } = useSubscriptionPlans();
+  const currentPlanSlug = (subscription?.planSlug ?? "free") as SubscriptionPlanSlug;
+  const currentPlan = plans?.find((p) => p.slug === currentPlanSlug);
+  const isFreePlan = currentPlanSlug === "free";
+  const upgradeHref = "/subscribe?plan=pro";
 
   const activeBusiness =
     businesses.find((b) => b.id === currentBusinessId) ?? businesses[0] ?? null;
@@ -96,21 +105,45 @@ const DashboardPage = () => {
   return (
     <div className="space-y-6">
       {/* ────── Welcome Header ────── */}
-      <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">
-          {getCasualGreeting()}
-          {profile?.full_name?.trim() ? ` ${profile.full_name.trim().split(/\s+/)[0]}` : ""}
-        </h1>
-        <p className="text-muted-foreground">{t("dashboard.home.greetingSubtitle")}</p>
-        {activeBusiness && (
-          <div className="flex items-center gap-2 pt-1">
-            <span className="text-muted-foreground text-sm">Viewing:</span>
-            <Badge variant="secondary" className="font-medium">
-              <Building2 className="mr-1 size-3.5" />
-              {activeBusiness.name}
-            </Badge>
-          </div>
-        )}
+      <div className="flex items-end justify-between">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight">
+            {getCasualGreeting()}
+            {profile?.full_name?.trim() ? ` ${profile.full_name.trim().split(/\s+/)[0]}` : ""}
+          </h1>
+          <p className="text-muted-foreground">{t("dashboard.home.greetingSubtitle")}</p>
+          {activeBusiness && (
+            <div className="flex items-center gap-2 pt-1">
+              <span className="text-muted-foreground text-sm">Viewing:</span>
+              <Badge variant="secondary" className="font-medium">
+                <Building2 className="mr-1 size-3.5" />
+                {activeBusiness.name}
+              </Badge>
+            </div>
+          )}
+        </div>
+
+        {/* Current subscription plan badge; upgrade CTA when on free */}
+        <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
+          {!subscriptionLoading && (
+            <>
+              <Badge
+                variant={isFreePlan ? "secondary" : "default"}
+                className="border-primary/50 border px-4 py-2 font-medium capitalize"
+              >
+                {currentPlan?.name ?? currentPlanSlug}
+              </Badge>
+              {isFreePlan && (
+                <Button asChild size="sm" variant="default" className="gap-1.5">
+                  <Link href={upgradeHref}>
+                    <Zap className="size-3.5" />
+                    Upgrade
+                  </Link>
+                </Button>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {/* ────── Complete your profile banner ────── */}
@@ -208,7 +241,7 @@ const DashboardPage = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-3 gap-4 md:grid-cols-5">
             <div className="space-y-1">
               <p className="text-muted-foreground text-sm">Total Revenue</p>
               <p className="text-lg font-bold">
@@ -226,6 +259,10 @@ const DashboardPage = () => {
             <div className="space-y-1">
               <p className="text-muted-foreground text-sm">Clients</p>
               <p className="text-lg font-bold">{statsLoading ? "—" : clientCount}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-muted-foreground text-sm">Products</p>
+              <p className="text-lg font-bold">{statsLoading ? "—" : productCount}</p>
             </div>
             <div className="space-y-1">
               <p className="text-muted-foreground text-sm">Member Since</p>

@@ -1,11 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
-import {
-  useCreateProduct,
-  type Product,
-  type CreateProductPayload,
-} from "@/hooks/use-products";
+import { useCreateProduct, type Product, type CreateProductPayload } from "@/hooks/use-products";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
+import { Badge } from "@/components/ui/badge";
 import { Search, Plus, Package } from "lucide-react";
 
 const PAGE_SIZE = 20;
@@ -49,6 +46,8 @@ export type ProductLinePayload = {
 
 type ProductPickerDialogProps = {
   businessId: string | null;
+  /** Optional business name shown in the "Add product" dialog (e.g. for context). */
+  businessName?: string | null;
   products: Product[];
   refetchProducts: () => void;
   onAddLine: (product: ProductLinePayload) => void;
@@ -59,6 +58,7 @@ type ProductPickerDialogProps = {
 
 const ProductPickerDialog = ({
   businessId,
+  businessName,
   products,
   refetchProducts,
   onAddLine,
@@ -161,7 +161,7 @@ const ProductPickerDialog = ({
             onClick={() => setPickerOpen(true)}
             className="basis-4/6 justify-start font-normal"
           >
-            <Package className="mr-2 size-4 shrink-0 text-muted-foreground" />
+            <Package className="text-muted-foreground mr-2 size-4 shrink-0" />
             <span className="text-muted-foreground">Add from product...</span>
           </Button>
           <Button
@@ -192,7 +192,7 @@ const ProductPickerDialog = ({
           </DialogHeader>
 
           <div className="relative">
-            <Search className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" />
+            <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -205,7 +205,7 @@ const ProductPickerDialog = ({
           <div
             ref={listRef}
             onScroll={handleScroll}
-            className="-mx-6 min-h-0 max-h-[50vh] flex-1 overflow-y-auto px-6"
+            className="-mx-6 max-h-[50vh] min-h-0 flex-1 overflow-y-auto px-6"
           >
             {filtered.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-10 text-center">
@@ -234,7 +234,7 @@ const ProductPickerDialog = ({
                     key={product.id}
                     type="button"
                     onClick={() => handleSelect(product)}
-                    className="flex w-full items-center gap-3 rounded-md px-1 py-3 text-left transition-colors hover:bg-muted/50"
+                    className="hover:bg-muted/50 flex w-full items-center gap-3 rounded-md px-1 py-3 text-left transition-colors"
                   >
                     <div className="bg-muted flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-medium uppercase">
                       {product.name.charAt(0)}
@@ -285,8 +285,16 @@ const ProductPickerDialog = ({
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Add product or service</DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="flex flex-col gap-2">
               Create a new item and add it as a line to this invoice.
+              {businessId && (
+                <span className="flex items-center gap-2">
+                  Business:{" "}
+                  <Badge variant="secondary" className="font-normal">
+                    {businessName ?? "—"}
+                  </Badge>
+                </span>
+              )}
             </DialogDescription>
           </DialogHeader>
 
@@ -306,9 +314,7 @@ const ProductPickerDialog = ({
               <Textarea
                 id="new-product-desc"
                 value={addForm.description}
-                onChange={(e) =>
-                  setAddForm((p) => ({ ...p, description: e.target.value }))
-                }
+                onChange={(e) => setAddForm((p) => ({ ...p, description: e.target.value }))}
                 placeholder="Optional"
                 rows={2}
               />
@@ -335,7 +341,7 @@ const ProductPickerDialog = ({
                   id="new-product-unit"
                   value={addForm.unit}
                   onChange={(e) => setAddForm((p) => ({ ...p, unit: e.target.value }))}
-                  placeholder="e.g. hr, item"
+                  placeholder="e.g. kg, piece, item, etc."
                 />
               </div>
             </div>
@@ -354,7 +360,7 @@ const ProductPickerDialog = ({
               disabled={!addForm.name.trim()}
               isLoading={createProduct.isPending}
             >
-              Add & use as line
+              Add & Use Item
             </Button>
           </DialogFooter>
         </DialogContent>

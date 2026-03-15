@@ -415,7 +415,7 @@ const ProductsPage = () => {
                   id="product-unit"
                   value={form.unit}
                   onChange={(e) => setForm((p) => ({ ...p, unit: e.target.value }))}
-                  placeholder="e.g. hr, item"
+                  placeholder="e.g. kg, piece, item, etc."
                 />
               </div>
             </div>
