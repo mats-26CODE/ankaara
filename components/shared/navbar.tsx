@@ -58,14 +58,15 @@ const NavBar = () => {
           {isLanding && (
             <div className="hidden items-center gap-6 md:flex">
               {navLinks.map((link) => {
-                const isActive =
-                  !link.href.startsWith("/#") && pathname === link.href;
+                const isActive = !link.href.startsWith("/#") && pathname === link.href;
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`text-sm transition-colors xl:text-base ${
-                      isActive ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+                    className={`text-sm transition-colors ${
+                      isActive
+                        ? "text-primary font-medium"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {link.label}
@@ -203,8 +204,7 @@ const NavBar = () => {
               <div className="flex flex-col gap-4 px-6 pb-6">
                 {isLanding
                   ? navLinks.map((link) => {
-                      const isActive =
-                        !link.href.startsWith("/#") && pathname === link.href;
+                      const isActive = !link.href.startsWith("/#") && pathname === link.href;
                       return (
                         <Link
                           key={link.href}
@@ -212,7 +212,7 @@ const NavBar = () => {
                           onClick={handleLinkClick}
                           className={`py-2 text-base transition-colors ${
                             isActive
-                              ? "text-primary font-semibold"
+                              ? "text-primary font-medium"
                               : "text-muted-foreground hover:text-foreground"
                           }`}
                         >
@@ -227,7 +227,7 @@ const NavBar = () => {
                         onClick={handleLinkClick}
                         className={`py-2 text-base transition-colors ${
                           pathname === link.href
-                            ? "text-primary font-semibold"
+                            ? "text-primary font-medium"
                             : "text-muted-foreground hover:text-foreground"
                         }`}
                       >
