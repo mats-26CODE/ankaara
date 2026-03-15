@@ -23,9 +23,20 @@ const NavBar = () => {
   const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const isLanding =
+    pathname === "/" ||
+    pathname === "/about-us" ||
+    pathname === "/support" ||
+    pathname === "/terms" ||
+    pathname === "/privacy";
+
   const navLinks = [
-    { label: t("nav.features"), href: "#features" },
-    { label: t("nav.pricing"), href: "#pricing" },
+    { label: t("nav.features"), href: "/#features" },
+    { label: t("nav.pricing"), href: "/#pricing" },
+    { label: t("footer.aboutUs"), href: "/about-us" },
+    { label: t("footer.helpCenter"), href: "/support" },
+    { label: t("footer.termsOfService"), href: "/terms" },
+    { label: t("footer.privacyPolicy"), href: "/privacy" },
   ];
 
   const dashboardLinks = [{ label: t("nav.dashboard"), href: "/dashboard" }];
@@ -44,21 +55,23 @@ const NavBar = () => {
           <Logo size="sm" />
 
           {/* Desktop Navigation */}
-          {pathname === "/" && (
+          {isLanding && (
             <div className="hidden items-center gap-6 md:flex">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`text-sm transition-colors xl:text-base ${
-                    pathname === link.href
-                      ? "text-primary font-semibold"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {navLinks.map((link) => {
+                const isActive =
+                  !link.href.startsWith("/#") && pathname === link.href;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`text-sm transition-colors xl:text-base ${
+                      isActive ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>
@@ -188,17 +201,25 @@ const NavBar = () => {
                 <SheetTitle>Menu</SheetTitle>
               </SheetHeader>
               <div className="flex flex-col gap-4 px-6 pb-6">
-                {pathname === "/"
-                  ? navLinks.map((link) => (
-                      <a
-                        key={link.href}
-                        href={link.href}
-                        onClick={handleLinkClick}
-                        className="text-muted-foreground hover:text-foreground py-2 text-base transition-colors"
-                      >
-                        {link.label}
-                      </a>
-                    ))
+                {isLanding
+                  ? navLinks.map((link) => {
+                      const isActive =
+                        !link.href.startsWith("/#") && pathname === link.href;
+                      return (
+                        <Link
+                          key={link.href}
+                          href={link.href}
+                          onClick={handleLinkClick}
+                          className={`py-2 text-base transition-colors ${
+                            isActive
+                              ? "text-primary font-semibold"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          {link.label}
+                        </Link>
+                      );
+                    })
                   : dashboardLinks.map((link) => (
                       <Link
                         key={link.href}

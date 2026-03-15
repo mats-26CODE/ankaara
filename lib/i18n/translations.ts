@@ -40,6 +40,119 @@ export const translations = {
       terms: "Vigezo",
       support: "Msaada",
     },
+    about: {
+      title: `Kuhusu ${APP_NAME}`,
+      subtitle: "Invoicing sahihi na rahisi kwa wafanyabiashara na biashara.",
+      missionTitle: "Lengo letu",
+      missionContent:
+        "Kufanya invoicing iwe rahisi na ya kibiashara kwa kila mtu. Tunajenga zana zinazowasaidia wafanyabiashara na biashara kuunda ankara, kufuatilia malipo na kupokea pesa kwa urahisi.",
+      visionTitle: "Maono",
+      visionContent:
+        "Kuwa jukwaa la kwanza la invoicing linalotumika na biashara na wafanyabiashara barani Afrika, na malipo ya pesa za simu yakiwa sehemu ya mfumo.",
+      valuesTitle: "Thamani zetu",
+      value1Title: "Rahisi",
+      value1Description: "Mbinu rahisi — ankara nzuri, kiungo kimoja, ufuatiliaji wazi.",
+      value2Title: "Kuaminika",
+      value2Description: "Data yako ni ya siri na imara; tunajenga imani kwa usalama na uwazi.",
+      value3Title: "Kwa Afrika",
+      value3Description: "Imejengwa kwa pesa za simu na mahitaji ya biashara za Kiafrika.",
+      teamTitle: "Timu yetu",
+      teamDescription:
+        "Tunaongozwa na watu wenye uzoefu wa biashara na teknolojia. Tunafanya kazi kwa karibu na watumiaji wetu ili kujenga zana zinazojibu mahitaji yao.",
+      contactTitle: "Wasiliana nasi",
+      contactDescription: "Tuna maswali au maoni? Tuma barua pepe kwa timu yetu.",
+    },
+    support: {
+      title: "Msaada",
+      description:
+        "Unahitaji msaada? Tuna hapa. Kituo chetu cha msaada kitapatikana hivi karibuni. Kwa sasa, tafadhali wasiliana nasi kwa barua pepe.",
+      faqTitle: "Maswali Yanayoulizwa Mara kwa Mara",
+      faq1Question: "Ninawezaje kuunda ankara ya kwanza?",
+      faq1Answer:
+        "Ingia kwenye dashibodi, bonyeza Ankara > Unga ankara mpya. Jaza maelezo ya mteja na bidhaa/huduma, kisha uhifadhi na utume kiungo kwa mteja.",
+      faq2Question: "Je, naweza kubadilisha template ya ankara?",
+      faq2Answer:
+        "Ndiyo. Nenda kwenye Mipangilio > Violezo ili kuchagua muundo na rangi. Unachagua kati ya violezo vilivyopo.",
+      faq3Question: "Malipo ya pesa za simu yanafanya kazi vipi?",
+      faq3Answer:
+        "Integrations ya malipo (mf. Snipe) itapatikana hivi karibuni. Kwa sasa unaweza kushiriki kiungo cha ankara na kufuatilia waliotazama.",
+      faq4Question: "Ninawezaje kufuta au kurekebisha ankara?",
+      faq4Answer:
+        "Kutoka kwenye orodha ya ankara, fungua ankara unayotaka, kisha tumia 'Hariri' au 'Futa' kulingana na hali ya ankara.",
+      faq5Question: "Mipaka ya mpango wa bure ni ipi?",
+      faq5Answer:
+        "Kwa mpango wa bure una ankara 5 kwa mwezi, biashara 1, na wateja 10 kwa biashara. Endelea kwa Pro kwa kikomo kikubwa.",
+      faq6Question: "Ninawezaje kusaidia kuhusu ankara iliyochelewa?",
+      faq6Answer:
+        "Ankara zinaonyesha hali (iliyotumwa, imelipwa, imechelewa). Tumia kiungo cha ankara kukumbusha mteja, au wasiliana nasi kwa msaada zaidi.",
+      stillNeedHelp: "Bado unahitaji msaada?",
+      stillNeedHelpDescription: "Ikiwa hukupata jibu hapa, timu yetu iko tayari kukusaidia.",
+      contactSupport: "Wasiliana na Msaada",
+      contactsTitle: "Mawasiliano",
+      emailLabel: "Barua pepe",
+      phoneLabel: "Simu",
+    },
+    terms: {
+      title: "Vigezo vya Huduma",
+      lastUpdated: "Ilisasishwa mwisho: Machi 2025",
+      introduction:
+        "Karibu kwenye " +
+        APP_NAME +
+        ". Tafadhali soma vigezo hivi vya huduma kwa makini kabla ya kutumia jukwaa letu. Kwa kutumia " +
+        APP_NAME +
+        ", unakubali kufuata vigezo hivi.",
+      section1Title: "Kukubali vigezo",
+      section1Content:
+        "Kwa kusajili na kutumia jukwaa la " +
+        APP_NAME +
+        ", unakubali kufuata na kufungwa na vigezo hivi vya huduma. Ikiwa haukubali vigezo hivi, tafadhali usitumie jukwaa letu.",
+      section2Title: "Huduma zetu",
+      section2Content:
+        APP_NAME +
+        " inatoa jukwaa la invoicing kwa wafanyabiashara na biashara: kuunda ankara, kuzituma kwa kiungo, kufuatilia maoni na (hivi karibuni) kupokea malipo. Tunahifadhi data yako kwa usalama na kufuata sera yetu ya faragha.",
+      section3Title: "Matumizi yanayokubalika",
+      section3Content:
+        "Unakubali kutotumia jukwaa kwa shughuli zisizo halali, kudanganya, au kukiuka sheria. Tunaruhusu kusitisha au kukatisha akaunti yako ikiwa unakiuka vigezo au tabia isiyokubalika.",
+      section4Title: "Mali ya kiakili na data",
+      section4Content:
+        "Maudhui unayounda (ankara, maelezo ya biashara) ni yako. Unatupatia leseni ya kutumia na kuonyesha data hiyo ili kutoa huduma. Tutaheshimu faragha yako kama ilivyoelezwa kwenye Sera ya Faragha.",
+      section5Title: "Mabadiliko ya vigezo",
+      section5Content:
+        "Tunaweza kusasisha vigezo hivi wakati wowote. Tutawajaribu kutaarifa watumiaji kuhusu mabadiliko muhimu. Kuendelea kutumia jukwaa baada ya mabadiliko kunamaanisha unakubali vigezo vipya.",
+      section6Title: "Wasiliana",
+      section6Content:
+        "Kama una maswali kuhusu vigezo hivi vya huduma, tafadhali wasiliana nasi kwa barua pepe ya msaada.",
+      contactTitle: "Wasiliana nasi",
+      contactDescription: "Kwa maswali kuhusu vigezo vya huduma, wasiliana nasi.",
+    },
+    privacy: {
+      title: "Sera ya Faragha",
+      lastUpdated: "Ilisasishwa mwisho: Machi 2025",
+      introduction:
+        APP_NAME +
+        " inajali faragha yako. Sera hii ya faragha inaeleza jinsi tunavyokusanya, kutumia na kulinda taarifa zako za kibinafsi.",
+      section1Title: "Taarifa tunazokusanya",
+      section1Content:
+        "Tunakusanya jina, barua pepe, nambari ya simu (hiari), na maelezo ya biashara unayotoa. Tunapokea taarifa kutoka kwa mtumiaji wa barua pepe na uthibitishaji wa simu unapojisajili.",
+      section2Title: "Jinsi tunavyotumia taarifa",
+      section2Content:
+        "Tunatumia taarifa zako kukupa huduma bora, kuendeshea akaunti yako, kuonyesha ankara na wateja, na kuboresha jukwaa. Tunaweza kutumia barua pepe au simu kwa arifa muhimu kuhusu akaunti na huduma zetu.",
+      section3Title: "Kushiriki taarifa",
+      section3Content:
+        "Hatushiriki taarifa zako za kibinafsi na watu wa nje kwa madhumuni ya biashara. Taarifa za ankara (mf. jina la mteja, kiasi) zinashirikiwa na mteja pale unapotuma kiungo cha ankara — ni sehemu ya huduma.",
+      section4Title: "Usalama",
+      section4Content:
+        "Tunachukua hatua za kiusalama kulinda data yako (encryption, upatikanaji mdogo). Unapaswa kuweka nenosiri lako lisilotumika na kutuomba mara moja ikiwa una shaka juu ya akaunti.",
+      section5Title: "Haki zako",
+      section5Content:
+        "Unaweza kufikia na kusahihisha taarifa zako za wasifu kutoka kwenye Mipangilio. Unaweza kutuomba kufuta akaunti na data yako kwa kushughulikia msaada.",
+      section6Title: "Mabadiliko",
+      section6Content:
+        "Tunaweza kusasisha sera hii ya faragha. Tutawataarifa watumiaji kuhusu mabadiliko muhimu. Kuendelea kutumia jukwaa kunamaanisha unakubali sera iliyosasishwa.",
+      contactTitle: "Wasiliana nasi",
+      contactDescription:
+        "Ikiwa una maswali kuhusu sera hii ya faragha, tafadhali wasiliana nasi kwa barua pepe ya msaada.",
+    },
     landing: {
       tagline: `Fanya Biashara Yako Iwe ${APP_NAME}`,
       headline: `${APP_NAME} – Invoicing Sahihi, Rahisi`,
@@ -379,6 +492,119 @@ export const translations = {
       privacy: "Privacy",
       terms: "Terms",
       support: "Support",
+    },
+    about: {
+      title: `About ${APP_NAME}`,
+      subtitle: "Professional invoicing made simple for freelancers and businesses.",
+      missionTitle: "Our mission",
+      missionContent:
+        "To make invoicing simple and professional for everyone. We build tools that help freelancers and businesses create invoices, track payments, and get paid easily.",
+      visionTitle: "Our vision",
+      visionContent:
+        "To be the go-to invoicing platform for businesses and freelancers across Africa, with mobile money and modern payment options built in.",
+      valuesTitle: "Our values",
+      value1Title: "Simple",
+      value1Description: "Straightforward approach — great invoices, one link, clear tracking.",
+      value2Title: "Trustworthy",
+      value2Description: "Your data is private and secure; we build trust through security and transparency.",
+      value3Title: "Built for Africa",
+      value3Description: "Designed for mobile money and the needs of African businesses.",
+      teamTitle: "Our team",
+      teamDescription:
+        "We are driven by people with experience in business and technology. We work closely with our users to build tools that meet their needs.",
+      contactTitle: "Contact us",
+      contactDescription: "Have questions or feedback? Email our team.",
+    },
+    support: {
+      title: "Support",
+      description:
+        "Need help? We're here. Our help center will be available soon. For now, please contact us by email.",
+      faqTitle: "Frequently Asked Questions",
+      faq1Question: "How do I create my first invoice?",
+      faq1Answer:
+        "Log in to the dashboard, click Invoices > Create new invoice. Fill in the client and line items, then save and send the link to your client.",
+      faq2Question: "Can I change the invoice template?",
+      faq2Answer:
+        "Yes. Go to Settings > Templates to choose layout and branding. You can pick from available templates.",
+      faq3Question: "How do mobile money payments work?",
+      faq3Answer:
+        "Payment integrations (e.g. Snipe) will be available soon. For now you can share the invoice link and track who has viewed it.",
+      faq4Question: "How do I cancel or edit an invoice?",
+      faq4Answer:
+        "From the invoice list, open the invoice you want, then use Edit or Delete depending on the invoice status.",
+      faq5Question: "What are the free plan limits?",
+      faq5Answer:
+        "On the free plan you get 5 invoices per month, 1 business, and 10 clients per business. Upgrade to Pro for higher limits.",
+      faq6Question: "How can I follow up on overdue invoices?",
+      faq6Answer:
+        "Invoices show status (sent, paid, overdue). Use the invoice link to remind the client, or contact us for more help.",
+      stillNeedHelp: "Still need help?",
+      stillNeedHelpDescription: "If you didn't find an answer here, our team is ready to help.",
+      contactSupport: "Contact support",
+      contactsTitle: "Contacts",
+      emailLabel: "Email",
+      phoneLabel: "Phone",
+    },
+    terms: {
+      title: "Terms of Service",
+      lastUpdated: "Last updated: March 2025",
+      introduction:
+        "Welcome to " +
+        APP_NAME +
+        ". Please read these terms of service carefully before using our platform. By using " +
+        APP_NAME +
+        ", you agree to these terms.",
+      section1Title: "Acceptance of terms",
+      section1Content:
+        "By signing up and using the " +
+        APP_NAME +
+        " platform, you agree to be bound by these terms of service. If you do not agree, please do not use our platform.",
+      section2Title: "Our services",
+      section2Content:
+        APP_NAME +
+        " provides an invoicing platform for freelancers and businesses: create invoices, send them via link, track views, and (soon) receive payments. We store your data securely and in line with our privacy policy.",
+      section3Title: "Acceptable use",
+      section3Content:
+        "You agree not to use the platform for illegal activity, fraud, or to violate any laws. We may suspend or terminate your account if you breach these terms or engage in unacceptable behaviour.",
+      section4Title: "Intellectual property and data",
+      section4Content:
+        "Content you create (invoices, business details) is yours. You grant us a licence to use and display that data to provide the service. We will respect your privacy as set out in our Privacy Policy.",
+      section5Title: "Changes to terms",
+      section5Content:
+        "We may update these terms at any time. We will try to notify users of significant changes. Continued use of the platform after changes means you accept the new terms.",
+      section6Title: "Contact",
+      section6Content:
+        "If you have questions about these terms of service, please contact us at our support email.",
+      contactTitle: "Contact us",
+      contactDescription: "For questions about terms of service, contact us.",
+    },
+    privacy: {
+      title: "Privacy Policy",
+      lastUpdated: "Last updated: March 2025",
+      introduction:
+        APP_NAME +
+        " cares about your privacy. This privacy policy explains how we collect, use, and protect your personal information.",
+      section1Title: "Information we collect",
+      section1Content:
+        "We collect the name, email, phone number (optional), and business details you provide. We receive information from your email provider and phone verification when you sign up.",
+      section2Title: "How we use your information",
+      section2Content:
+        "We use your information to provide the service, manage your account, display invoices and clients, and improve the platform. We may use email or phone for important notices about your account and our services.",
+      section3Title: "Sharing information",
+      section3Content:
+        "We do not share your personal information with third parties for their marketing. Invoice data (e.g. client name, amount) is shared with the client when you send the invoice link — that is part of the service.",
+      section4Title: "Security",
+      section4Content:
+        "We take security measures to protect your data (encryption, limited access). You should keep your password secure and contact us immediately if you suspect any account compromise.",
+      section5Title: "Your rights",
+      section5Content:
+        "You can access and update your profile information from Settings. You can request account and data deletion by contacting support.",
+      section6Title: "Changes",
+      section6Content:
+        "We may update this privacy policy. We will notify users of significant changes. Continued use of the platform means you accept the updated policy.",
+      contactTitle: "Contact us",
+      contactDescription:
+        "If you have questions about this privacy policy, please contact us at our support email.",
     },
     landing: {
       tagline: `${APP_NAME} · Professional Invoicing, Made Simple`,

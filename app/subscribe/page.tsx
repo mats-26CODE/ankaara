@@ -14,6 +14,8 @@ import {
   getPlanTier,
   groupPlansByTier,
   type SubscriptionPlanSlug,
+  type SubscriptionPlanWithFeatures,
+  type SubscriptionPlanFeature,
 } from "@/hooks/use-subscription-plans";
 import { useSetSubscription } from "@/hooks/use-set-subscription";
 import { getNextPlanSlug } from "@/lib/subscription-limits";
@@ -53,7 +55,7 @@ const SubscribeContent = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const planParam = searchParams.get("plan") as SubscriptionPlanSlug | null;
+  const planParam = searchParams.get("plan"); // URL can be "pro" (shorthand) or a full slug
   const limitParam = searchParams.get("limit");
   const fromOnboarding = searchParams.get("from") === "onboarding";
 
@@ -66,13 +68,23 @@ const SubscribeContent = () => {
 
   useEffect(() => {
     if (planParam) {
-      const slug =
+      const validSlugs: SubscriptionPlanSlug[] = [
+        "free",
+        "pro-monthly",
+        "pro-6month",
+        "pro-yearly",
+        "business",
+        "business-monthly",
+        "business-6month",
+        "business-yearly",
+      ];
+      const slug: SubscriptionPlanSlug | null =
         planParam === "pro"
           ? "pro-monthly"
-          : (["free", "pro-monthly", "pro-6month", "pro-yearly", "business", "business-monthly", "business-6month", "business-yearly"].includes(planParam)
-              ? planParam
-              : null);
-      if (slug) setSelectedSlug(slug as SubscriptionPlanSlug);
+          : validSlugs.includes(planParam as SubscriptionPlanSlug)
+            ? (planParam as SubscriptionPlanSlug)
+            : null;
+      if (slug) setSelectedSlug(slug);
       return;
     }
     if (limitParam && subscription?.planSlug) {
@@ -177,7 +189,7 @@ const SubscribeContent = () => {
           </p>
 
           {limitParam && (
-            <div className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 mb-6 rounded-lg border px-4 py-3 text-center text-sm text-amber-800 dark:text-amber-200">
+            <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
               You&apos;ve reached your plan limit. Upgrade to a higher plan to continue.
             </div>
           )}
@@ -190,7 +202,7 @@ const SubscribeContent = () => {
             (() => {
               const grouped = groupPlansByTier(plans ?? []);
               const renderPlanCard = (
-                plan: (typeof plans)[number],
+                plan: SubscriptionPlanWithFeatures,
                 tier: ReturnType<typeof getPlanTier>,
                 isSelected: boolean,
                 onSelect: () => void,
@@ -206,7 +218,9 @@ const SubscribeContent = () => {
                     role="button"
                     tabIndex={0}
                     className={`relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border-2 transition-all ${
-                      isSelected ? "border-primary ring-primary/20 ring-2" : "bg-card hover:border-primary/30 shadow-xs"
+                      isSelected
+                        ? "border-primary ring-primary/20 ring-2"
+                        : "bg-card hover:border-primary/30 shadow-xs"
                     }`}
                     onClick={onSelect}
                     onKeyDown={(e) => {
@@ -226,7 +240,9 @@ const SubscribeContent = () => {
                         <span className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-lg">
                           <Icon className="h-5 w-5" />
                         </span>
-                        <CardTitle className="text-xl font-semibold md:text-2xl">{plan.name}</CardTitle>
+                        <CardTitle className="text-xl font-semibold md:text-2xl">
+                          {plan.name}
+                        </CardTitle>
                       </div>
                       <p className="text-muted-foreground text-sm">
                         {plan.description ?? t(`landing.pricing.${tier}.description`)}
@@ -247,7 +263,7 @@ const SubscribeContent = () => {
                     <CardContent className="flex flex-1 flex-col pt-0">
                       <ul className="flex-1 space-y-3">
                         {plan.features.length > 0
-                          ? plan.features.map((f) => (
+                          ? plan.features.map((f: SubscriptionPlanFeature) => (
                               <li
                                 key={f.id}
                                 className="text-muted-foreground flex items-start gap-2 text-sm"
@@ -278,7 +294,7 @@ const SubscribeContent = () => {
 
               const renderTierCardWithTabs = (
                 tier: "pro" | "business",
-                tierPlans: (typeof plans)[number][],
+                tierPlans: SubscriptionPlanWithFeatures[],
                 tierLabel: string,
               ) => {
                 if (tierPlans.length === 0) return null;
@@ -308,7 +324,9 @@ const SubscribeContent = () => {
                         <span className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-lg">
                           <Icon className="h-5 w-5" />
                         </span>
-                        <CardTitle className="text-xl font-semibold md:text-2xl">{tierLabel}</CardTitle>
+                        <CardTitle className="text-xl font-semibold md:text-2xl">
+                          {tierLabel}
+                        </CardTitle>
                       </div>
                       <p className="text-muted-foreground text-sm">
                         {t(`landing.pricing.${tier}.description`)}
@@ -326,7 +344,11 @@ const SubscribeContent = () => {
                           ))}
                         </TabsList>
                         {tierPlans.map((p) => (
-                          <TabsContent key={p.id} value={p.slug} className="mt-3 focus-visible:outline-none">
+                          <TabsContent
+                            key={p.id}
+                            value={p.slug}
+                            className="mt-3 focus-visible:outline-none"
+                          >
                             {p.is_contact_sales ? (
                               <p className="text-foreground text-lg font-semibold">
                                 {t("landing.pricing.contactUs")}
@@ -337,7 +359,9 @@ const SubscribeContent = () => {
                                   {formatPriceDisplay(p.price_amount, p.price_currency) ??
                                     t(`landing.pricing.${tier}.price`)}
                                 </span>
-                                <span className="text-muted-foreground">{getPeriodSuffix(p.billing_interval)}</span>
+                                <span className="text-muted-foreground">
+                                  {getPeriodSuffix(p.billing_interval)}
+                                </span>
                               </div>
                             )}
                           </TabsContent>
@@ -347,7 +371,7 @@ const SubscribeContent = () => {
                     <CardContent className="flex flex-1 flex-col pt-0">
                       <ul className="flex-1 space-y-3">
                         {activePlan.features.length > 0
-                          ? activePlan.features.map((f) => (
+                          ? activePlan.features.map((f: SubscriptionPlanFeature) => (
                               <li
                                 key={f.id}
                                 className="text-muted-foreground flex items-start gap-2 text-sm"
@@ -380,18 +404,23 @@ const SubscribeContent = () => {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
                   {grouped.free && (
                     <div key="free">
-                      {renderPlanCard(
-                        grouped.free,
-                        "free",
-                        selectedSlug === "free",
-                        () => setSelectedSlug("free"),
+                      {renderPlanCard(grouped.free, "free", selectedSlug === "free", () =>
+                        setSelectedSlug("free"),
                       )}
                     </div>
                   )}
                   {grouped.pro.length > 0 &&
-                    renderTierCardWithTabs("pro", grouped.pro, t("landing.pricing.pro.name") ?? "Pro Plan")}
+                    renderTierCardWithTabs(
+                      "pro",
+                      grouped.pro,
+                      t("landing.pricing.pro.name") ?? "Pro Plan",
+                    )}
                   {grouped.business.length > 0 &&
-                    renderTierCardWithTabs("business", grouped.business, t("landing.pricing.business.name") ?? "Business Plan")}
+                    renderTierCardWithTabs(
+                      "business",
+                      grouped.business,
+                      t("landing.pricing.business.name") ?? "Business Plan",
+                    )}
                 </div>
               );
             })()
@@ -423,7 +452,7 @@ const SubscribeContent = () => {
                   );
                 })()
               ) : isFree ? (
-                <div className="rounded-lg border border-muted bg-muted/30 px-4 py-3 text-center">
+                <div className="border-muted bg-muted/30 rounded-lg border px-4 py-3 text-center">
                   <p className="text-muted-foreground text-sm">
                     You’re on the Free plan. Upgrade above when you need more.
                   </p>
