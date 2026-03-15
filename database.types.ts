@@ -744,6 +744,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      check_subscription_expiry: {
+        Args: { p_user_id: string };
+        Returns: boolean;
+      };
       get_user_by_phone: {
         Args: { phone_number: string };
         Returns: {

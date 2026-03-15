@@ -13,6 +13,9 @@ const fetchCurrentSubscription = async (
   if (!userId) return null;
 
   const supabase = createClient();
+  // Reconcile expiry on each fetch: if subscription end_date passed, reset to free (call on login / when subscription is read)
+  await supabase.rpc("check_subscription_expiry", { p_user_id: userId });
+
   const { data, error } = await supabase
     .from("subscriptions")
     .select("plan")
