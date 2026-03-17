@@ -1,3 +1,8 @@
+/**
+ * Proposal template: quotation-specific, sales-focused layout with
+ * prominent validity period, scope of work, and acceptance section.
+ * Used only for quotations.
+ */
 import type { InvoiceTemplateProps } from "@/lib/invoice-templates/types";
 import dayjs from "dayjs";
 import { BusinessLogo } from "./business-logo";
@@ -5,13 +10,12 @@ import { QuotationAcceptanceSection } from "./quotation-acceptance-section";
 
 const DEFAULT_BRAND = "#2563eb";
 
-export const BoldBrandTemplate = (props: InvoiceTemplateProps) => {
+export const ProposalTemplate = (props: InvoiceTemplateProps) => {
   const {
     invoiceNumber,
     status,
     issueDate,
     dueDate,
-    documentType,
     currency,
     subtotal,
     totalDiscount,
@@ -25,11 +29,7 @@ export const BoldBrandTemplate = (props: InvoiceTemplateProps) => {
     business,
     client,
     items,
-    isPaid,
   } = props;
-  const isQuotation = documentType === "quotation";
-  const docLabel = isQuotation ? "Quotation" : "Invoice";
-  const dateLabel = isQuotation ? "Valid Until" : "Due Date";
   const showDiscountCol = items.some((i) => Number(i.discount ?? 0) > 0);
   const taxLabel =
     Number(tax) > 0 && taxPercent != null && taxPercent > 0
@@ -39,8 +39,8 @@ export const BoldBrandTemplate = (props: InvoiceTemplateProps) => {
 
   return (
     <div className="overflow-hidden rounded-xl bg-white text-gray-900 shadow-sm">
-      {/* Colored header */}
-      <div className="px-8 py-8 text-white" style={{ backgroundColor: brand }}>
+      {/* Hero header with prominent validity */}
+      <div className="relative px-8 py-10 text-white" style={{ backgroundColor: brand }}>
         <div className="flex items-start justify-between">
           <div>
             <div className="mb-3">
@@ -57,62 +57,52 @@ export const BoldBrandTemplate = (props: InvoiceTemplateProps) => {
             )}
           </div>
           <div className="text-right">
-            <p className="text-sm font-medium tracking-wider uppercase opacity-70">{docLabel}</p>
+            <p className="text-sm font-medium tracking-wider uppercase opacity-70">Quotation</p>
             <p className="mt-1 text-3xl font-black">{invoiceNumber}</p>
           </div>
         </div>
-      </div>
-
-      {/* Status banner */}
-      <div
-        className="flex items-center justify-between border-b px-8 py-4"
-        style={{ borderColor: brand + "20" }}
-      >
-        <div className="flex gap-6">
+        {/* Prominent validity banner */}
+        <div className="mt-6 flex items-center justify-between rounded-lg bg-white/15 px-5 py-4 backdrop-blur-sm">
           <div>
-            <p className="text-[10px] font-bold tracking-wider uppercase" style={{ color: brand }}>
-              Issue Date
-            </p>
-            <p className="text-sm">{dayjs(issueDate).format("MMM D, YYYY")}</p>
+            <p className="text-xs font-bold uppercase tracking-wider opacity-90">Issue Date</p>
+            <p className="text-lg font-bold">{dayjs(issueDate).format("MMMM D, YYYY")}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs font-bold uppercase tracking-wider opacity-90">Valid Until</p>
+            <p className="text-lg font-bold">{dayjs(dueDate).format("MMMM D, YYYY")}</p>
           </div>
           <div>
-            <p className="text-[10px] font-bold tracking-wider uppercase" style={{ color: brand }}>
-              {dateLabel}
-            </p>
-            <p className="text-sm">{dayjs(dueDate).format("MMM D, YYYY")}</p>
+            {status === "accepted" ? (
+              <span className="rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-bold text-white">
+                ACCEPTED
+              </span>
+            ) : status === "expired" ? (
+              <span className="rounded-full bg-amber-500 px-4 py-1.5 text-xs font-bold text-white">
+                EXPIRED
+              </span>
+            ) : (
+              <span className="rounded-full border-2 border-white/60 px-4 py-1.5 text-xs font-bold uppercase">
+                {status}
+              </span>
+            )}
           </div>
         </div>
-        {isQuotation ? (
-          status === "accepted" ? (
-            <span className="rounded-full px-4 py-1.5 text-xs font-bold text-white" style={{ backgroundColor: "#059669" }}>ACCEPTED</span>
-          ) : status === "expired" ? (
-            <span className="rounded-full bg-amber-600 px-4 py-1.5 text-xs font-bold text-white">EXPIRED</span>
-          ) : (
-            <span className="rounded-full border-2 px-4 py-1.5 text-xs font-bold uppercase" style={{ borderColor: brand, color: brand }}>{status}</span>
-          )
-        ) : isPaid ? (
-          <span className="rounded-full px-4 py-1.5 text-xs font-bold text-white" style={{ backgroundColor: "#059669" }}>PAID</span>
-        ) : status === "overdue" ? (
-          <span className="rounded-full bg-red-600 px-4 py-1.5 text-xs font-bold text-white">OVERDUE</span>
-        ) : (
-          <span className="rounded-full border-2 px-4 py-1.5 text-xs font-bold uppercase" style={{ borderColor: brand, color: brand }}>{status}</span>
-        )}
       </div>
 
-      {/* Scope of work (quotation only) */}
-      {isQuotation && scopeOfWork && (
-        <div className="border-b border-gray-200 px-8 py-6" style={{ borderColor: brand + "30" }}>
-          <p className="mb-2 text-xs font-bold tracking-wider uppercase" style={{ color: brand }}>
-            Scope of Work
-          </p>
-          <p className="text-sm whitespace-pre-wrap text-gray-600">{scopeOfWork}</p>
-        </div>
-      )}
+      {/* Scope of work - always shown for proposal (placeholder if empty) */}
+      <div className="border-b border-gray-200 px-8 py-6">
+        <p className="mb-2 text-xs font-bold tracking-wider uppercase" style={{ color: brand }}>
+          Scope of Work
+        </p>
+        <p className="text-sm whitespace-pre-wrap text-gray-600">
+          {scopeOfWork || "Deliverables and services as described in the items below."}
+        </p>
+      </div>
 
-      {/* Bill to */}
+      {/* Client */}
       <div className="px-8 py-6">
         <p className="mb-2 text-xs font-bold tracking-wider uppercase" style={{ color: brand }}>
-          Bill To
+          Prepared For
         </p>
         <p className="text-lg font-bold">{client?.name}</p>
         <div className="mt-1 space-y-0.5 text-sm text-gray-500">
@@ -147,7 +137,7 @@ export const BoldBrandTemplate = (props: InvoiceTemplateProps) => {
               </th>
               {showDiscountCol && (
                 <th
-                  className="w-24 py-3 text-right text-xs font-bold tracking-wider uppercase px-3"
+                  className="w-24 px-3 py-3 text-right text-xs font-bold tracking-wider uppercase"
                   style={{ color: brand }}
                 >
                   Discount
@@ -171,7 +161,9 @@ export const BoldBrandTemplate = (props: InvoiceTemplateProps) => {
                 </td>
                 {showDiscountCol && (
                   <td className="px-3 py-3 text-right text-gray-500">
-                    {Number(item.discount ?? 0) > 0 ? `-${Number(item.discount).toLocaleString()}` : "—"}
+                    {Number(item.discount ?? 0) > 0
+                      ? `-${Number(item.discount).toLocaleString()}`
+                      : "—"}
                   </td>
                 )}
                 <td className="px-3 py-3 text-right font-bold">
@@ -218,18 +210,19 @@ export const BoldBrandTemplate = (props: InvoiceTemplateProps) => {
       {notes && (
         <div className="px-8 pb-8">
           <p className="mb-2 text-xs font-bold tracking-wider uppercase" style={{ color: brand }}>
-            Notes
+            Terms & Notes
           </p>
           <p className="text-sm whitespace-pre-wrap text-gray-600">{notes}</p>
         </div>
       )}
 
-      {/* Quotation acceptance section */}
-      {isQuotation && (
-        <div className="border-t px-8 pb-8 pt-6" style={{ borderColor: brand + "20" }}>
-          <QuotationAcceptanceSection />
-        </div>
-      )}
+      {/* Acceptance section - prominent for proposal */}
+      <div
+        className="border-t-2 px-8 py-8"
+        style={{ borderColor: brand + "40", backgroundColor: brand + "05" }}
+      >
+        <QuotationAcceptanceSection />
+      </div>
 
       {/* Footer Note */}
       {footerNote && (

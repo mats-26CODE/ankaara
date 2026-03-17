@@ -1,15 +1,14 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useClients } from "@/hooks/use-clients";
 import { useProducts } from "@/hooks/use-products";
 import { useBusinesses, type Business } from "@/hooks/use-businesses";
 import { useCurrentBusinessId } from "@/lib/stores/business-store";
-import { useCreateInvoice, type InvoiceItemInput } from "@/hooks/use-invoices";
-import { useQuotation, useQuotations } from "@/hooks/use-quotations";
+import { useCreateQuotation, type QuotationItemInput } from "@/hooks/use-quotations";
 import { useCurrencies } from "@/hooks/use-currencies";
-import { TEMPLATES, type TemplateId } from "@/lib/invoice-templates/types";
+import { QUOTATION_TEMPLATES, type QuotationTemplateId } from "@/lib/quotation-templates/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,18 +28,14 @@ import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Plus, Trash2, ArrowLeft, Eye } from "lucide-react";
 import dayjs from "dayjs";
-import { InvoiceTemplate } from "@/lib/invoice-templates/registry";
+import { QuotationTemplate } from "@/lib/quotation-templates/registry";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 
-const CreateInvoicePage = () => {
+const CreateQuotationPage = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const quotationIdParam = searchParams.get("quotation");
-  const { quotation: linkedQuotation } = useQuotation(quotationIdParam);
   const { businesses, loading: bizLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
-  const { quotations } = useQuotations(currentBusinessId, null, 1, 100);
   const {
     clients,
     loading: clientsLoading,
@@ -48,7 +43,7 @@ const CreateInvoicePage = () => {
   } = useClients(currentBusinessId);
   const { products, refetch: refetchProducts } = useProducts(currentBusinessId);
   const { currencies, loading: currenciesLoading } = useCurrencies();
-  const createInvoice = useCreateInvoice();
+  const createQuotation = useCreateQuotation();
 
   const currentBusiness = useMemo(
     () => businesses.find((b) => b.id === currentBusinessId) as Business | undefined,
@@ -57,19 +52,18 @@ const CreateInvoicePage = () => {
 
   const [clientId, setClientId] = useState("");
   const [issueDate, setIssueDate] = useState(dayjs().format("YYYY-MM-DD"));
-  const [dueDate, setDueDate] = useState(dayjs().add(14, "day").format("YYYY-MM-DD"));
+  const [validUntil, setValidUntil] = useState(dayjs().add(30, "day").format("YYYY-MM-DD"));
   const [currency, setCurrency] = useState("");
   const [tax, setTax] = useState("");
   const [notes, setNotes] = useState("");
+  const [scopeOfWork, setScopeOfWork] = useState("");
   const [accentColor, setAccentColor] = useState("");
   const [footerNote, setFooterNote] = useState("");
-  const [templateId, setTemplateId] = useState<TemplateId>("classic");
-  const [items, setItems] = useState<InvoiceItemInput[]>([]);
+  const [templateId, setTemplateId] = useState<QuotationTemplateId>("classic");
+  const [items, setItems] = useState<QuotationItemInput[]>([]);
   const [productPickerOpen, setProductPickerOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [savingMode, setSavingMode] = useState<"draft" | "submit" | null>(null);
-  const [prefilledFromQuotation, setPrefilledFromQuotation] = useState(false);
-  const [selectedQuotationId, setSelectedQuotationId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!currentBusinessId && businesses.length > 0) {
@@ -85,45 +79,6 @@ const CreateInvoicePage = () => {
       setAccentColor(currentBusiness.brand_color);
     }
   }, [currentBusiness, currency, accentColor]);
-
-  useEffect(() => {
-    if (!linkedQuotation || prefilledFromQuotation) return;
-    setClientId(linkedQuotation.client_id);
-    setIssueDate(linkedQuotation.issue_date);
-    setDueDate(
-      linkedQuotation.valid_until
-        ? linkedQuotation.valid_until
-        : dayjs(linkedQuotation.issue_date).add(14, "day").format("YYYY-MM-DD"),
-    );
-    setCurrency(linkedQuotation.currency);
-    const storedTax = Number(linkedQuotation.tax) || 0;
-    const storedSubtotal = Number(linkedQuotation.subtotal) || 0;
-    const pct =
-      linkedQuotation.tax_percentage != null && Number(linkedQuotation.tax_percentage) >= 0
-        ? Number(linkedQuotation.tax_percentage)
-        : storedSubtotal > 0
-          ? (storedTax / storedSubtotal) * 100
-          : 0;
-    setTax(pct ? String(Math.round(pct * 100) / 100) : "");
-    setNotes(linkedQuotation.notes ?? "");
-    setAccentColor(linkedQuotation.accent_color ?? "");
-    setFooterNote(linkedQuotation.footer_note ?? "");
-    setTemplateId((linkedQuotation.template_id as TemplateId) || "classic");
-    setItems(
-      (linkedQuotation.items ?? []).map((item) => ({
-        product_id: item.product_id ?? undefined,
-        description: item.description,
-        quantity: Number(item.quantity),
-        unit_price: Number(item.unit_price),
-        discount: Number(item.discount) || 0,
-      })),
-    );
-    if (linkedQuotation.business_id && linkedQuotation.business_id !== currentBusinessId) {
-      setCurrentBusiness(linkedQuotation.business_id);
-    }
-    setPrefilledFromQuotation(true);
-    setSelectedQuotationId(linkedQuotation.id);
-  }, [linkedQuotation, currentBusinessId, setCurrentBusiness, prefilledFromQuotation]);
 
   const subtotal = useMemo(
     () =>
@@ -143,10 +98,10 @@ const CreateInvoicePage = () => {
   const previewProps = useMemo(
     () => ({
       templateId,
-      invoiceNumber: "INV-PREVIEW",
+      quotationNumber: "QUO-PREVIEW",
       status: "draft",
       issueDate,
-      dueDate,
+      validUntil: validUntil || null,
       currency: currency || "TZS",
       subtotal,
       totalDiscount: totalDiscount > 0 ? totalDiscount : undefined,
@@ -154,9 +109,9 @@ const CreateInvoicePage = () => {
       taxPercent: taxPercent || null,
       total,
       notes: notes || null,
+      scopeOfWork: scopeOfWork.trim() || null,
       accentColor: accentColor.trim() || null,
       footerNote: footerNote.trim() || null,
-      isPaid: false,
       business: currentBusiness
         ? {
             name: currentBusiness.name,
@@ -188,7 +143,7 @@ const CreateInvoicePage = () => {
     [
       templateId,
       issueDate,
-      dueDate,
+      validUntil,
       currency,
       subtotal,
       totalDiscount,
@@ -196,6 +151,7 @@ const CreateInvoicePage = () => {
       taxPercent,
       total,
       notes,
+      scopeOfWork,
       accentColor,
       footerNote,
       currentBusiness,
@@ -204,7 +160,7 @@ const CreateInvoicePage = () => {
     ],
   );
 
-  const updateItem = (index: number, field: keyof InvoiceItemInput, value: string | number) => {
+  const updateItem = (index: number, field: keyof QuotationItemInput, value: string | number) => {
     setItems((prev) => prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
   };
 
@@ -230,7 +186,6 @@ const CreateInvoicePage = () => {
     !!currentBusinessId &&
     !!clientId &&
     !!issueDate &&
-    !!dueDate &&
     !!currency &&
     items.length > 0 &&
     items.every((item) => item.description.trim() && item.quantity > 0 && item.unit_price > 0);
@@ -244,12 +199,12 @@ const CreateInvoicePage = () => {
   const handleSubmit = () => {
     if (!canSubmit || !currentBusinessId) return;
     setSavingMode("submit");
-    createInvoice.mutate(
+    createQuotation.mutate(
       {
         business_id: currentBusinessId,
         client_id: clientId,
         issue_date: issueDate,
-        due_date: dueDate,
+        valid_until: validUntil?.trim() || null,
         currency,
         tax: taxAmount,
         tax_percentage: taxPercent,
@@ -257,12 +212,12 @@ const CreateInvoicePage = () => {
         accent_color: accentColor.trim() || undefined,
         footer_note: footerNote.trim() || undefined,
         notes: notes.trim() || undefined,
-        quotation_id: selectedQuotationId ?? quotationIdParam ?? undefined,
+        scope_of_work: scopeOfWork.trim() || null,
         items,
       },
       {
-        onSuccess: (invoice) => {
-          router.push(`/dashboard/invoices/${invoice.id}`);
+        onSuccess: (quotation) => {
+          router.push(`/dashboard/quotations/${quotation.id}`);
         },
         onSettled: () => setSavingMode(null),
       },
@@ -272,12 +227,12 @@ const CreateInvoicePage = () => {
   const handleSaveDraft = () => {
     if (!canSaveDraft || !currentBusinessId) return;
     setSavingMode("draft");
-    createInvoice.mutate(
+    createQuotation.mutate(
       {
         business_id: currentBusinessId,
         client_id: clientId,
         issue_date: issueDate,
-        due_date: dueDate,
+        valid_until: validUntil?.trim() || null,
         currency,
         tax: taxAmount,
         tax_percentage: taxPercent,
@@ -285,12 +240,12 @@ const CreateInvoicePage = () => {
         accent_color: accentColor.trim() || undefined,
         footer_note: footerNote.trim() || undefined,
         notes: notes.trim() || undefined,
-        quotation_id: selectedQuotationId ?? quotationIdParam ?? undefined,
+        scope_of_work: scopeOfWork.trim() || null,
         items,
       },
       {
-        onSuccess: (invoice) => {
-          router.push(`/dashboard/invoices/${invoice.id}`);
+        onSuccess: (quotation) => {
+          router.push(`/dashboard/quotations/${quotation.id}`);
         },
         onSettled: () => setSavingMode(null),
       },
@@ -319,20 +274,12 @@ const CreateInvoicePage = () => {
           <ArrowLeft className="size-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">New Invoice</h1>
+          <h1 className="text-2xl font-bold tracking-tight">New Quotation</h1>
           <p className="text-muted-foreground text-sm">
-            Create an invoice for your business{" "}
+            Create a quotation for your business{" "}
             <Badge variant="secondary" className="font-normal">
               {currentBusiness?.name ?? "—"}
             </Badge>
-            {linkedQuotation && (
-              <>
-                {" "}
-                <Badge variant="outline" className="font-normal">
-                  From {linkedQuotation.quotation_number}
-                </Badge>
-              </>
-            )}
           </p>
         </div>
       </div>
@@ -362,7 +309,7 @@ const CreateInvoicePage = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
-            {TEMPLATES.map((tmpl) => (
+            {QUOTATION_TEMPLATES.map((tmpl) => (
               <button
                 key={tmpl.id}
                 type="button"
@@ -382,9 +329,7 @@ const CreateInvoicePage = () => {
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left: Form */}
         <div className="space-y-6 lg:col-span-2">
-          {/* Client & Dates */}
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Details</CardTitle>
@@ -411,32 +356,13 @@ const CreateInvoicePage = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Due Date *</Label>
-                  <DatePicker value={dueDate} onChange={setDueDate} placeholder="Select due date" />
+                  <Label>Valid Until</Label>
+                  <DatePicker
+                    value={validUntil}
+                    onChange={setValidUntil}
+                    placeholder="Optional expiry date"
+                  />
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Link to Quotation (optional)</Label>
-                <Select
-                  value={selectedQuotationId ?? "none"}
-                  onValueChange={(v) => setSelectedQuotationId(v === "none" ? null : v)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="None" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {quotations.map((q) => (
-                      <SelectItem key={q.id} value={q.id}>
-                        {q.quotation_number} — {q.client?.name ?? "—"}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-muted-foreground text-xs">
-                  Optionally link this invoice to a quotation
-                </p>
               </div>
 
               <div className="space-y-2">
@@ -454,10 +380,20 @@ const CreateInvoicePage = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="space-y-2">
+                <Label>Scope of Work</Label>
+                <Textarea
+                  value={scopeOfWork}
+                  onChange={(e) => setScopeOfWork(e.target.value)}
+                  placeholder="Describe deliverables, services, or project scope (optional)"
+                  rows={3}
+                  className="resize-none"
+                />
+              </div>
             </CardContent>
           </Card>
 
-          {/* Line Items */}
           <Card>
             <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle className="text-base">Line Items</CardTitle>
@@ -554,7 +490,6 @@ const CreateInvoicePage = () => {
             onOpenChange={setProductPickerOpen}
           />
 
-          {/* Notes & Customization */}
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Notes & Customization</CardTitle>
@@ -565,12 +500,12 @@ const CreateInvoicePage = () => {
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Additional notes or payment instructions..."
+                  placeholder="Additional notes or terms..."
                   rows={3}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Invoice Footer Note</Label>
+                <Label>Footer Note</Label>
                 <Textarea
                   value={footerNote}
                   onChange={(e) => setFooterNote(e.target.value)}
@@ -594,15 +529,11 @@ const CreateInvoicePage = () => {
                     className="flex-1"
                   />
                 </div>
-                <p className="text-muted-foreground text-xs">
-                  Overrides the business brand color for this invoice
-                </p>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Right: Summary */}
         <div className="space-y-6">
           <Card className="sticky top-6">
             <CardHeader>
@@ -659,7 +590,7 @@ const CreateInvoicePage = () => {
                   className="w-full"
                   onClick={handleSaveDraft}
                   disabled={!canSaveDraft}
-                  isLoading={createInvoice.isPending && savingMode === "draft"}
+                  isLoading={createQuotation.isPending && savingMode === "draft"}
                 >
                   Save as Draft
                 </Button>
@@ -667,9 +598,9 @@ const CreateInvoicePage = () => {
                   className="w-full"
                   onClick={handleSubmit}
                   disabled={!canSubmit}
-                  isLoading={createInvoice.isPending && savingMode === "submit"}
+                  isLoading={createQuotation.isPending && savingMode === "submit"}
                 >
-                  Create Invoice
+                  Create Quotation
                 </Button>
                 <Button variant="outline" className="w-full" onClick={() => router.back()}>
                   Cancel
@@ -680,15 +611,14 @@ const CreateInvoicePage = () => {
         </div>
       </div>
 
-      {/* Full preview dialog */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="flex max-h-[90vh] w-[min(80vw,800px)] max-w-[min(80vw,800px)] flex-col overflow-hidden rounded-2xl sm:max-w-[min(98vw,1400px)]">
           <DialogHeader>
-            <DialogTitle>Invoice preview</DialogTitle>
+            <DialogTitle>Quotation preview</DialogTitle>
           </DialogHeader>
           <div className="bg-muted/30 flex-1 overflow-auto rounded-lg border p-4">
             <div className="w-full min-w-0 rounded-lg bg-white shadow-sm">
-              <InvoiceTemplate {...previewProps} />
+              <QuotationTemplate {...previewProps} />
             </div>
           </div>
         </DialogContent>
@@ -697,4 +627,4 @@ const CreateInvoicePage = () => {
   );
 };
 
-export default CreateInvoicePage;
+export default CreateQuotationPage;

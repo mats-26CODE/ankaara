@@ -1,6 +1,7 @@
 import type { InvoiceTemplateProps } from "@/lib/invoice-templates/types";
 import dayjs from "dayjs";
 import { BusinessLogo } from "./business-logo";
+import { QuotationAcceptanceSection } from "./quotation-acceptance-section";
 
 export const ModernMinimalTemplate = (props: InvoiceTemplateProps) => {
   const {
@@ -8,6 +9,7 @@ export const ModernMinimalTemplate = (props: InvoiceTemplateProps) => {
     status,
     issueDate,
     dueDate,
+    documentType,
     currency,
     subtotal,
     totalDiscount,
@@ -16,11 +18,15 @@ export const ModernMinimalTemplate = (props: InvoiceTemplateProps) => {
     total,
     notes,
     footerNote,
+    scopeOfWork,
     business,
     client,
     items,
     isPaid,
   } = props;
+  const isQuotation = documentType === "quotation";
+  const docLabel = isQuotation ? "Quotation" : "Invoice";
+  const dateLabel = isQuotation ? "Valid Until" : "Due";
   const showDiscountCol = items.some((i) => Number(i.discount ?? 0) > 0);
   const taxLabel =
     Number(tax) > 0 && taxPercent != null && taxPercent > 0
@@ -36,7 +42,7 @@ export const ModernMinimalTemplate = (props: InvoiceTemplateProps) => {
       <div className="px-8 pt-10 pb-6">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-sm font-medium tracking-widest text-gray-400 uppercase">Invoice</p>
+            <p className="text-sm font-medium tracking-widest text-gray-400 uppercase">{docLabel}</p>
             <h1 className="mt-1 text-4xl font-extralight tracking-tight text-gray-900">
               {invoiceNumber}
             </h1>
@@ -54,6 +60,14 @@ export const ModernMinimalTemplate = (props: InvoiceTemplateProps) => {
         </div>
       </div>
 
+      {/* Scope of work (quotation only) */}
+      {isQuotation && scopeOfWork && (
+        <div className="border-y border-gray-100 px-8 py-5">
+          <p className="mb-2 text-[10px] tracking-widest text-gray-400 uppercase">Scope of Work</p>
+          <p className="text-sm whitespace-pre-wrap text-gray-600">{scopeOfWork}</p>
+        </div>
+      )}
+
       {/* Status + Dates strip */}
       <div className="flex items-center justify-between border-y border-gray-100 px-8 py-4">
         <div className="flex gap-8">
@@ -62,23 +76,25 @@ export const ModernMinimalTemplate = (props: InvoiceTemplateProps) => {
             <p className="text-sm font-medium">{dayjs(issueDate).format("MMM D, YYYY")}</p>
           </div>
           <div>
-            <p className="text-[10px] tracking-widest text-gray-400 uppercase">Due</p>
+            <p className="text-[10px] tracking-widest text-gray-400 uppercase">{dateLabel}</p>
             <p className="text-sm font-medium">{dayjs(dueDate).format("MMM D, YYYY")}</p>
           </div>
         </div>
         <div>
-          {isPaid ? (
-            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
-              Paid
-            </span>
+          {isQuotation ? (
+            status === "accepted" ? (
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">Accepted</span>
+            ) : status === "expired" ? (
+              <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-600">Expired</span>
+            ) : (
+              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-500 capitalize">{status}</span>
+            )
+          ) : isPaid ? (
+            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">Paid</span>
           ) : status === "overdue" ? (
-            <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-600">
-              Overdue
-            </span>
+            <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-600">Overdue</span>
           ) : (
-            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-500 capitalize">
-              {status}
-            </span>
+            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-500 capitalize">{status}</span>
           )}
         </div>
       </div>
@@ -177,6 +193,13 @@ export const ModernMinimalTemplate = (props: InvoiceTemplateProps) => {
             <p className="mb-2 text-[10px] tracking-widest text-gray-400 uppercase">Notes</p>
             <p className="text-sm whitespace-pre-wrap text-gray-600">{notes}</p>
           </div>
+        </div>
+      )}
+
+      {/* Quotation acceptance section */}
+      {isQuotation && (
+        <div className="border-t border-gray-100 px-8 pb-8 pt-6">
+          <QuotationAcceptanceSection />
         </div>
       )}
 

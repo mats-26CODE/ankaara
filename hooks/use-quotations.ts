@@ -8,21 +8,27 @@ import { ToastAlert } from "@/config/toast";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
 import type { Tables } from "@/database.types";
 
-export type InvoiceStatus = "draft" | "sent" | "viewed" | "paid" | "overdue" | "cancelled";
+export type QuotationStatus =
+  | "draft"
+  | "sent"
+  | "viewed"
+  | "accepted"
+  | "expired"
+  | "cancelled";
 
-export type InvoiceItem = Tables<"invoice_items">;
+export type QuotationItem = Tables<"quotation_items">;
 
-export type Invoice = Tables<"invoices"> & {
-  status: InvoiceStatus;
+export type Quotation = Tables<"quotations"> & {
+  status: QuotationStatus;
   client?: Pick<Tables<"clients">, "id" | "name" | "email" | "phone" | "address">;
   business?: Pick<
     Tables<"businesses">,
     "id" | "name" | "address" | "logo_url" | "logo_text" | "tax_number" | "brand_color" | "currency"
   >;
-  items?: InvoiceItem[];
+  items?: QuotationItem[];
 };
 
-export type InvoiceItemInput = {
+export type QuotationItemInput = {
   id?: string;
   product_id?: string | null;
   description: string;
@@ -31,42 +37,42 @@ export type InvoiceItemInput = {
   discount?: number;
 };
 
-export type CreateInvoicePayload = {
+export type CreateQuotationPayload = {
   business_id: string;
   client_id: string;
   issue_date: string;
-  due_date: string;
+  valid_until?: string | null;
   currency: string;
   tax: number;
   tax_percentage?: number;
   notes?: string;
+  scope_of_work?: string | null;
   template_id?: string;
   accent_color?: string;
   footer_note?: string;
-  quotation_id?: string | null;
-  items: InvoiceItemInput[];
+  items: QuotationItemInput[];
 };
 
-export type UpdateInvoicePayload = {
+export type UpdateQuotationPayload = {
   id: string;
   client_id?: string;
   issue_date?: string;
-  due_date?: string;
+  valid_until?: string | null;
   currency?: string;
   tax?: number;
   tax_percentage?: number;
   notes?: string | null;
+  scope_of_work?: string | null;
   template_id?: string;
   accent_color?: string | null;
   footer_note?: string | null;
-  quotation_id?: string | null;
-  items?: InvoiceItemInput[];
+  items?: QuotationItemInput[];
 };
 
-const lineTotal = (item: InvoiceItemInput) =>
+const lineTotal = (item: QuotationItemInput) =>
   item.quantity * item.unit_price - (item.discount ?? 0);
 
-const computeTotals = (items: InvoiceItemInput[], tax: number) => {
+const computeTotals = (items: QuotationItemInput[], tax: number) => {
   const subtotal = items.reduce((sum, item) => sum + lineTotal(item), 0);
   const totalDiscount = items.reduce((sum, item) => sum + (item.discount ?? 0), 0);
   return { subtotal, tax, total: subtotal + tax, totalDiscount };
@@ -74,19 +80,19 @@ const computeTotals = (items: InvoiceItemInput[], tax: number) => {
 
 const DEFAULT_PAGE_SIZE = 10;
 
-export const useInvoices = (
+export const useQuotations = (
   businessId: string | null,
-  statusFilter?: InvoiceStatus | null,
+  statusFilter?: QuotationStatus | null,
   page: number = 1,
   pageSize: number = DEFAULT_PAGE_SIZE,
 ) => {
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refetch = useCallback(async () => {
     if (!businessId) {
-      setInvoices([]);
+      setQuotations([]);
       setTotalCount(null);
       setLoading(false);
       return;
@@ -96,7 +102,7 @@ export const useInvoices = (
     const to = from + pageSize - 1;
 
     let query = supabase
-      .from("invoices")
+      .from("quotations")
       .select("*, client:clients(id, name, email, phone, address)", {
         count: "exact",
       })
@@ -111,10 +117,10 @@ export const useInvoices = (
     const { data, error, count } = await query;
 
     if (error) {
-      setInvoices([]);
+      setQuotations([]);
       setTotalCount(null);
     } else {
-      setInvoices((data as unknown as Invoice[]) ?? []);
+      setQuotations((data as unknown as Quotation[]) ?? []);
       setTotalCount(count ?? null);
     }
     setLoading(false);
@@ -125,75 +131,75 @@ export const useInvoices = (
     refetch();
   }, [refetch]);
 
-  return { invoices, loading, refetch, totalCount };
+  return { quotations, loading, refetch, totalCount };
 };
 
-export const useInvoice = (invoiceId: string | null) => {
-  const [invoice, setInvoice] = useState<Invoice | null>(null);
+export const useQuotation = (quotationId: string | null) => {
+  const [quotation, setQuotation] = useState<Quotation | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refetch = useCallback(async () => {
-    if (!invoiceId) {
-      setInvoice(null);
+    if (!quotationId) {
+      setQuotation(null);
       setLoading(false);
       return;
     }
     const supabase = createClient();
     const { data, error } = await supabase
-      .from("invoices")
+      .from("quotations")
       .select(
-        "*, client:clients(id, name, email, phone, address), business:businesses!invoices_business_id_fkey(id, name, address, logo_url, logo_text, tax_number, brand_color, currency)",
+        "*, client:clients(id, name, email, phone, address), business:businesses!quotations_business_id_fkey(id, name, address, logo_url, logo_text, tax_number, brand_color, currency)",
       )
-      .eq("id", invoiceId)
+      .eq("id", quotationId)
       .single();
 
     if (error) {
-      setInvoice(null);
+      setQuotation(null);
       setLoading(false);
       return;
     }
 
     const { data: items } = await supabase
-      .from("invoice_items")
+      .from("quotation_items")
       .select("*")
-      .eq("invoice_id", invoiceId)
+      .eq("quotation_id", quotationId)
       .order("id", { ascending: true });
 
-    setInvoice({
-      ...(data as unknown as Invoice),
-      items: (items as InvoiceItem[]) ?? [],
+    setQuotation({
+      ...(data as unknown as Quotation),
+      items: (items as QuotationItem[]) ?? [],
     });
     setLoading(false);
-  }, [invoiceId]);
+  }, [quotationId]);
 
   useEffect(() => {
     setLoading(true);
     refetch();
   }, [refetch]);
 
-  return { invoice, loading, refetch };
+  return { quotation, loading, refetch };
 };
 
-export const useCreateInvoice = () => {
+export const useCreateQuotation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: CreateInvoicePayload) => {
+    mutationFn: async (payload: CreateQuotationPayload) => {
       const supabase = createClient();
       const { subtotal, tax, total } = computeTotals(payload.items, payload.tax);
 
-      const { data: invNumData, error: invNumError } = await supabase.rpc("next_invoice_number", {
+      const { data: quoNumData, error: quoNumError } = await supabase.rpc("next_quotation_number", {
         p_business_id: payload.business_id,
       });
-      if (invNumError) throw invNumError;
+      if (quoNumError) throw quoNumError;
 
       const { data, error } = await supabase
-        .from("invoices")
+        .from("quotations")
         .insert({
           business_id: payload.business_id,
           client_id: payload.client_id,
-          invoice_number: invNumData as string,
+          quotation_number: quoNumData as string,
           issue_date: payload.issue_date,
-          due_date: payload.due_date,
+          valid_until: payload.valid_until?.trim() || null,
           currency: payload.currency,
           subtotal,
           tax,
@@ -203,17 +209,17 @@ export const useCreateInvoice = () => {
           accent_color: payload.accent_color?.trim() || null,
           footer_note: payload.footer_note?.trim() || null,
           notes: payload.notes?.trim() || null,
-          quotation_id: payload.quotation_id ?? null,
+          scope_of_work: payload.scope_of_work?.trim() || null,
         })
         .select()
         .single();
 
       if (error) throw error;
-      const invoice = data;
+      const quotation = data;
 
       if (payload.items.length > 0) {
         const rows = payload.items.map((item) => ({
-          invoice_id: invoice.id,
+          quotation_id: quotation.id,
           product_id: item.product_id ?? null,
           description: item.description,
           quantity: item.quantity,
@@ -221,36 +227,36 @@ export const useCreateInvoice = () => {
           discount: item.discount ?? 0,
           total: item.quantity * item.unit_price - (item.discount ?? 0),
         }));
-        const { error: itemsError } = await supabase.from("invoice_items").insert(rows);
+        const { error: itemsError } = await supabase.from("quotation_items").insert(rows);
         if (itemsError) throw itemsError;
       }
 
-      return invoice;
+      return quotation;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
-      ToastAlert.success("Invoice created");
+      ToastAlert.success("Quotation created");
     },
     onError: (error: Error) => {
       if (isPlanLimitError(error)) {
-        ToastAlert.error("Plan limit reached. Upgrade to create more invoices.");
+        ToastAlert.error("Plan limit reached. Upgrade to create more quotations.");
         if (typeof window !== "undefined") window.location.assign(getSubscribeUrlForPlanLimit(error));
         return;
       }
-      ToastAlert.error(error.message || "Failed to create invoice");
+      ToastAlert.error(error.message || "Failed to create quotation");
     },
   });
 };
 
-export const useUpdateInvoice = () => {
+export const useUpdateQuotation = () => {
   return useMutation({
-    mutationFn: async (payload: UpdateInvoicePayload) => {
+    mutationFn: async (payload: UpdateQuotationPayload) => {
       const supabase = createClient();
       const updates: Record<string, unknown> = {};
 
       if (payload.client_id) updates.client_id = payload.client_id;
       if (payload.issue_date) updates.issue_date = payload.issue_date;
-      if (payload.due_date) updates.due_date = payload.due_date;
+      if (payload.valid_until !== undefined) updates.valid_until = payload.valid_until?.trim() || null;
       if (payload.currency) updates.currency = payload.currency;
       if (payload.template_id) updates.template_id = payload.template_id;
       if (payload.accent_color !== undefined)
@@ -258,7 +264,8 @@ export const useUpdateInvoice = () => {
       if (payload.footer_note !== undefined)
         updates.footer_note = payload.footer_note?.trim() || null;
       if (payload.notes !== undefined) updates.notes = payload.notes?.trim() || null;
-      if (payload.quotation_id !== undefined) updates.quotation_id = payload.quotation_id ?? null;
+      if (payload.scope_of_work !== undefined)
+        updates.scope_of_work = payload.scope_of_work?.trim() || null;
 
       if (payload.items) {
         const { subtotal, tax, total } = computeTotals(payload.items, payload.tax ?? 0);
@@ -272,7 +279,7 @@ export const useUpdateInvoice = () => {
       }
 
       const { data, error } = await supabase
-        .from("invoices")
+        .from("quotations")
         .update(updates)
         .eq("id", payload.id)
         .select()
@@ -280,11 +287,11 @@ export const useUpdateInvoice = () => {
       if (error) throw error;
 
       if (payload.items) {
-        await supabase.from("invoice_items").delete().eq("invoice_id", payload.id);
+        await supabase.from("quotation_items").delete().eq("quotation_id", payload.id);
 
         if (payload.items.length > 0) {
           const rows = payload.items.map((item) => ({
-            invoice_id: payload.id,
+            quotation_id: payload.id,
             product_id: item.product_id ?? null,
             description: item.description,
             quantity: item.quantity,
@@ -292,59 +299,82 @@ export const useUpdateInvoice = () => {
             discount: item.discount ?? 0,
             total: item.quantity * item.unit_price - (item.discount ?? 0),
           }));
-          const { error: itemsError } = await supabase.from("invoice_items").insert(rows);
+          const { error: itemsError } = await supabase.from("quotation_items").insert(rows);
           if (itemsError) throw itemsError;
         }
       }
 
-      return data as unknown as Invoice;
+      return data as unknown as Quotation;
     },
     onSuccess: () => {
-      ToastAlert.success("Invoice updated");
+      ToastAlert.success("Quotation updated");
     },
     onError: (error: Error) => {
-      ToastAlert.error(error.message || "Failed to update invoice");
+      ToastAlert.error(error.message || "Failed to update quotation");
     },
   });
 };
 
-export const useSendInvoice = () => {
+export const useCancelQuotation = () => {
   return useMutation({
-    mutationFn: async (invoiceId: string) => {
+    mutationFn: async (quotationId: string) => {
       const supabase = createClient();
       const { data, error } = await supabase
-        .from("invoices")
+        .from("quotations")
+        .update({ status: "cancelled" })
+        .eq("id", quotationId)
+        .in("status", ["draft", "sent", "viewed"])
+        .select()
+        .single();
+      if (error) throw error;
+      return data as unknown as Quotation;
+    },
+    onSuccess: () => {
+      ToastAlert.success("Quotation cancelled");
+    },
+    onError: (error: Error) => {
+      ToastAlert.error(error.message || "Failed to cancel quotation");
+    },
+  });
+};
+
+export const useSendQuotation = () => {
+  return useMutation({
+    mutationFn: async (quotationId: string) => {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("quotations")
         .update({ status: "sent" })
-        .eq("id", invoiceId)
+        .eq("id", quotationId)
         .eq("status", "draft")
         .select()
         .single();
       if (error) throw error;
-      return data as unknown as Invoice;
+      return data as unknown as Quotation;
     },
     onSuccess: () => {
-      ToastAlert.success("Invoice marked as sent");
+      ToastAlert.success("Quotation marked as sent");
     },
     onError: (error: Error) => {
-      ToastAlert.error(error.message || "Failed to send invoice");
+      ToastAlert.error(error.message || "Failed to send quotation");
     },
   });
 };
 
-export const useDeleteInvoice = () => {
+export const useDeleteQuotation = () => {
   return useMutation({
-    mutationFn: async (invoiceId: string) => {
+    mutationFn: async (quotationId: string) => {
       const supabase = createClient();
 
-      await supabase.from("invoice_items").delete().eq("invoice_id", invoiceId);
-      const { error } = await supabase.from("invoices").delete().eq("id", invoiceId);
+      await supabase.from("quotation_items").delete().eq("quotation_id", quotationId);
+      const { error } = await supabase.from("quotations").delete().eq("id", quotationId);
       if (error) throw error;
     },
     onSuccess: () => {
-      ToastAlert.success("Invoice deleted");
+      ToastAlert.success("Quotation deleted");
     },
     onError: (error: Error) => {
-      ToastAlert.error(error.message || "Failed to delete invoice");
+      ToastAlert.error(error.message || "Failed to delete quotation");
     },
   });
 };

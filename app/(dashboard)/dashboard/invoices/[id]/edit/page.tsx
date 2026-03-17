@@ -3,6 +3,7 @@
 import { use, useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useInvoice, useUpdateInvoice, type InvoiceItemInput } from "@/hooks/use-invoices";
+import { useQuotations } from "@/hooks/use-quotations";
 import { useClients } from "@/hooks/use-clients";
 import { useProducts } from "@/hooks/use-products";
 import { ClientPickerDialog } from "@/components/shared/client-picker-dialog";
@@ -43,6 +44,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
     refetch: refetchClients,
   } = useClients(invoice?.business_id ?? null);
   const { products, refetch: refetchProducts } = useProducts(invoice?.business_id ?? null);
+  const { quotations } = useQuotations(invoice?.business_id ?? null, null, 1, 100);
 
   const [clientId, setClientId] = useState("");
   const [issueDate, setIssueDate] = useState("");
@@ -53,6 +55,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
   const [accentColor, setAccentColor] = useState("");
   const [footerNote, setFooterNote] = useState("");
   const [templateId, setTemplateId] = useState<TemplateId>("classic");
+  const [quotationId, setQuotationId] = useState<string | null>(null);
   const [items, setItems] = useState<InvoiceItemInput[]>([]);
   const [productPickerOpen, setProductPickerOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -77,6 +80,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
     setAccentColor(invoice.accent_color ?? "");
     setFooterNote(invoice.footer_note ?? "");
     setTemplateId((invoice.template_id as TemplateId) || "classic");
+    setQuotationId(invoice.quotation_id ?? null);
     setItems(
       (invoice.items ?? []).map((item) => ({
         product_id: item.product_id ?? undefined,
@@ -198,6 +202,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
         issue_date: issueDate,
         due_date: dueDate,
         currency,
+        quotation_id: quotationId,
         tax: taxAmount,
         tax_percentage: taxPercent,
         template_id: templateId,
@@ -290,6 +295,26 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
                   <Label>Due Date *</Label>
                   <DatePicker value={dueDate} onChange={setDueDate} placeholder="Select due date" />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Link to Quotation (optional)</Label>
+                <Select
+                  value={quotationId ?? "none"}
+                  onValueChange={(v) => setQuotationId(v === "none" ? null : v)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="None" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {quotations.map((q) => (
+                      <SelectItem key={q.id} value={q.id}>
+                        {q.quotation_number} — {q.client?.name ?? "—"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
@@ -559,7 +584,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
 
       {/* Full preview dialog */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="flex max-h-[90vh] max-w-[95vw] flex-col overflow-hidden">
+        <DialogContent className="flex max-h-[90vh] w-[min(80vw,800px)] max-w-[min(80vw,800px)] flex-col overflow-hidden sm:max-w-[min(98vw,1400px)]">
           <DialogHeader>
             <DialogTitle>Invoice preview</DialogTitle>
           </DialogHeader>

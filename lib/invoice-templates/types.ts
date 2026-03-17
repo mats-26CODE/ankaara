@@ -30,6 +30,8 @@ export type InvoiceTemplateProps = {
   status: string;
   issueDate: string;
   dueDate: string;
+  /** When documentType is 'quotation', use "Valid Until" instead of "Due Date" */
+  documentType?: "invoice" | "quotation";
   currency: string;
   subtotal: number;
   /** Total discount across all lines. When > 0, templates show a discount row in the totals section. */
@@ -45,6 +47,8 @@ export type InvoiceTemplateProps = {
   client: TemplateClientInfo | null;
   items: TemplateLineItem[];
   isPaid: boolean;
+  /** Quotation-only: scope of work / deliverables description */
+  scopeOfWork?: string | null;
 };
 
 export type TemplateId =

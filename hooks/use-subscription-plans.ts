@@ -104,6 +104,11 @@ const FEATURE_LABELS: Record<string, { singular: string; plural: string; unlimit
     plural: "products or services",
     unlimited: "Unlimited products",
   },
+  quotations_count: {
+    singular: "quotation per month",
+    plural: "quotations per month",
+    unlimited: "Unlimited quotations",
+  },
 };
 
 /** Human-readable feature description for display. */

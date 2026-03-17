@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { APP_NAME } from "@/constants/values";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Collapsible } from "radix-ui";
 import {
   LayoutDashboard,
   FileText,
+  Quote,
   Users,
   Package,
   Plus,
@@ -19,6 +20,8 @@ import {
   User,
   Building2,
   Palette,
+  Eye,
+  XCircle,
 } from "lucide-react";
 import {
   Sidebar,
@@ -48,8 +51,10 @@ import { cn } from "@/lib/utils";
 
 export const DashboardSidebar = () => {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { state } = useSidebar();
   const [invoicesOpen, setInvoicesOpen] = useState(false);
+  const [quotationsOpen, setQuotationsOpen] = useState(false);
 
   const isActive = (path: string) => {
     if (path === "/dashboard") {
@@ -59,11 +64,16 @@ export const DashboardSidebar = () => {
   };
 
   const isInvoicesActive = pathname.startsWith("/dashboard/invoices");
+  const isQuotationsActive = pathname.startsWith("/dashboard/quotations");
   const showSubmenu = state !== "collapsed";
 
   useEffect(() => {
     if (isInvoicesActive) setInvoicesOpen(true);
   }, [isInvoicesActive]);
+
+  useEffect(() => {
+    if (isQuotationsActive) setQuotationsOpen(true);
+  }, [isQuotationsActive]);
 
   return (
     <Sidebar variant="floating" collapsible="icon">
@@ -113,7 +123,12 @@ export const DashboardSidebar = () => {
                     <Collapsible.Content>
                       <SidebarMenuSub>
                         <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild isActive={isActive("/dashboard/invoices")}>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={
+                              pathname === "/dashboard/invoices" && !searchParams.get("status")
+                            }
+                          >
                             <Link href="/dashboard/invoices">
                               <FileText className="size-4" />
                               <span>All Invoices</span>
@@ -134,7 +149,10 @@ export const DashboardSidebar = () => {
                         <SidebarMenuSubItem>
                           <SidebarMenuSubButton
                             asChild
-                            isActive={pathname === "/dashboard/invoices?status=draft"}
+                            isActive={
+                              pathname === "/dashboard/invoices" &&
+                              searchParams.get("status") === "draft"
+                            }
                           >
                             <Link href="/dashboard/invoices?status=draft">
                               <Clock className="size-4" />
@@ -145,7 +163,10 @@ export const DashboardSidebar = () => {
                         <SidebarMenuSubItem>
                           <SidebarMenuSubButton
                             asChild
-                            isActive={pathname === "/dashboard/invoices?status=sent"}
+                            isActive={
+                              pathname === "/dashboard/invoices" &&
+                              searchParams.get("status") === "sent"
+                            }
                           >
                             <Link href="/dashboard/invoices?status=sent">
                               <Send className="size-4" />
@@ -156,7 +177,10 @@ export const DashboardSidebar = () => {
                         <SidebarMenuSubItem>
                           <SidebarMenuSubButton
                             asChild
-                            isActive={pathname === "/dashboard/invoices?status=paid"}
+                            isActive={
+                              pathname === "/dashboard/invoices" &&
+                              searchParams.get("status") === "paid"
+                            }
                           >
                             <Link href="/dashboard/invoices?status=paid">
                               <CheckCircle2 className="size-4" />
@@ -167,7 +191,10 @@ export const DashboardSidebar = () => {
                         <SidebarMenuSubItem>
                           <SidebarMenuSubButton
                             asChild
-                            isActive={pathname === "/dashboard/invoices?status=overdue"}
+                            isActive={
+                              pathname === "/dashboard/invoices" &&
+                              searchParams.get("status") === "overdue"
+                            }
                           >
                             <Link href="/dashboard/invoices?status=overdue">
                               <AlertTriangle className="size-4" />
@@ -235,6 +262,221 @@ export const DashboardSidebar = () => {
                         >
                           <AlertTriangle className="size-4" />
                           Overdue
+                        </Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </SidebarMenuItem>
+              )}
+
+              {/* Quotations — collapsible when expanded, dropdown when collapsed */}
+              {showSubmenu ? (
+                <Collapsible.Root open={quotationsOpen} onOpenChange={setQuotationsOpen} asChild>
+                  <SidebarMenuItem>
+                    <Collapsible.Trigger asChild>
+                      <SidebarMenuButton
+                        isActive={isQuotationsActive}
+                        tooltip="Quotations"
+                        className="cursor-pointer"
+                      >
+                        <Quote className="size-4 shrink-0" />
+                        <span>Quotations</span>
+                        <ChevronRight
+                          className={cn(
+                            "ml-auto size-4 shrink-0 transition-transform duration-200",
+                            quotationsOpen && "rotate-90",
+                          )}
+                        />
+                      </SidebarMenuButton>
+                    </Collapsible.Trigger>
+                    <Collapsible.Content>
+                      <SidebarMenuSub>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={
+                              pathname === "/dashboard/quotations" && !searchParams.get("status")
+                            }
+                          >
+                            <Link href="/dashboard/quotations">
+                              <Quote className="size-4" />
+                              <span>All Quotations</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={isActive("/dashboard/quotations/create")}
+                          >
+                            <Link href="/dashboard/quotations/create">
+                              <Plus className="size-4" />
+                              <span>Create Quotation</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={
+                              pathname === "/dashboard/quotations" &&
+                              searchParams.get("status") === "draft"
+                            }
+                          >
+                            <Link href="/dashboard/quotations?status=draft">
+                              <Clock className="size-4" />
+                              <span>Drafts</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={
+                              pathname === "/dashboard/quotations" &&
+                              searchParams.get("status") === "sent"
+                            }
+                          >
+                            <Link href="/dashboard/quotations?status=sent">
+                              <Send className="size-4" />
+                              <span>Sent</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={
+                              pathname === "/dashboard/quotations" &&
+                              searchParams.get("status") === "viewed"
+                            }
+                          >
+                            <Link href="/dashboard/quotations?status=viewed">
+                              <Eye className="size-4" />
+                              <span>Viewed</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={
+                              pathname === "/dashboard/quotations" &&
+                              searchParams.get("status") === "accepted"
+                            }
+                          >
+                            <Link href="/dashboard/quotations?status=accepted">
+                              <CheckCircle2 className="size-4" />
+                              <span>Accepted</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={
+                              pathname === "/dashboard/quotations" &&
+                              searchParams.get("status") === "expired"
+                            }
+                          >
+                            <Link href="/dashboard/quotations?status=expired">
+                              <AlertTriangle className="size-4" />
+                              <span>Expired</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={
+                              pathname === "/dashboard/quotations" &&
+                              searchParams.get("status") === "cancelled"
+                            }
+                          >
+                            <Link href="/dashboard/quotations?status=cancelled">
+                              <XCircle className="size-4" />
+                              <span>Cancelled</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      </SidebarMenuSub>
+                    </Collapsible.Content>
+                  </SidebarMenuItem>
+                </Collapsible.Root>
+              ) : (
+                <SidebarMenuItem>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <SidebarMenuButton isActive={isQuotationsActive} tooltip="Quotations">
+                        <Quote className="size-4 shrink-0" />
+                        <span>Quotations</span>
+                      </SidebarMenuButton>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent side="right" align="start" className="min-w-44">
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard/quotations" className="flex items-center gap-2">
+                          <Quote className="size-4" />
+                          All Quotations
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard/quotations/create" className="flex items-center gap-2">
+                          <Plus className="size-4" />
+                          Create Quotation
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href="/dashboard/quotations?status=draft"
+                          className="flex items-center gap-2"
+                        >
+                          <Clock className="size-4" />
+                          Drafts
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href="/dashboard/quotations?status=sent"
+                          className="flex items-center gap-2"
+                        >
+                          <Send className="size-4" />
+                          Sent
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href="/dashboard/quotations?status=viewed"
+                          className="flex items-center gap-2"
+                        >
+                          <Eye className="size-4" />
+                          Viewed
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href="/dashboard/quotations?status=accepted"
+                          className="flex items-center gap-2"
+                        >
+                          <CheckCircle2 className="size-4" />
+                          Accepted
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href="/dashboard/quotations?status=expired"
+                          className="flex items-center gap-2"
+                        >
+                          <AlertTriangle className="size-4" />
+                          Expired
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href="/dashboard/quotations?status=cancelled"
+                          className="flex items-center gap-2"
+                        >
+                          <XCircle className="size-4" />
+                          Cancelled
                         </Link>
                       </DropdownMenuItem>
                     </DropdownMenuContent>

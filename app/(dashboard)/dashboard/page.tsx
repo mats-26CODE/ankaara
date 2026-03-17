@@ -34,6 +34,7 @@ import {
   UserRound,
   ChevronRight,
   FileText,
+  Quote,
   Users,
   Plus,
   Settings,
@@ -69,7 +70,8 @@ const DashboardPage = () => {
   const { businesses, loading: businessesLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
   const { format: formatAmount } = useFormatAmount();
-  const { invoiceStats, clientCount, productCount, loading: statsLoading } = useDashboardStats(user?.id);
+  const { invoiceStats, clientCount, productCount, quotationCount, loading: statsLoading } =
+    useDashboardStats(user?.id);
   const { data: subscription, isLoading: subscriptionLoading } = useCurrentSubscription(user?.id);
   const { data: plans } = useSubscriptionPlans();
   const currentPlanSlug = (subscription?.planSlug ?? "free") as SubscriptionPlanSlug;
@@ -241,7 +243,7 @@ const DashboardPage = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-4 md:grid-cols-5">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
             <div className="space-y-1">
               <p className="text-muted-foreground text-sm">Total Revenue</p>
               <p className="text-lg font-bold">
@@ -265,6 +267,10 @@ const DashboardPage = () => {
               <p className="text-lg font-bold">{statsLoading ? "—" : productCount}</p>
             </div>
             <div className="space-y-1">
+              <p className="text-muted-foreground text-sm">Quotations</p>
+              <p className="text-lg font-bold">{statsLoading ? "—" : quotationCount}</p>
+            </div>
+            <div className="space-y-1">
               <p className="text-muted-foreground text-sm">Member Since</p>
               <p className="text-sm font-medium">
                 {profile?.created_at
@@ -280,7 +286,7 @@ const DashboardPage = () => {
       </Card>
 
       {/* ────── Stats Grid ────── */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Paid</CardTitle>
@@ -344,6 +350,22 @@ const DashboardPage = () => {
             </Button>
           </CardFooter>
         </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Quotations</CardTitle>
+            <Quote className="size-4 text-violet-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{statsLoading ? "—" : quotationCount}</div>
+            <p className="text-muted-foreground mt-1 text-xs">Total quotations</p>
+          </CardContent>
+          <CardFooter>
+            <Button variant="outline" size="sm" asChild className="w-full">
+              <Link href="/dashboard/quotations">View all</Link>
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
 
       {/* ────── Quick Actions + Account Summary ────── */}
@@ -370,6 +392,12 @@ const DashboardPage = () => {
               <Link href="/dashboard/invoices">
                 <FileText className="mr-2 size-4" />
                 All Invoices
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link href="/dashboard/quotations">
+                <Quote className="mr-2 size-4" />
+                Quotations
               </Link>
             </Button>
             <Separator className="my-2" />

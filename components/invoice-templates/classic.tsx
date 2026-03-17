@@ -1,6 +1,7 @@
 import type { InvoiceTemplateProps } from "@/lib/invoice-templates/types";
 import dayjs from "dayjs";
 import { BusinessLogo } from "./business-logo";
+import { QuotationAcceptanceSection } from "./quotation-acceptance-section";
 
 const StatusLabel = ({ status, isPaid }: { status: string; isPaid: boolean }) => {
   if (isPaid) return <span className="inline-block rounded bg-emerald-100 px-3 py-1 text-xs font-bold uppercase text-emerald-700">Paid</span>;
@@ -8,8 +9,17 @@ const StatusLabel = ({ status, isPaid }: { status: string; isPaid: boolean }) =>
   return <span className="inline-block rounded border px-3 py-1 text-xs font-bold uppercase text-gray-600">{status}</span>;
 };
 
+const QuotationStatusLabel = ({ status }: { status: string }) => {
+  if (status === "accepted") return <span className="inline-block rounded bg-emerald-100 px-3 py-1 text-xs font-bold uppercase text-emerald-700">Accepted</span>;
+  if (status === "expired") return <span className="inline-block rounded bg-amber-100 px-3 py-1 text-xs font-bold uppercase text-amber-700">Expired</span>;
+  if (status === "sent" || status === "viewed") return <span className="inline-block rounded bg-blue-100 px-3 py-1 text-xs font-bold uppercase text-blue-700">{status}</span>;
+  return <span className="inline-block rounded border px-3 py-1 text-xs font-bold uppercase text-gray-600">{status}</span>;
+};
+
 export const ClassicTemplate = (props: InvoiceTemplateProps) => {
-  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, totalDiscount, tax, taxPercent, total, notes, accentColor, footerNote, business, client, items, isPaid } = props;
+  const { invoiceNumber, status, issueDate, dueDate, documentType, currency, subtotal, totalDiscount, tax, taxPercent, total, notes, accentColor, footerNote, scopeOfWork, business, client, items, isPaid } = props;
+  const isQuotation = documentType === "quotation";
+  const dateLabel = isQuotation ? "Valid Until" : "Due Date";
   const taxLabel = Number(tax) > 0 && (taxPercent != null && taxPercent > 0) ? `Tax (${Number(taxPercent) % 1 === 0 ? taxPercent : Number(taxPercent).toFixed(1)}%)` : "Tax";
   const showDiscountCol = items.some((i) => Number(i.discount ?? 0) > 0);
 
@@ -27,10 +37,18 @@ export const ClassicTemplate = (props: InvoiceTemplateProps) => {
           </div>
           <div className="text-right">
             <h1 className="text-2xl font-bold text-gray-900">{invoiceNumber}</h1>
-            <div className="mt-2"><StatusLabel status={status} isPaid={isPaid} /></div>
+            <div className="mt-2">{isQuotation ? <QuotationStatusLabel status={status} /> : <StatusLabel status={status} isPaid={isPaid} />}</div>
           </div>
         </div>
       </div>
+
+      {/* Scope of work (quotation only) */}
+      {isQuotation && scopeOfWork && (
+        <div className="border-b border-gray-200 px-8 py-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Scope of Work</p>
+          <p className="text-sm whitespace-pre-wrap text-gray-600">{scopeOfWork}</p>
+        </div>
+      )}
 
       {/* Billing + Dates */}
       <div className="grid grid-cols-2 gap-8 px-8 py-6">
@@ -47,7 +65,7 @@ export const ClassicTemplate = (props: InvoiceTemplateProps) => {
             <p className="text-sm">{dayjs(issueDate).format("MMMM D, YYYY")}</p>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Due Date</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{dateLabel}</p>
             <p className="text-sm">{dayjs(dueDate).format("MMMM D, YYYY")}</p>
           </div>
         </div>
@@ -101,6 +119,13 @@ export const ClassicTemplate = (props: InvoiceTemplateProps) => {
         <div className="border-t border-gray-200 px-8 py-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Notes</p>
           <p className="text-sm whitespace-pre-wrap text-gray-600">{notes}</p>
+        </div>
+      )}
+
+      {/* Quotation acceptance section */}
+      {isQuotation && (
+        <div className="border-t border-gray-200 px-8 py-6">
+          <QuotationAcceptanceSection />
         </div>
       )}
 

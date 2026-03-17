@@ -31,12 +31,14 @@ const fetchDashboardStats = async (
   invoiceStats: InvoiceStats;
   clientCount: number;
   productCount: number;
+  quotationCount: number;
 }> => {
   if (!userId) {
     return {
       invoiceStats: defaultStats,
       clientCount: 0,
       productCount: 0,
+      quotationCount: 0,
     };
   }
 
@@ -52,6 +54,7 @@ const fetchDashboardStats = async (
       invoiceStats: defaultStats,
       clientCount: 0,
       productCount: 0,
+      quotationCount: 0,
     };
   }
 
@@ -88,10 +91,16 @@ const fetchDashboardStats = async (
     .select("id", { count: "exact", head: true })
     .in("business_id", bizIds);
 
+  const { count: quotationCountResult } = await supabase
+    .from("quotations")
+    .select("id", { count: "exact", head: true })
+    .in("business_id", bizIds);
+
   return {
     invoiceStats: stats,
     clientCount: clientCountResult || 0,
     productCount: productCountResult || 0,
+    quotationCount: quotationCountResult || 0,
   };
 };
 
@@ -107,6 +116,7 @@ export const useDashboardStats = (userId: string | undefined) => {
     invoiceStats: data?.invoiceStats ?? defaultStats,
     clientCount: data?.clientCount ?? 0,
     productCount: data?.productCount ?? 0,
+    quotationCount: data?.quotationCount ?? 0,
     loading: isLoading,
     refetch,
   };

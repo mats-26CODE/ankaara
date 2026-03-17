@@ -23,8 +23,8 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { InvoiceTemplate } from "@/lib/invoice-templates/registry";
 import { ShareInvoiceDialog } from "@/components/shared/share-invoice-dialog";
-import { INVOICE_ELEMENT_ID } from "@/components/shared/invoice-export-buttons";
-import { ArrowLeft, Pencil, Trash2, Share2 } from "lucide-react";
+import { INVOICE_ELEMENT_ID, InvoiceExportButtons } from "@/components/shared/invoice-export-buttons";
+import { ArrowLeft, Pencil, Trash2, Share2, Quote } from "lucide-react";
 import dayjs from "dayjs";
 
 const STATUS_CONFIG: Record<
@@ -127,6 +127,18 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
             </div>
             <p className="text-muted-foreground text-sm">
               Created {dayjs(invoice.created_at).format("MMM D, YYYY")}
+              {invoice.quotation_id && (
+                <>
+                  {" · "}
+                  <Link
+                    href={`/dashboard/quotations/${invoice.quotation_id}`}
+                    className="inline-flex items-center gap-1 text-primary hover:underline"
+                  >
+                    <Quote className="size-3.5" />
+                    Linked quotation
+                  </Link>
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -139,6 +151,7 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
               </Link>
             </Button>
           )}
+          <InvoiceExportButtons invoiceNumber={invoice.invoice_number} />
           <Button
             size="sm"
             onClick={() => canShare && setShareDialogOpen(true)}

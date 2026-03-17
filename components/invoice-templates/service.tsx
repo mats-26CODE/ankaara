@@ -1,9 +1,13 @@
 import type { InvoiceTemplateProps } from "@/lib/invoice-templates/types";
 import dayjs from "dayjs";
 import { BusinessLogo } from "./business-logo";
+import { QuotationAcceptanceSection } from "./quotation-acceptance-section";
 
 export const ServiceTemplate = (props: InvoiceTemplateProps) => {
-  const { invoiceNumber, status, issueDate, dueDate, currency, subtotal, totalDiscount, tax, taxPercent, total, notes, footerNote, business, client, items, isPaid } = props;
+  const { invoiceNumber, status, issueDate, dueDate, documentType, currency, subtotal, totalDiscount, tax, taxPercent, total, notes, footerNote, scopeOfWork, business, client, items, isPaid } = props;
+  const isQuotation = documentType === "quotation";
+  const dateLabel = isQuotation ? "Valid Until" : "Due Date";
+  const docLabel = isQuotation ? "Quotation #" : "Invoice #";
   const showDiscountCol = items.some((i) => Number(i.discount ?? 0) > 0);
   const taxLabel = Number(tax) > 0 && (taxPercent != null && taxPercent > 0) ? `Tax (${Number(taxPercent) % 1 === 0 ? taxPercent : Number(taxPercent).toFixed(1)}%)` : "Tax";
 
@@ -30,10 +34,10 @@ export const ServiceTemplate = (props: InvoiceTemplateProps) => {
         </div>
       </div>
 
-      {/* Invoice meta row */}
+      {/* Invoice/Quotation meta row */}
       <div className="grid grid-cols-4 border-b border-gray-200 divide-x divide-gray-200 text-center">
         <div className="py-3">
-          <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold">Invoice #</p>
+          <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold">{docLabel}</p>
           <p className="text-sm font-bold mt-0.5">{invoiceNumber}</p>
         </div>
         <div className="py-3">
@@ -41,13 +45,21 @@ export const ServiceTemplate = (props: InvoiceTemplateProps) => {
           <p className="text-sm mt-0.5">{dayjs(issueDate).format("MMM D, YYYY")}</p>
         </div>
         <div className="py-3">
-          <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold">Due Date</p>
+          <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold">{dateLabel}</p>
           <p className="text-sm mt-0.5">{dayjs(dueDate).format("MMM D, YYYY")}</p>
         </div>
         <div className="py-3">
           <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold">Status</p>
           <p className="text-sm font-bold mt-0.5">
-            {isPaid ? (
+            {isQuotation ? (
+              status === "accepted" ? (
+                <span className="text-emerald-600">Accepted</span>
+              ) : status === "expired" ? (
+                <span className="text-amber-600">Expired</span>
+              ) : (
+                <span className="capitalize">{status}</span>
+              )
+            ) : isPaid ? (
               <span className="text-emerald-600">Paid</span>
             ) : status === "overdue" ? (
               <span className="text-red-600">Overdue</span>
@@ -58,9 +70,19 @@ export const ServiceTemplate = (props: InvoiceTemplateProps) => {
         </div>
       </div>
 
+      {/* Scope of work (quotation only) */}
+      {isQuotation && scopeOfWork && (
+        <div className="px-6 py-4 border-b border-gray-200">
+          <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-2">Scope of Work</p>
+          <p className="text-sm text-gray-600 whitespace-pre-wrap">{scopeOfWork}</p>
+        </div>
+      )}
+
       {/* Service items */}
       <div className="px-6 py-4">
-        <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-3">Services Provided</p>
+        <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-3">
+          {isQuotation ? "Items / Services" : "Services Provided"}
+        </p>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b-2 border-gray-900">
@@ -114,6 +136,9 @@ export const ServiceTemplate = (props: InvoiceTemplateProps) => {
           <p className="text-sm text-gray-600 whitespace-pre-wrap">{notes}</p>
         </div>
       )}
+
+      {/* Quotation acceptance section */}
+      {isQuotation && <div className="px-6 pb-6"><QuotationAcceptanceSection /></div>}
 
       {/* Footer Note */}
       {footerNote && (
