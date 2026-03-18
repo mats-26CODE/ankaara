@@ -89,8 +89,12 @@ const SubscribeContent = () => {
     }
     if (limitParam && subscription?.planSlug) {
       setSelectedSlug(getNextPlanSlug(subscription.planSlug));
+      return;
     }
-  }, [planParam, limitParam, subscription?.planSlug]);
+    if (fromOnboarding) {
+      setSelectedSlug((prev) => (prev === null ? "pro-monthly" : prev));
+    }
+  }, [planParam, limitParam, subscription?.planSlug, fromOnboarding]);
 
   // Redirect unauthenticated users to login, preserving return URL
   useEffect(() => {
@@ -169,14 +173,6 @@ const SubscribeContent = () => {
         <div className="mb-6 flex justify-center">
           <Logo size="sm" />
         </div>
-
-        {fromOnboarding && (
-          <div className="mb-4 flex justify-end">
-            <Button variant="ghost" size="sm" onClick={handleSkip}>
-              Skip for now
-            </Button>
-          </div>
-        )}
 
         <div className="bg-background rounded-4xl border p-6 sm:p-8">
           <h1 className="text-foreground mb-1 text-center text-2xl font-semibold">

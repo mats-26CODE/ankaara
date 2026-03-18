@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Figtree, Pacifico } from "next/font/google";
 import "./globals.css";
 import Providers from "@/providers/providers";
+import { AuthHashHandler } from "@/components/auth/auth-hash-handler";
 import { APP_NAME } from "@/constants/values";
 
 const figtree = Figtree({
@@ -72,7 +73,10 @@ export default function RootLayout({
           }}
         />
         <Suspense fallback={null}>
-          <Providers>{children}</Providers>
+          <Providers>
+            <AuthHashHandler />
+            {children}
+          </Providers>
         </Suspense>
       </body>
     </html>

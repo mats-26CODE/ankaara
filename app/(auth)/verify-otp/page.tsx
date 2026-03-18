@@ -70,14 +70,18 @@ const VerifyOtpContent = () => {
     }
 
     if (isOnboarding) {
+      const pendingRaw =
+        typeof window !== "undefined" ? sessionStorage.getItem(ONBOARDING_PENDING_KEY) : null;
+      const fullName = pendingRaw
+        ? (JSON.parse(pendingRaw) as { fullName?: string })?.fullName?.trim()
+        : undefined;
+
       verifyOtpForOnboardingMutation.mutate(
-        { phone, code: otp },
+        { phone, code: otp, fullName },
         {
           onSuccess: () => {
             const pendingRaw =
-              typeof window !== "undefined"
-                ? sessionStorage.getItem(ONBOARDING_PENDING_KEY)
-                : null;
+              typeof window !== "undefined" ? sessionStorage.getItem(ONBOARDING_PENDING_KEY) : null;
             if (!pendingRaw || !user?.id) {
               router.replace("/dashboard");
               return;
@@ -90,7 +94,11 @@ const VerifyOtpContent = () => {
               taxNumber?: string;
               currency: string;
             };
-            const businessName = pending.businessName.trim() || pending.fullName.trim() || profile?.full_name || "My Business";
+            const businessName =
+              pending.businessName.trim() ||
+              pending.fullName.trim() ||
+              profile?.full_name ||
+              "My Business";
 
             completeOnboarding.mutate(
               {
@@ -109,10 +117,10 @@ const VerifyOtpContent = () => {
                   await refetchProfile();
                   router.replace("/subscribe?from=onboarding");
                 },
-              }
+              },
             );
           },
-        }
+        },
       );
     } else {
       verifyOtpMutation.mutate({ phone, otp });
@@ -126,15 +134,9 @@ const VerifyOtpContent = () => {
     }
     if (!canResend) return;
     if (isOnboarding) {
-      sendOtpForOnboardingMutation.mutate(
-        { phone },
-        { onSuccess: () => startCountdown() }
-      );
+      sendOtpForOnboardingMutation.mutate({ phone }, { onSuccess: () => startCountdown() });
     } else {
-      sendOtpMutation.mutate(
-        { phone },
-        { onSuccess: () => startCountdown() }
-      );
+      sendOtpMutation.mutate({ phone }, { onSuccess: () => startCountdown() });
     }
   };
 
@@ -158,35 +160,34 @@ const VerifyOtpContent = () => {
             : t("auth.verifyOtp.error"));
 
   return (
-    <div className="min-h-screen max-h-screen flex items-center justify-center p-8 bg-background">
-      <div className="w-full max-w-md space-y-8 flex flex-col items-center justify-center">
+    <div className="bg-background flex max-h-screen min-h-screen items-center justify-center p-8">
+      <div className="flex w-full max-w-md flex-col items-center justify-center space-y-8">
         <div className="text-center">
           <Logo />
         </div>
 
         <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-bold text-foreground">
-            {t("auth.verifyOtp.title")}
-          </h1>
+          <h1 className="text-foreground text-3xl font-bold">{t("auth.verifyOtp.title")}</h1>
           <p className="text-muted-foreground">
             {t("auth.verifyOtp.subtitle")} <strong>{phone}</strong>
           </p>
         </div>
 
         {hasError && (
-          <div className="w-full p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+          <div className="text-destructive bg-destructive/10 border-destructive/20 w-fit rounded-md border p-3 text-center text-sm">
             {errorMessage}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6 flex flex-col items-center">
-          <div className="space-y-3 flex flex-col items-center">
+        <form onSubmit={handleSubmit} className="flex flex-col items-center space-y-6">
+          <div className="flex flex-col items-center space-y-3">
             <InputOTP
               maxLength={6}
               pattern={REGEXP_ONLY_DIGITS}
               value={otp}
               onChange={setOtp}
               disabled={isVerifying}
+              autoFocus
             >
               <InputOTPGroup>
                 <InputOTPSlot index={0} />
@@ -200,7 +201,7 @@ const VerifyOtpContent = () => {
                 <InputOTPSlot index={5} />
               </InputOTPGroup>
             </InputOTP>
-            <p className="text-xs text-muted-foreground text-center">
+            <p className="text-muted-foreground text-center text-xs">
               {t("auth.verifyOtp.codeHint")}
             </p>
           </div>
@@ -216,18 +217,16 @@ const VerifyOtpContent = () => {
           </Button>
         </form>
 
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-center text-sm">
           {t("auth.verifyOtp.noCode")}{" "}
           {canResend ? (
             <button
               type="button"
               onClick={handleResendOtp}
               disabled={
-                isOnboarding
-                  ? sendOtpForOnboardingMutation.isPending
-                  : sendOtpMutation.isPending
+                isOnboarding ? sendOtpForOnboardingMutation.isPending : sendOtpMutation.isPending
               }
-              className="text-primary hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-primary font-medium hover:underline disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isOnboarding
                 ? sendOtpForOnboardingMutation.isPending

@@ -18,10 +18,11 @@ import { useProfile } from "@/hooks/use-profile";
 import { useTranslation } from "@/hooks/use-translation";
 import { Spinner } from "@/components/ui/spinner";
 import { addCountryCode } from "@/helpers/helpers";
-import { useSendOtpForOnboarding } from "@/hooks/use-auth";
+import { useSendOtpForOnboarding, useUpdateUserEmail } from "@/hooks/use-auth";
 import { useCurrencies } from "@/hooks/use-currencies";
-import { useCompleteOnboarding, useSkipOnboarding } from "@/hooks/use-onboarding";
-import { useOnboardingStore } from "@/lib/stores/onboarding-store";
+import { useCompleteOnboarding } from "@/hooks/use-onboarding";
+import { isGoogleUser, isPhoneUser } from "@/helpers/auth-provider";
+import { setOnboardingPendingCookie } from "@/helpers/onboarding-pending-cookie";
 import type { Profile } from "@/hooks/use-profile";
 
 const ONBOARDING_PENDING_KEY = "onboarding_pending";
@@ -47,24 +48,30 @@ const OnboardingPage = () => {
     taxNumber: "",
     currency: "TZS",
     phone: "",
+    email: "",
   });
   const [prefilled, setPrefilled] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+
+  const isGoogle = isGoogleUser(user);
+  const isPhone = isPhoneUser(user);
 
   useEffect(() => {
-    if (prefilled || !profile) return;
+    if (prefilled || !profile || !user) return;
     setForm((prev) => ({
       ...prev,
-      fullName: profile.full_name?.trim() || prev.fullName,
+      fullName:
+        profile.full_name?.trim() || (user.user_metadata?.full_name as string) || prev.fullName,
       currency: profile.preferred_currency || prev.currency,
+      email: user.email ?? prev.email,
+      phone: profile.phone || user.phone || prev.phone,
     }));
     setPrefilled(true);
-  }, [profile, prefilled]);
+  }, [profile, prefilled, user]);
 
   const sendOtpMutation = useSendOtpForOnboarding();
+  const updateUserEmailMutation = useUpdateUserEmail();
   const completeOnboarding = useCompleteOnboarding();
-  const skipOnboarding = useSkipOnboarding();
-  const setOnboardingSkipped = useOnboardingStore((s) => s.setSkipped);
-  const showOptionalPhone = !profile?.phone;
 
   const profileComplete = isProfileActuallyComplete(profile);
 
@@ -82,14 +89,24 @@ const OnboardingPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (!user) return;
 
     if (!form.fullName.trim()) {
       setError("Your name is required");
       return;
     }
 
-    const phoneTrimmed = form.phone.trim();
-    if (showOptionalPhone && phoneTrimmed) {
+    if (isGoogle && !user.phone) {
+      const fullNameTrimmed = form.fullName.trim();
+      const phoneTrimmed = form.phone.trim();
+      if (!fullNameTrimmed) {
+        setError("Your name is required");
+        return;
+      }
+      if (!phoneTrimmed) {
+        setError("Phone number is required to link your account");
+        return;
+      }
       setSubmitting(true);
       setError(null);
       try {
@@ -102,6 +119,43 @@ const OnboardingPage = () => {
         );
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to send OTP");
+        setSubmitting(false);
+      }
+      return;
+    }
+
+    if (isPhone && !user.email) {
+      const fullNameTrimmed = form.fullName.trim();
+      const emailTrimmed = form.email.trim();
+      if (!fullNameTrimmed) {
+        setError("Your name is required");
+        return;
+      }
+      if (!emailTrimmed) {
+        setError("Email is required to link your account");
+        return;
+      }
+      setSubmitting(true);
+      setError(null);
+      try {
+        sessionStorage.setItem(ONBOARDING_PENDING_KEY, JSON.stringify(form));
+        setOnboardingPendingCookie({
+          fullName: form.fullName,
+          businessName: form.businessName,
+          location: form.location,
+          capacity: form.capacity,
+          taxNumber: form.taxNumber,
+          currency: form.currency,
+        });
+        await updateUserEmailMutation.mutateAsync({
+          email: emailTrimmed,
+          fullName: fullNameTrimmed,
+          emailRedirectTo:
+            typeof window !== "undefined" ? `${window.location.origin}/auth/confirm` : undefined,
+        });
+        setEmailSent(true);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to send confirmation email");
         setSubmitting(false);
       }
       return;
@@ -162,13 +216,20 @@ const OnboardingPage = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="fullName">{t("auth.onboarding.yourName")}</Label>
+                <Label htmlFor="fullName">
+                  {t("auth.onboarding.yourName")}
+                  {!isGoogle && <span className="text-destructive ml-1">*</span>}
+                  {isGoogle && form.fullName && (
+                    <span className="text-muted-foreground ml-1 font-normal">(from Google)</span>
+                  )}
+                </Label>
                 <Input
                   id="fullName"
                   value={form.fullName}
                   onChange={(e) => setForm((p) => ({ ...p, fullName: e.target.value }))}
                   placeholder={t("auth.onboarding.yourNamePlaceholder")}
                   required
+                  disabled={isGoogle && !!(user?.user_metadata?.full_name || profile?.full_name)}
                 />
               </div>
 
@@ -220,15 +281,35 @@ const OnboardingPage = () => {
                   />
                 </div>
 
-                {showOptionalPhone && (
+                {isGoogle && user && !user.phone && (
                   <div className="basis-2/5 space-y-2">
-                    <Label htmlFor="phone">{t("auth.onboarding.phoneOptional")}</Label>
+                    <Label htmlFor="phone">
+                      {t("auth.onboarding.phoneOptional")}
+                      <span className="text-destructive ml-1">*</span>
+                    </Label>
                     <Input
                       id="phone"
                       type="tel"
                       value={form.phone}
                       onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
                       placeholder={t("auth.onboarding.phonePlaceholder")}
+                      required
+                    />
+                  </div>
+                )}
+                {isPhone && user && !user.email && (
+                  <div className="basis-2/5 space-y-2">
+                    <Label htmlFor="email">
+                      Email
+                      <span className="text-destructive ml-1">*</span>
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={form.email}
+                      onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+                      placeholder="you@example.com"
+                      required
                     />
                   </div>
                 )}
@@ -260,34 +341,27 @@ const OnboardingPage = () => {
               <p className="text-destructive bg-destructive/10 rounded-md p-3 text-sm">{error}</p>
             )}
 
-            <Button
-              type="submit"
-              isLoading={submitting || sendOtpMutation.isPending}
-              className="w-full"
-            >
-              {t("auth.onboarding.finish")}
-            </Button>
+            {emailSent ? (
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-center text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400">
+                <p className="font-medium">Check your email</p>
+                <p className="mt-1 text-sm">
+                  We sent a confirmation link to <strong>{form.email}</strong>. Click the link to
+                  complete your setup.
+                </p>
+              </div>
+            ) : (
+              <Button
+                type="submit"
+                isLoading={
+                  submitting || sendOtpMutation.isPending || updateUserEmailMutation.isPending
+                }
+                className="w-full"
+              >
+                {t("auth.onboarding.finish")}
+              </Button>
+            )}
           </form>
         </div>
-
-        <p className="text-muted-foreground mt-5 text-center text-xs">
-          <button
-            type="button"
-            onClick={() => {
-              setOnboardingSkipped(true);
-              skipOnboarding.mutate({
-                userId: user!.id,
-                currency: form.currency,
-                fullName: profile?.full_name || undefined,
-              });
-              router.replace("/dashboard");
-            }}
-            disabled={submitting || skipOnboarding.isPending}
-            className="text-muted-foreground hover:underline"
-          >
-            Skip for now
-          </button>
-        </p>
       </div>
     </div>
   );

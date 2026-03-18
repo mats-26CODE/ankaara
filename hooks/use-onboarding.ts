@@ -13,6 +13,7 @@ type CompleteOnboardingPayload = {
   taxNumber?: string;
   fullName?: string;
   phone?: string;
+  email?: string;
 };
 
 type SkipOnboardingPayload = {
@@ -27,7 +28,13 @@ type SkipOnboardingPayload = {
 const upsertBusiness = async (
   supabase: ReturnType<typeof createClient>,
   ownerId: string,
-  fields: { name: string; address?: string | null; capacity?: string | null; tax_number?: string | null; currency: string }
+  fields: {
+    name: string;
+    address?: string | null;
+    capacity?: string | null;
+    tax_number?: string | null;
+    currency: string;
+  },
 ) => {
   const { data: existing } = await supabase
     .from("businesses")
@@ -37,15 +44,10 @@ const upsertBusiness = async (
     .maybeSingle();
 
   if (existing) {
-    const { error } = await supabase
-      .from("businesses")
-      .update(fields)
-      .eq("id", existing.id);
+    const { error } = await supabase.from("businesses").update(fields).eq("id", existing.id);
     if (error) throw error;
   } else {
-    const { error } = await supabase
-      .from("businesses")
-      .insert({ owner_id: ownerId, ...fields });
+    const { error } = await supabase.from("businesses").insert({ owner_id: ownerId, ...fields });
     if (error) throw error;
   }
 };
@@ -55,6 +57,9 @@ export const useCompleteOnboarding = () => {
     mutationFn: async (payload: CompleteOnboardingPayload) => {
       const supabase = createClient();
 
+      // Phone is linked to auth user in verify-otp edge function (admin.updateUserById)
+      // after OTP verification. Client updateUser would require Supabase's own OTP flow.
+
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
@@ -62,6 +67,7 @@ export const useCompleteOnboarding = () => {
           onboarding_completed: true,
           ...(payload.fullName ? { full_name: payload.fullName } : {}),
           ...(payload.phone ? { phone: payload.phone } : {}),
+          ...(payload.email ? { email: payload.email } : {}),
         })
         .eq("id", payload.userId);
 
@@ -78,8 +84,14 @@ export const useCompleteOnboarding = () => {
     onSuccess: () => {
       ToastAlert.success("Profile setup complete!");
     },
-    onError: (error: Error) => {
-      ToastAlert.error(error.message || "Something went wrong. Please try again.");
+    onError: (error: Error & { code?: string }) => {
+      const isDuplicatePhone =
+        error.code === "23505" ||
+        (error.message && error.message.includes("user_phone_number_key"));
+      const message = isDuplicatePhone
+        ? "This phone number is already registered to another account. Please use a different number."
+        : error.message || "Something went wrong. Please try again.";
+      ToastAlert.error(message);
     },
   });
 };

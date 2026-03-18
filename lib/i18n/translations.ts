@@ -394,7 +394,7 @@ export const translations = {
         next: "Endelea",
         finish: "Kamilisha",
         creating: "Inatengeneza...",
-        phoneOptional: "Nambari ya simu (hiari)",
+        phoneOptional: "Nambari ya simu",
         phonePlaceholder: "0767 XXX XXX",
       },
       login: {
@@ -506,7 +506,8 @@ export const translations = {
       value1Title: "Simple",
       value1Description: "Straightforward approach — great invoices, one link, clear tracking.",
       value2Title: "Trustworthy",
-      value2Description: "Your data is private and secure; we build trust through security and transparency.",
+      value2Description:
+        "Your data is private and secure; we build trust through security and transparency.",
       value3Title: "Built for Africa",
       value3Description: "Designed for mobile money and the needs of African businesses.",
       teamTitle: "Our team",
@@ -842,7 +843,7 @@ export const translations = {
         next: "Continue",
         finish: "Finish",
         creating: "Setting up...",
-        phoneOptional: "Phone number (optional)",
+        phoneOptional: "Phone number",
         phonePlaceholder: "0767 XXX XXX",
       },
       login: {

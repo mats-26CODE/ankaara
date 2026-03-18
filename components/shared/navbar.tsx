@@ -78,7 +78,7 @@ const NavBar = () => {
         </div>
 
         {/* Desktop Actions */}
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="hidden items-center gap-2 md:flex">
           {user ? (
             <Popover>
               <PopoverTrigger asChild>
@@ -131,16 +131,19 @@ const NavBar = () => {
             </Popover>
           ) : (
             <>
-              <Link
-                href="/login"
-                className="border-primary/10 hover:bg-muted ml-2 rounded-full border px-6 py-2 text-sm font-medium"
-              >
-                {t("nav.login")}
-              </Link>
               <Button
+                variant="outline"
                 asChild
                 size="sm"
-                className="hover:bg-muted ml-2 rounded-full text-sm font-medium"
+                className="hover:bg-primary/80 dark:hover:bg-primary/20 rounded-full text-sm font-medium shadow-none transition-colors duration-200"
+              >
+                <Link href="/login">{t("nav.login")}</Link>
+              </Button>
+              <Button
+                variant="outline"
+                asChild
+                size="sm"
+                className="hover:bg-primary/80 dark:hover:bg-primary/20 rounded-full text-sm font-medium shadow-none transition-colors duration-200"
               >
                 <Link href="/sign-up">{t("nav.signup")}</Link>
               </Button>

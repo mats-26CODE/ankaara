@@ -84,7 +84,7 @@ BEGIN
   END IF;
 
   IF NEW.raw_app_meta_data->>'provider' = 'phone' THEN
-    INSERT INTO public.profiles(id, phone_number, auth_type)
+    INSERT INTO public.profiles(id, phone, auth_type)
     VALUES (NEW.id, NEW.phone, 'Phone');
 
     SELECT id, total_users INTO stat_id, stat_total_users

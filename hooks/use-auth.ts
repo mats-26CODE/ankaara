@@ -18,17 +18,14 @@ export const useSendOtp = (resendOtp: boolean) => {
   return useMutation({
     mutationFn: async (payload: { phone: string }) => {
       const supabase = createClient();
-      const { data, error } = await supabase.functions.invoke(
-        "authenticate-user",
-        {
-          body: {
-            operation: !resendOtp ? "login" : "resend",
-            payload: {
-              phone_number: addCountryCode(payload.phone),
-            },
+      const { data, error } = await supabase.functions.invoke("authenticate-user", {
+        body: {
+          operation: !resendOtp ? "login" : "resend",
+          payload: {
+            phone_number: addCountryCode(payload.phone),
           },
-        }
-      );
+        },
+      });
 
       let errorMessage = "";
 
@@ -111,8 +108,7 @@ export const useSendOtpForOnboarding = () => {
       }
       if (errMessage) throw new Error(errMessage);
       const errMsg = (data as { message?: string })?.message;
-      if (errMsg && (data as { success?: boolean })?.success !== true)
-        throw new Error(errMsg);
+      if (errMsg && (data as { success?: boolean })?.success !== true) throw new Error(errMsg);
       return data;
     },
     onSuccess: () => {
@@ -127,13 +123,18 @@ export const useSendOtpForOnboarding = () => {
 /**
  * Verify OTP for onboarding (authenticated user).
  * Uses verify-otp edge function; on success does not redirect — caller should finalize profile and redirect.
+ * Pass fullName to update auth user display name (for mobile/Google users).
  */
 export const useVerifyOtpForOnboarding = () => {
   return useMutation({
-    mutationFn: async (payload: { phone: string; code: string }) => {
+    mutationFn: async (payload: { phone: string; code: string; fullName?: string }) => {
       const supabase = createClient();
       const { data, error } = await supabase.functions.invoke("verify-otp", {
-        body: { phone: payload.phone, code: payload.code },
+        body: {
+          phone: payload.phone,
+          code: payload.code,
+          ...(payload.fullName?.trim() ? { fullName: payload.fullName.trim() } : {}),
+        },
       });
       let errMessage = "";
       if (error instanceof FunctionsHttpError) {
@@ -148,14 +149,66 @@ export const useVerifyOtpForOnboarding = () => {
       }
       if (errMessage) throw new Error(errMessage);
       const errMsg = (data as { message?: string })?.message;
-      if (errMsg && (data as { success?: boolean })?.success !== true)
-        throw new Error(errMsg);
+      if (errMsg && (data as { success?: boolean })?.success !== true) throw new Error(errMsg);
       return data;
     },
     onError: (error: AuthError) => {
-      ToastAlert.error(
-        error.message || "Invalid OTP. Please try again."
-      );
+      ToastAlert.error(error.message || "Invalid OTP. Please try again.");
+    },
+  });
+};
+
+/**
+ * Request email change for account linking (e.g. phone user adding email).
+ * Supabase sends a confirmation email; user must click the link.
+ * Updates auth user_metadata (full_name), profiles table (full_name, email), then sends confirm email.
+ */
+export const useUpdateUserEmail = () => {
+  return useMutation({
+    mutationFn: async (payload: { email: string; fullName?: string; emailRedirectTo?: string }) => {
+      const supabase = createClient();
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (userError || !user?.id) throw new Error("Not authenticated");
+
+      const emailTrimmed = payload.email.trim();
+      const fullNameTrimmed = payload.fullName?.trim();
+
+      // Update profiles table immediately (full_name, email)
+      const profileUpdates: { full_name?: string; email?: string } = {};
+      if (fullNameTrimmed) profileUpdates.full_name = fullNameTrimmed;
+      profileUpdates.email = emailTrimmed;
+
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update(profileUpdates)
+        .eq("id", user.id);
+
+      if (profileError) throw profileError;
+
+      // Update auth user (sends confirmation email)
+      const redirectTo =
+        payload.emailRedirectTo ??
+        (typeof window !== "undefined" ? `${window.location.origin}/auth/confirm` : undefined);
+      const updatePayload: { email: string; data?: { full_name: string } } = {
+        email: emailTrimmed,
+      };
+      if (fullNameTrimmed) {
+        updatePayload.data = { full_name: fullNameTrimmed };
+      }
+      const { data, error } = await supabase.auth.updateUser(updatePayload, {
+        emailRedirectTo: redirectTo,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      ToastAlert.success("Check your email and click the confirmation link to complete setup.");
+    },
+    onError: (error: AuthError) => {
+      ToastAlert.error(error.message || "Failed to send confirmation email. Please try again.");
     },
   });
 };
@@ -182,8 +235,7 @@ export const useGoogleOAuth = () => {
       // We'll handle the callback in a separate route
     },
     onError: (error: AuthError) => {
-      const message =
-        error.message || "Google authentication failed. Please try again.";
+      const message = error.message || "Google authentication failed. Please try again.";
       ToastAlert.error(message);
     },
   });
