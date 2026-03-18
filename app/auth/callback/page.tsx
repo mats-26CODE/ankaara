@@ -24,7 +24,7 @@ const AuthCallbackPage = () => {
     const handleAuth = async () => {
       const supabase = createClient();
 
-      // 1. OAuth flow: code in query params - must run on SERVER (PKCE code verifier is in cookies)
+      // 1. OAuth flow: code in query params - exchange on SERVER (PKCE verifier in cookies)
       if (code) {
         window.location.href = `/api/auth/callback?code=${encodeURIComponent(code)}&next=${encodeURIComponent(next)}`;
         return;

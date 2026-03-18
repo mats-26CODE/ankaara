@@ -177,14 +177,14 @@ export const useUpdateUserEmail = () => {
       const fullNameTrimmed = payload.fullName?.trim();
 
       // Update profiles table immediately (full_name, email)
-      const profileUpdates: { full_name?: string; email?: string } = {};
-      if (fullNameTrimmed) profileUpdates.full_name = fullNameTrimmed;
-      profileUpdates.email = emailTrimmed;
-
+      const profileUpdates = {
+        email: emailTrimmed,
+        ...(fullNameTrimmed ? { full_name: fullNameTrimmed } : {}),
+      };
       const { error: profileError } = await supabase
         .from("profiles")
-        .update(profileUpdates)
-        .eq("id", user.id);
+        .update(profileUpdates as any)
+        .eq("id", user.id as any);
 
       if (profileError) throw profileError;
 
@@ -223,16 +223,15 @@ export const useGoogleOAuth = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/api/auth/callback`,
         },
       });
 
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      // The redirect will happen automatically
-      // We'll handle the callback in a separate route
+    onSuccess: (data) => {
+      if (data?.url) window.location.href = data.url;
     },
     onError: (error: AuthError) => {
       const message = error.message || "Google authentication failed. Please try again.";

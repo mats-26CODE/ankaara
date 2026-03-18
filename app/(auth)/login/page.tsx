@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Logo from "@/components/shared/logo";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { APP_NAME } from "@/constants/values";
 import { useTranslation } from "@/hooks/use-translation";
 import { validatePhoneNumber } from "@/helpers/helpers";
+import { Spinner } from "@/components/ui/spinner";
 import Link from "next/link";
 
 const LoginContent = () => {
@@ -18,10 +19,22 @@ const LoginContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect");
+  const code = searchParams.get("code");
+  const next = searchParams.get("next");
+
+  // Handle OAuth callback when Supabase redirects to /login?code=... (e.g. Site URL misconfigured)
+  useEffect(() => {
+    if (code) {
+      const nextPath = next || redirect || "/dashboard";
+      window.location.href = `/api/auth/callback?code=${encodeURIComponent(code)}&next=${encodeURIComponent(nextPath)}`;
+    }
+  }, [code, next, redirect]);
+
   const [formData, setFormData] = useState({
     phone: "",
   });
   const [error, setError] = useState<string | null>(null);
+
   const googleOAuthMutation = useGoogleOAuth();
   const sendOtpMutation = useSendOtp(false);
 
@@ -65,6 +78,18 @@ const LoginContent = () => {
   const handleGoogleSignIn = () => {
     googleOAuthMutation.mutate();
   };
+
+  if (code) {
+    return (
+      <div className="bg-background flex min-h-screen items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Logo />
+          <p className="text-muted-foreground text-sm">Completing sign in...</p>
+          <Spinner className="size-6" />
+        </div>
+      </div>
+    );
+  }
 
   const testimonial = {
     quote: `${APP_NAME} has made getting paid on time a breeze. Professional invoices, payment links, and mobile money—everything I need in one place.`,
