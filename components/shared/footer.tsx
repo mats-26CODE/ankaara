@@ -121,8 +121,9 @@ export const Footer = () => {
           </div>
         </div>
 
-        <div className="border-border mt-12 border-t pt-8 text-center">
+        <div className="border-border mt-12 flex items-center justify-center gap-5 border-t pt-8 text-center">
           <p className="text-muted-foreground text-sm">{t("footer.copyright")}</p>
+          <p className="text-muted-foreground text-sm">🚀 Tayos Labs</p>
         </div>
       </div>
     </footer>
