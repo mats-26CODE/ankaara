@@ -41,13 +41,13 @@ export default function RootLayout({
                 try {
                   const stored = localStorage.getItem('preferences-store');
                   let theme = 'light';
-                  let language = 'sw';
+                  let language = 'en';
                   
                   if (stored) {
                     const preferences = JSON.parse(stored);
                     if (preferences && preferences.state) {
                       theme = preferences.state.theme || 'light';
-                      language = preferences.state.language || 'sw';
+                      language = preferences.state.language || 'en';
                     }
                   }
                   
@@ -65,7 +65,7 @@ export default function RootLayout({
                 } catch (e) {
                   // Fallback to light theme on error
                   document.documentElement.classList.toggle('dark', false);
-                  document.documentElement.lang = 'sw';
+                  document.documentElement.lang = 'en';
                   document.documentElement.setAttribute('data-theme-initialized', 'true');
                 }
               })();
