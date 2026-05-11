@@ -68,6 +68,7 @@ export type Database = {
           created_at: string;
           email: string | null;
           id: string;
+          is_walk_in: boolean;
           name: string;
           phone: string | null;
           updated_at: string;
@@ -78,6 +79,7 @@ export type Database = {
           created_at?: string;
           email?: string | null;
           id?: string;
+          is_walk_in?: boolean;
           name: string;
           phone?: string | null;
           updated_at?: string;
@@ -88,6 +90,7 @@ export type Database = {
           created_at?: string;
           email?: string | null;
           id?: string;
+          is_walk_in?: boolean;
           name?: string;
           phone?: string | null;
           updated_at?: string;
@@ -1278,6 +1281,26 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "sales";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      ensure_walk_in_client: {
+        Args: { p_business_id: string };
+        Returns: {
+          address: string | null;
+          business_id: string;
+          created_at: string;
+          email: string | null;
+          id: string;
+          is_walk_in: boolean;
+          name: string;
+          phone: string | null;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "clients";
           isOneToOne: true;
           isSetofReturn: false;
         };

@@ -210,6 +210,18 @@ const DashboardPage = () => {
                       <span>{profile.phone}</span>
                     </>
                   )}
+                  {profile?.created_at && (
+                    <>
+                      <span>•</span>
+                      <span>
+                        Member since{" "}
+                        {new Date(profile.created_at).toLocaleDateString("en-US", {
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -265,50 +277,43 @@ const DashboardPage = () => {
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-muted-foreground text-sm">Profit</p>
+              <p className="text-muted-foreground text-sm">Total Profit</p>
               <p className="text-lg font-bold">
                 {statsLoading ? "—" : formatAmount(salesStats.totalProfit, { decimalDigits: 0 })}
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-muted-foreground text-sm">Clients</p>
-              <p className="text-lg font-bold">{statsLoading ? "—" : clientCount}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-muted-foreground text-sm">Products</p>
+              <p className="text-muted-foreground text-sm">Total Products</p>
               <p className="text-lg font-bold">{statsLoading ? "—" : productCount}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-muted-foreground text-sm">Quotations</p>
-              <p className="text-lg font-bold">{statsLoading ? "—" : quotationCount}</p>
+              <p className="text-muted-foreground text-sm">Total Clients</p>
+              <p className="text-lg font-bold">{statsLoading ? "—" : clientCount}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-muted-foreground text-sm">Member Since</p>
-              <p className="text-sm font-medium">
-                {profile?.created_at
-                  ? new Date(profile.created_at).toLocaleDateString("en-US", {
-                      month: "short",
-                      year: "numeric",
-                    })
-                  : "—"}
-              </p>
+              <p className="text-muted-foreground text-sm">Total Invoices</p>
+              <p className="text-lg font-bold">{statsLoading ? "—" : invoiceStats.total}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-muted-foreground text-sm">Total Quotations</p>
+              <p className="text-lg font-bold">{statsLoading ? "—" : quotationCount}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* ────── Core POS Stats ────── */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Profit</CardTitle>
-            <TrendingUp className="size-4 text-green-600" />
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-sm font-medium">Today's Sales</CardTitle>
+            <ShoppingCart className="size-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {statsLoading ? "—" : formatAmount(salesStats.totalProfit, { decimalDigits: 0 })}
+            <div className="text-xl font-bold">
+              {statsLoading ? "—" : formatAmount(salesStats.todaySales, { decimalDigits: 0 })}
             </div>
-            <p className="text-muted-foreground mt-1 text-xs">From recorded sales</p>
+            <p className="text-muted-foreground mt-1 text-xs">Sales dated today</p>
           </CardContent>
           <CardFooter>
             <Button variant="outline" size="sm" asChild className="w-full">
@@ -318,30 +323,30 @@ const DashboardPage = () => {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
-            <ShoppingCart className="size-4 text-blue-600" />
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-sm font-medium">Today's Profit</CardTitle>
+            <TrendingUp className="size-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {statsLoading ? "—" : formatAmount(salesStats.totalSales, { decimalDigits: 0 })}
+            <div className="text-xl font-bold">
+              {statsLoading ? "—" : formatAmount(salesStats.todayProfit, { decimalDigits: 0 })}
             </div>
-            <p className="text-muted-foreground mt-1 text-xs">POS sales ledger</p>
+            <p className="text-muted-foreground mt-1 text-xs">Profit dated today</p>
           </CardContent>
           <CardFooter>
             <Button variant="outline" size="sm" asChild className="w-full">
-              <Link href="/dashboard/sales/create">Record sale</Link>
+              <Link href="/dashboard/sales">View profit</Link>
             </Button>
           </CardFooter>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-medium">Inventory Value</CardTitle>
             <Package className="size-4 text-violet-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-xl font-bold">
               {statsLoading
                 ? "—"
                 : formatAmount(inventoryStats.inventoryValue, { decimalDigits: 0 })}
@@ -351,42 +356,6 @@ const DashboardPage = () => {
           <CardFooter>
             <Button variant="outline" size="sm" asChild className="w-full">
               <Link href="/dashboard/products">Manage inventory</Link>
-            </Button>
-          </CardFooter>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today's Sales</CardTitle>
-            <CheckCircle2 className="size-4 text-emerald-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {statsLoading ? "—" : formatAmount(salesStats.todaySales, { decimalDigits: 0 })}
-            </div>
-            <p className="text-muted-foreground mt-1 text-xs">Sales dated today</p>
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" size="sm" asChild className="w-full">
-              <Link href="/dashboard/sales">View timeline</Link>
-            </Button>
-          </CardFooter>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today's Profit</CardTitle>
-            <CheckCircle2 className="size-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {statsLoading ? "—" : formatAmount(salesStats.todayProfit, { decimalDigits: 0 })}
-            </div>
-            <p className="text-muted-foreground mt-1 text-xs">Profit dated today</p>
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" size="sm" asChild className="w-full">
-              <Link href="/dashboard/sales">View sales</Link>
             </Button>
           </CardFooter>
         </Card>

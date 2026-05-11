@@ -115,6 +115,34 @@ export const DashboardSidebar = () => {
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
+              {/* Inventory */}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/dashboard/products")}
+                  tooltip="Inventory"
+                >
+                  <Link href="/dashboard/products">
+                    <Package className="size-4" />
+                    <span>Inventory</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              {/* Clients */}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/dashboard/clients")}
+                  tooltip="Clients"
+                >
+                  <Link href="/dashboard/clients">
+                    <Users className="size-4" />
+                    <span>Clients</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
               {/* Invoices — collapsible when expanded, dropdown when collapsed */}
               {showSubmenu ? (
                 <Collapsible.Root open={invoicesOpen} onOpenChange={setInvoicesOpen} asChild>
@@ -501,34 +529,6 @@ export const DashboardSidebar = () => {
                   </DropdownMenu>
                 </SidebarMenuItem>
               )}
-
-              {/* Clients */}
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isActive("/dashboard/clients")}
-                  tooltip="Clients"
-                >
-                  <Link href="/dashboard/clients">
-                    <Users className="size-4" />
-                    <span>Clients</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              {/* Inventory */}
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isActive("/dashboard/products")}
-                  tooltip="Inventory"
-                >
-                  <Link href="/dashboard/products">
-                    <Package className="size-4" />
-                    <span>Inventory</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
 
               {/* Invoice Templates */}
               <SidebarMenuItem>

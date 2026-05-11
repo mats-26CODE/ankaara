@@ -29,6 +29,8 @@ type ClientPickerDialogProps = {
   onChange: (clientId: string) => void;
   clients: Client[];
   refetchClients: () => void;
+  contextLabel?: string;
+  includeWalkIn?: boolean;
 };
 
 const ClientPickerDialog = ({
@@ -37,6 +39,8 @@ const ClientPickerDialog = ({
   onChange,
   clients,
   refetchClients,
+  contextLabel = "invoice",
+  includeWalkIn = false,
 }: ClientPickerDialogProps) => {
   const createClient = useCreateClient();
   const selectedClient = clients.find((c) => c.id === value);
@@ -54,16 +58,21 @@ const ClientPickerDialog = ({
     address: "",
   });
 
+  const selectableClients = useMemo(
+    () => (includeWalkIn ? clients : clients.filter((client) => !client.is_walk_in)),
+    [clients, includeWalkIn],
+  );
+
   const filtered = useMemo(() => {
-    if (!search.trim()) return clients;
+    if (!search.trim()) return selectableClients;
     const q = search.toLowerCase();
-    return clients.filter(
+    return selectableClients.filter(
       (c) =>
         c.name.toLowerCase().includes(q) ||
         c.email?.toLowerCase().includes(q) ||
-        c.phone?.includes(q)
+        c.phone?.includes(q),
     );
-  }, [clients, search]);
+  }, [selectableClients, search]);
 
   const visible = filtered.slice(0, visibleCount);
   const hasMore = visibleCount < filtered.length;
@@ -123,7 +132,7 @@ const ClientPickerDialog = ({
           onClick={() => setPickerOpen(true)}
           className="basis-4/6 justify-start font-normal"
         >
-          <User className="mr-2 size-4 shrink-0 text-muted-foreground" />
+          <User className="text-muted-foreground mr-2 size-4 shrink-0" />
           {selectedClient ? (
             <span className="truncate">{selectedClient.name}</span>
           ) : (
@@ -148,17 +157,15 @@ const ClientPickerDialog = ({
 
       {/* Client Picker Dialog */}
       <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
-        <DialogContent className="sm:max-w-md flex flex-col max-h-[80vh]">
+        <DialogContent className="flex max-h-[80vh] flex-col sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Select Client</DialogTitle>
-            <DialogDescription>
-              Search and pick a client for this invoice.
-            </DialogDescription>
+            <DialogDescription>Search and pick a client for this {contextLabel}.</DialogDescription>
           </DialogHeader>
 
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -172,11 +179,11 @@ const ClientPickerDialog = ({
           <div
             ref={listRef}
             onScroll={handleScroll}
-            className="flex-1 overflow-y-auto -mx-6 px-6 min-h-0 max-h-[50vh]"
+            className="-mx-6 max-h-[50vh] min-h-0 flex-1 overflow-y-auto px-6"
           >
             {filtered.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-10 text-center">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   {search ? "No clients match your search." : "No clients yet."}
                 </p>
                 <Button
@@ -190,7 +197,7 @@ const ClientPickerDialog = ({
                     setAddOpen(true);
                   }}
                 >
-                  <Plus className="size-4 mr-1" />
+                  <Plus className="mr-1 size-4" />
                   Add Client
                 </Button>
               </div>
@@ -203,22 +210,27 @@ const ClientPickerDialog = ({
                       key={client.id}
                       type="button"
                       onClick={() => handleSelect(client.id)}
-                      className="flex w-full items-center gap-3 px-1 py-3 text-left transition-colors hover:bg-muted/50 rounded-md"
+                      className="hover:bg-muted/50 flex w-full items-center gap-3 rounded-md px-1 py-3 text-left transition-colors"
                     >
-                      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium uppercase">
+                      <div className="bg-muted flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-medium uppercase">
                         {client.name.charAt(0)}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{client.name}</p>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-sm font-medium">{client.name}</p>
+                          {client.is_walk_in && (
+                            <span className="text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] uppercase">
+                              Walk-in
+                            </span>
+                          )}
+                        </div>
                         {(client.email || client.phone) && (
-                          <p className="text-xs text-muted-foreground truncate">
+                          <p className="text-muted-foreground truncate text-xs">
                             {[client.email, client.phone].filter(Boolean).join(" · ")}
                           </p>
                         )}
                       </div>
-                      {isSelected && (
-                        <Check className="size-4 shrink-0 text-primary" />
-                      )}
+                      {isSelected && <Check className="text-primary size-4 shrink-0" />}
                     </button>
                   );
                 })}
@@ -232,8 +244,8 @@ const ClientPickerDialog = ({
           </div>
 
           {/* Footer: Add client shortcut */}
-          <div className="flex items-center justify-between pt-2 border-t">
-            <p className="text-xs text-muted-foreground">
+          <div className="flex items-center justify-between border-t pt-2">
+            <p className="text-muted-foreground text-xs">
               {filtered.length} client{filtered.length !== 1 ? "s" : ""}
             </p>
             <Button
@@ -244,7 +256,7 @@ const ClientPickerDialog = ({
                 setAddOpen(true);
               }}
             >
-              <Plus className="size-4 mr-1" />
+              <Plus className="mr-1 size-4" />
               New Client
             </Button>
           </div>
@@ -256,9 +268,7 @@ const ClientPickerDialog = ({
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Add Client</DialogTitle>
-            <DialogDescription>
-              Create a new client for your business.
-            </DialogDescription>
+            <DialogDescription>Create a new client for your business.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3 py-2">

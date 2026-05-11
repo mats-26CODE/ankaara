@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import dayjs from "dayjs";
 import { useBusinesses, type Business } from "@/hooks/use-businesses";
-import { useClients } from "@/hooks/use-clients";
+import { useClients, useEnsureWalkInClient } from "@/hooks/use-clients";
 import { useProducts } from "@/hooks/use-products";
 import { useCreateDirectSale, type DirectSaleItemInput } from "@/hooks/use-sales";
 import { useCurrentBusinessId } from "@/lib/stores/business-store";
@@ -13,18 +13,12 @@ import {
   ProductPickerDialog,
   type ProductLinePayload,
 } from "@/components/shared/product-picker-dialog";
+import { ClientPickerDialog } from "@/components/shared/client-picker-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
@@ -53,11 +47,13 @@ const CreateSalePage = () => {
   const router = useRouter();
   const { businesses, loading: businessesLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
-  const { clients } = useClients(currentBusinessId);
+  const { clients, refetch: refetchClients } = useClients(currentBusinessId);
   const { products, refetch: refetchProducts } = useProducts(currentBusinessId);
   const createSale = useCreateDirectSale();
+  const ensureWalkInClient = useEnsureWalkInClient();
+  const ensureRequestedBusinessId = useRef<string | null>(null);
 
-  const [clientId, setClientId] = useState<string>("none");
+  const [clientId, setClientId] = useState<string>("");
   const [saleDate, setSaleDate] = useState(dayjs().format("YYYY-MM-DD"));
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<SaleLine[]>([]);
@@ -67,12 +63,36 @@ const CreateSalePage = () => {
     () => businesses.find((b) => b.id === currentBusinessId) as Business | undefined,
     [businesses, currentBusinessId],
   );
+  const walkInClient = useMemo(() => clients.find((client) => client.is_walk_in), [clients]);
 
   useEffect(() => {
     if (!currentBusinessId && businesses.length > 0) {
       setCurrentBusiness(businesses[0].id);
     }
   }, [businesses, currentBusinessId, setCurrentBusiness]);
+
+  useEffect(() => {
+    if (!currentBusinessId) return;
+
+    if (walkInClient) {
+      ensureRequestedBusinessId.current = null;
+      setClientId((current) => current || walkInClient.id);
+      return;
+    }
+
+    if (ensureRequestedBusinessId.current === currentBusinessId) return;
+
+    ensureRequestedBusinessId.current = currentBusinessId;
+    ensureWalkInClient.mutate(currentBusinessId, {
+      onSuccess: (client) => {
+        setClientId((current) => current || client.id);
+        refetchClients();
+      },
+      onError: () => {
+        ensureRequestedBusinessId.current = null;
+      },
+    });
+  }, [currentBusinessId, walkInClient, ensureWalkInClient, refetchClients]);
 
   const subtotal = useMemo(() => items.reduce((sum, item) => sum + lineTotal(item), 0), [items]);
   const totalCost = useMemo(
@@ -126,7 +146,7 @@ const CreateSalePage = () => {
     createSale.mutate(
       {
         business_id: currentBusinessId,
-        client_id: clientId === "none" ? null : clientId,
+        client_id: clientId || walkInClient?.id || null,
         sale_date: saleDate,
         currency: currentBusiness.currency,
         notes: notes.trim() || null,
@@ -186,26 +206,40 @@ const CreateSalePage = () => {
             <CardHeader>
               <CardTitle className="text-base">Sale Details</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
+            <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Sale Date</Label>
                 <DatePicker value={saleDate} onChange={setSaleDate} />
               </div>
               <div className="space-y-2">
                 <Label>Client</Label>
-                <Select value={clientId} onValueChange={setClientId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Optional client" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No client</SelectItem>
-                    {clients.map((client) => (
-                      <SelectItem key={client.id} value={client.id}>
-                        {client.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  <ClientPickerDialog
+                    businessId={currentBusinessId}
+                    value={clientId}
+                    onChange={setClientId}
+                    clients={clients}
+                    refetchClients={refetchClients}
+                    contextLabel="sale"
+                    includeWalkIn
+                  />
+                  {clientId && clientId !== walkInClient?.id && walkInClient && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setClientId(walkInClient.id)}
+                      className="text-muted-foreground px-0"
+                    >
+                      Use walk-in customer
+                    </Button>
+                  )}
+                  {clientId === walkInClient?.id && (
+                    <p className="text-muted-foreground text-xs">
+                      Walk-in Customer is selected by default for direct sales.
+                    </p>
+                  )}
+                </div>
               </div>
               <div className="space-y-2 sm:col-span-2">
                 <Label>Notes</Label>

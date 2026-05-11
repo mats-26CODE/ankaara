@@ -9,6 +9,7 @@ import { useCurrentBusinessId } from "@/lib/stores/business-store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -19,7 +20,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Building2, ChevronLeft, ChevronRight, Eye, Plus, RotateCcw } from "lucide-react";
+import {
+  Building2,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Plus,
+  RotateCcw,
+  Search,
+  ShoppingCart,
+  X,
+} from "lucide-react";
 
 const PAGE_SIZE = 10;
 
@@ -27,6 +38,7 @@ const SalesPage = () => {
   const { businesses, loading: businessesLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const { sales, loading, totalCount } = useSales(
@@ -56,6 +68,18 @@ const SalesPage = () => {
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const to = Math.min(page * PAGE_SIZE, total);
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return sales;
+    const q = search.toLowerCase();
+    return sales.filter(
+      (sale) =>
+        sale.sale_number.toLowerCase().includes(q) ||
+        sale.client?.name?.toLowerCase().includes(q) ||
+        sale.invoice?.invoice_number?.toLowerCase().includes(q) ||
+        sale.source.toLowerCase().includes(q),
+    );
+  }, [sales, search]);
 
   if (businessesLoading) {
     return (
@@ -103,31 +127,67 @@ const SalesPage = () => {
       </div>
 
       <Card>
-        <CardHeader className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[220px_220px_1fr]">
-          <DatePicker value={fromDate} onChange={setFromDate} placeholder="From date" />
-          <DatePicker value={toDate} onChange={setToDate} placeholder="To date" />
-          {(fromDate || toDate) && (
-            <Button
-              variant="outline"
-              onClick={() => {
-                setFromDate("");
-                setToDate("");
-              }}
-              className="w-fit"
-            >
-              <RotateCcw className="mr-2 size-4" />
-              Clear filters
-            </Button>
-          )}
+        <CardHeader className="pb-3">
+          <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-center">
+            <div className="relative max-w-sm flex-1">
+              <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by sale, client, invoice..."
+                className="pl-9"
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <DatePicker
+                value={fromDate}
+                onChange={setFromDate}
+                placeholder="From date"
+                className="w-fit"
+              />
+              <DatePicker
+                value={toDate}
+                onChange={setToDate}
+                placeholder="To date"
+                className="w-fit"
+              />
+              {(fromDate || toDate) && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setFromDate("");
+                    setToDate("");
+                  }}
+                  className="w-fit"
+                >
+                  <X className="size-4 text-red-400" />
+                  Clear
+                </Button>
+              )}
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <Spinner className="size-6" />
             </div>
-          ) : sales.length === 0 ? (
-            <div className="py-8 text-center">
-              <p className="text-muted-foreground text-sm">No sales recorded yet.</p>
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 py-12 text-center">
+              <ShoppingCart className="text-muted-foreground size-10" />
+              <p className="text-muted-foreground text-sm">
+                {sales.length === 0
+                  ? "No sales recorded yet. Record your first sale."
+                  : "No sales match your search or filters."}
+              </p>
+              {sales.length === 0 && (
+                <Button size="sm" variant="outline" asChild>
+                  <Link href="/dashboard/sales/create">
+                    <Plus className="mr-1 size-4" />
+                    Record Sale
+                  </Link>
+                </Button>
+              )}
             </div>
           ) : (
             <Table>
@@ -143,7 +203,7 @@ const SalesPage = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sales.map((sale) => (
+                {filtered.map((sale) => (
                   <TableRow key={sale.id}>
                     <TableCell className="font-medium">{sale.sale_number}</TableCell>
                     <TableCell>{dayjs(sale.sale_date).format("MMM D, YYYY")}</TableCell>

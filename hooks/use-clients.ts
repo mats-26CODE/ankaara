@@ -12,6 +12,9 @@ export type Client = Tables<"clients">;
 export type CreateClientPayload = Pick<TablesInsert<"clients">, "business_id" | "name"> &
   Partial<Pick<TablesInsert<"clients">, "email" | "phone" | "address">>;
 export type UpdateClientPayload = TablesUpdate<"clients"> & { id: string };
+type UseClientsOptions = {
+  includeWalkIn?: boolean;
+};
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -19,12 +22,14 @@ export const useClients = (
   businessId: string | null,
   page?: number,
   pageSize: number = DEFAULT_PAGE_SIZE,
+  options: UseClientsOptions = {},
 ) => {
   const [clients, setClients] = useState<Client[]>([]);
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   const usePagination = page != null && page >= 1 && pageSize >= 1;
+  const includeWalkIn = options.includeWalkIn ?? true;
 
   const refetch = useCallback(async () => {
     if (!businessId) {
@@ -40,6 +45,10 @@ export const useClients = (
       .eq("business_id", businessId)
       .order("created_at", { ascending: false });
 
+    if (!includeWalkIn) {
+      query = query.eq("is_walk_in", false);
+    }
+
     if (usePagination) {
       const from = (page! - 1) * pageSize;
       const to = from + pageSize - 1;
@@ -53,10 +62,10 @@ export const useClients = (
       setTotalCount(null);
     } else {
       setClients(data ?? []);
-      setTotalCount(usePagination ? count ?? null : (data?.length ?? 0));
+      setTotalCount(usePagination ? (count ?? null) : (data?.length ?? 0));
     }
     setLoading(false);
-  }, [businessId, usePagination, page, pageSize]);
+  }, [businessId, usePagination, page, pageSize, includeWalkIn]);
 
   useEffect(() => {
     setLoading(true);
@@ -79,6 +88,7 @@ export const useCreateClient = () => {
           email: payload.email?.trim() || null,
           phone: payload.phone?.trim() || null,
           address: payload.address?.trim() || null,
+          is_walk_in: false,
         })
         .select()
         .single();
@@ -93,10 +103,32 @@ export const useCreateClient = () => {
     onError: (error: Error) => {
       if (isPlanLimitError(error)) {
         ToastAlert.error("Plan limit reached. Upgrade to add more clients.");
-        if (typeof window !== "undefined") window.location.assign(getSubscribeUrlForPlanLimit(error));
+        if (typeof window !== "undefined")
+          window.location.assign(getSubscribeUrlForPlanLimit(error));
         return;
       }
       ToastAlert.error(error.message || "Failed to add client");
+    },
+  });
+};
+
+export const useEnsureWalkInClient = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (businessId: string) => {
+      const supabase = createClient();
+      const { data, error } = await supabase.rpc("ensure_walk_in_client", {
+        p_business_id: businessId,
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
+    },
+    onError: (error: Error) => {
+      ToastAlert.error(error.message || "Failed to prepare walk-in customer");
     },
   });
 };
@@ -106,6 +138,18 @@ export const useUpdateClient = () => {
     mutationFn: async (payload: UpdateClientPayload) => {
       const supabase = createClient();
       const { id, ...fields } = payload;
+
+      const { data: existingClient, error: clientError } = await supabase
+        .from("clients")
+        .select("is_walk_in")
+        .eq("id", id)
+        .single();
+
+      if (clientError) throw clientError;
+
+      if (existingClient?.is_walk_in) {
+        throw new Error("The walk-in customer is required for sales and cannot be edited.");
+      }
 
       const updateFields: Record<string, unknown> = {};
       for (const [key, value] of Object.entries(fields)) {
@@ -136,15 +180,34 @@ export const useDeleteClient = () => {
     mutationFn: async (id: string) => {
       const supabase = createClient();
 
+      const { data: client, error: clientError } = await supabase
+        .from("clients")
+        .select("is_walk_in")
+        .eq("id", id)
+        .single();
+
+      if (clientError) throw clientError;
+
+      if (client?.is_walk_in) {
+        throw new Error("The walk-in customer is required for sales and cannot be deleted.");
+      }
+
       const { count } = await supabase
         .from("invoices")
         .select("id", { count: "exact", head: true })
         .eq("client_id", id);
 
       if (count && count > 0) {
-        throw new Error(
-          "Cannot delete this client — they still have invoices. Remove them first."
-        );
+        throw new Error("Cannot delete this client — they still have invoices. Remove them first.");
+      }
+
+      const { count: salesCount } = await supabase
+        .from("sales")
+        .select("id", { count: "exact", head: true })
+        .eq("client_id", id);
+
+      if (salesCount && salesCount > 0) {
+        throw new Error("Cannot delete this client — they still have sales records.");
       }
 
       const { error } = await supabase.from("clients").delete().eq("id", id);

@@ -279,7 +279,16 @@ const ClientsPage = () => {
               <TableBody>
                 {filtered.map((client) => (
                   <TableRow key={client.id}>
-                    <TableCell className="font-medium">{client.name}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <span>{client.name}</span>
+                        {client.is_walk_in && (
+                          <Badge variant="secondary" className="text-[10px] uppercase">
+                            Walk-in
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="hidden sm:table-cell text-muted-foreground">
                       {client.email || "—"}
                     </TableCell>
@@ -297,17 +306,23 @@ const ClientsPage = () => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => openEdit(client)}>
-                            <Pencil className="size-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => openDelete(client)}
-                            className="text-destructive focus:text-destructive"
-                          >
-                            <Trash2 className="size-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
+                          {client.is_walk_in ? (
+                            <DropdownMenuItem disabled>System client</DropdownMenuItem>
+                          ) : (
+                            <>
+                              <DropdownMenuItem onClick={() => openEdit(client)}>
+                                <Pencil className="size-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => openDelete(client)}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <Trash2 className="size-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

@@ -137,7 +137,8 @@ const fetchDashboardStats = async (
   const { count: clientCountResult } = await supabase
     .from("clients")
     .select("id", { count: "exact", head: true })
-    .in("business_id", bizIds);
+    .in("business_id", bizIds)
+    .eq("is_walk_in", false);
 
   const { count: productCountResult } = await supabase
     .from("products")
