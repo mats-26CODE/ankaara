@@ -501,8 +501,8 @@ const ProductsPage = () => {
 
       {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-xl">
+          <DialogHeader className="shrink-0">
             <DialogTitle>{editingProduct ? "Edit Product" : "Add Product or Service"}</DialogTitle>
             <DialogDescription className="flex flex-col gap-2">
               {editingProduct
@@ -519,7 +519,7 @@ const ProductsPage = () => {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-2">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-2 pr-1">
             <div className="space-y-2">
               <Label>Item Type *</Label>
               <Select
@@ -528,7 +528,7 @@ const ProductsPage = () => {
                   setForm((p) => ({ ...p, item_type: value as ProductItemType }))
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -644,7 +644,7 @@ const ProductsPage = () => {
             )}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="shrink-0 border-t pt-4">
             <Button
               variant="outline"
               onClick={() => setDialogOpen(false)}
