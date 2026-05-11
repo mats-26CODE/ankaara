@@ -3,14 +3,13 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { useSyncExternalStore } from "react";
-import {
-  translations,
-  defaultLanguage,
-  t as translate,
-} from "@/lib/i18n/translations";
+import { translations, defaultLanguage, t as translate } from "@/lib/i18n/translations";
 
 type Theme = "light" | "dark";
 type Language = "en" | "sw";
+
+const defaultTranslator = (key: string, vars?: Record<string, string>) =>
+  translate(defaultLanguage, key, vars);
 
 interface PreferencesState {
   theme: Theme;
@@ -55,8 +54,8 @@ const createPreferencesStore = () => {
             document.documentElement.lang = state.language;
           }
         },
-      }
-    )
+      },
+    ),
   );
 };
 
@@ -67,7 +66,7 @@ export const useTheme = () => {
   const theme = useSyncExternalStore(
     usePreferencesStore.subscribe,
     () => usePreferencesStore.getState().theme,
-    () => "light" // SSR value
+    () => "light", // SSR value
   );
   const setTheme = usePreferencesStore((state) => state.setTheme);
 
@@ -85,14 +84,13 @@ export const useLanguage = () => {
   const language = useSyncExternalStore(
     usePreferencesStore.subscribe,
     () => usePreferencesStore.getState().language,
-    () => defaultLanguage // SSR value
+    () => defaultLanguage, // SSR value
   );
   const setLanguage = usePreferencesStore((state) => state.setLanguage);
   const t = useSyncExternalStore(
     usePreferencesStore.subscribe,
     () => usePreferencesStore.getState().t,
-    () => (key: string, vars?: Record<string, string>) =>
-      translate(defaultLanguage, key, vars) // SSR value
+    () => defaultTranslator, // SSR value
   );
 
   return {

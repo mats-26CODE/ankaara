@@ -33,7 +33,10 @@ export default function RootLayout({
       <head>
         <meta name="apple-mobile-web-app-title" content="Ankaara" />
       </head>
-      <body className={`${figtree.variable} ${pacifico.variable} antialiased`}>
+      <body
+        className={`${figtree.variable} ${pacifico.variable} antialiased`}
+        suppressHydrationWarning
+      >
         <script
           dangerouslySetInnerHTML={{
             __html: `
