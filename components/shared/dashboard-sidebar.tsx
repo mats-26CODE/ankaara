@@ -11,6 +11,7 @@ import {
   Quote,
   Users,
   Package,
+  ShoppingCart,
   Plus,
   ChevronRight,
   Send,
@@ -96,6 +97,20 @@ export const DashboardSidebar = () => {
                   <Link href="/dashboard">
                     <LayoutDashboard className="size-4" />
                     <span>Overview</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              {/* Sales */}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname.startsWith("/dashboard/sales")}
+                  tooltip="Sales"
+                >
+                  <Link href="/dashboard/sales">
+                    <ShoppingCart className="size-4" />
+                    <span>Sales</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -420,7 +435,10 @@ export const DashboardSidebar = () => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link href="/dashboard/quotations/create" className="flex items-center gap-2">
+                        <Link
+                          href="/dashboard/quotations/create"
+                          className="flex items-center gap-2"
+                        >
                           <Plus className="size-4" />
                           Create Quotation
                         </Link>
@@ -498,16 +516,16 @@ export const DashboardSidebar = () => {
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
-              {/* Products */}
+              {/* Inventory */}
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
                   isActive={isActive("/dashboard/products")}
-                  tooltip="Products & Services"
+                  tooltip="Inventory"
                 >
                   <Link href="/dashboard/products">
                     <Package className="size-4" />
-                    <span>Products</span>
+                    <span>Inventory</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

@@ -106,6 +106,15 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
   const taxAmount = subtotal * (taxPercent / 100);
   const total = subtotal + taxAmount;
 
+  const itemMeetsMinimumPrice = (item: InvoiceItemInput) => {
+    if (!item.product_id || !item.base_price) return true;
+    const quantity = Number(item.quantity) || 0;
+    if (quantity <= 0) return true;
+    const netUnitPrice =
+      (quantity * Number(item.unit_price) - Number(item.discount ?? 0)) / quantity;
+    return netUnitPrice >= Number(item.base_price);
+  };
+
   const updateItem = (index: number, field: keyof InvoiceItemInput, value: string | number) => {
     setItems((prev) => prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
   };
@@ -114,11 +123,21 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
     setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const addItemFromProduct = (product: { id: string; name: string; unit_price: number }) => {
+  const addItemFromProduct = (product: {
+    id: string;
+    name: string;
+    item_type: string;
+    base_price: number;
+    stock_quantity: number;
+    unit_price: number;
+  }) => {
     setItems((prev) => [
       ...prev,
       {
         product_id: product.id,
+        item_type: product.item_type,
+        base_price: product.base_price,
+        stock_quantity: product.stock_quantity,
         description: product.name,
         quantity: 1,
         unit_price: product.unit_price,
@@ -191,7 +210,13 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
     !!dueDate &&
     !!currency &&
     items.length > 0 &&
-    items.every((item) => item.description.trim() && item.quantity > 0 && item.unit_price > 0);
+    items.every(
+      (item) =>
+        item.description.trim() &&
+        item.quantity > 0 &&
+        item.unit_price > 0 &&
+        itemMeetsMinimumPrice(item),
+    );
 
   const handleSubmit = () => {
     if (!canSubmit) return;
@@ -388,9 +413,11 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
                     <div className="space-y-2">
                       <Label>Unit Price</Label>
                       <Input
-                        readOnly
-                        value={Number(item.unit_price).toLocaleString()}
-                        className="bg-muted"
+                        type="number"
+                        min={item.base_price ?? 0}
+                        step="any"
+                        value={item.unit_price || ""}
+                        onChange={(e) => updateItem(idx, "unit_price", Number(e.target.value) || 0)}
                       />
                     </div>
                     <div className="space-y-2">
@@ -417,6 +444,12 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
                       />
                     </div>
                   </div>
+                  {!itemMeetsMinimumPrice(item) && (
+                    <p className="text-destructive text-sm">
+                      Price after discount cannot be below the base price of{" "}
+                      {Number(item.base_price ?? 0).toLocaleString()}.
+                    </p>
+                  )}
                 </div>
               ))}
             </CardContent>

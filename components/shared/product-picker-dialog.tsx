@@ -7,6 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -41,6 +48,10 @@ const parsePriceInput = (raw: string): string => {
 export type ProductLinePayload = {
   id: string;
   name: string;
+  item_type: string;
+  base_price: number;
+  selling_price: number;
+  stock_quantity: number;
   unit_price: number;
 };
 
@@ -79,7 +90,10 @@ const ProductPickerDialog = ({
   const [addForm, setAddForm] = useState({
     name: "",
     description: "",
-    unit_price: "",
+    item_type: "product",
+    base_price: "",
+    selling_price: "",
+    stock_quantity: "",
     unit: "",
   });
 
@@ -113,24 +127,43 @@ const ProductPickerDialog = ({
     onAddLine({
       id: product.id,
       name: product.name,
-      unit_price: Number(product.unit_price),
+      item_type: product.item_type,
+      base_price: Number(product.base_price),
+      selling_price: Number(product.selling_price),
+      stock_quantity: Number(product.stock_quantity),
+      unit_price: Number(product.selling_price),
     });
     setPickerOpen(false);
     setSearch("");
   };
 
   const resetAddForm = () => {
-    setAddForm({ name: "", description: "", unit_price: "", unit: "" });
+    setAddForm({
+      name: "",
+      description: "",
+      item_type: "product",
+      base_price: "",
+      selling_price: "",
+      stock_quantity: "",
+      unit: "",
+    });
   };
 
   const handleAddProduct = () => {
     if (!addForm.name.trim() || !businessId) return;
-    const unitPrice = Number(addForm.unit_price);
+    const basePrice = Number(addForm.base_price);
+    const sellingPrice = Number(addForm.selling_price);
+    const stockQuantity = Number(addForm.stock_quantity);
     const payload: CreateProductPayload = {
       business_id: businessId,
       name: addForm.name.trim(),
       description: addForm.description.trim() || undefined,
-      unit_price: Number.isNaN(unitPrice) ? 0 : unitPrice,
+      item_type: addForm.item_type as "product" | "service",
+      base_price: Number.isNaN(basePrice) ? 0 : basePrice,
+      selling_price: Number.isNaN(sellingPrice) ? 0 : sellingPrice,
+      unit_price: Number.isNaN(sellingPrice) ? 0 : sellingPrice,
+      stock_quantity:
+        addForm.item_type === "service" || Number.isNaN(stockQuantity) ? 0 : stockQuantity,
       unit: addForm.unit.trim() || undefined,
     };
     createProduct.mutate(payload, {
@@ -140,7 +173,11 @@ const ProductPickerDialog = ({
           onAddLine({
             id: newProduct.id,
             name: newProduct.name,
-            unit_price: Number(newProduct.unit_price),
+            item_type: newProduct.item_type,
+            base_price: Number(newProduct.base_price),
+            selling_price: Number(newProduct.selling_price),
+            stock_quantity: Number(newProduct.stock_quantity),
+            unit_price: Number(newProduct.selling_price),
           });
         }
         setAddOpen(false);
@@ -243,12 +280,14 @@ const ProductPickerDialog = ({
                       <p className="truncate text-sm font-medium">{product.name}</p>
                       {(product.description || product.unit) && (
                         <p className="text-muted-foreground truncate text-xs">
-                          {[product.description, product.unit].filter(Boolean).join(" · ")}
+                          {[product.item_type, product.description, product.unit]
+                            .filter(Boolean)
+                            .join(" · ")}
                         </p>
                       )}
                     </div>
                     <span className="shrink-0 font-medium tabular-nums">
-                      {Number(product.unit_price).toLocaleString()}
+                      {Number(product.selling_price).toLocaleString()}
                     </span>
                   </button>
                 ))}
@@ -300,6 +339,21 @@ const ProductPickerDialog = ({
 
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
+              <Label>Item type *</Label>
+              <Select
+                value={addForm.item_type}
+                onValueChange={(value) => setAddForm((p) => ({ ...p, item_type: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="product">Product</SelectItem>
+                  <SelectItem value="service">Service</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
               <Label htmlFor="new-product-name">Name *</Label>
               <Input
                 id="new-product-name"
@@ -321,20 +375,37 @@ const ProductPickerDialog = ({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="new-product-price">Unit price *</Label>
+                <Label htmlFor="new-product-base-price">Base price *</Label>
                 <Input
-                  id="new-product-price"
+                  id="new-product-base-price"
                   inputMode="decimal"
-                  value={formatPriceDisplay(addForm.unit_price)}
+                  value={formatPriceDisplay(addForm.base_price)}
                   onChange={(e) =>
                     setAddForm((p) => ({
                       ...p,
-                      unit_price: parsePriceInput(e.target.value),
+                      base_price: parsePriceInput(e.target.value),
                     }))
                   }
                   placeholder="0"
                 />
               </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="new-product-selling-price">Selling price *</Label>
+                <Input
+                  id="new-product-selling-price"
+                  inputMode="decimal"
+                  value={formatPriceDisplay(addForm.selling_price)}
+                  onChange={(e) =>
+                    setAddForm((p) => ({
+                      ...p,
+                      selling_price: parsePriceInput(e.target.value),
+                    }))
+                  }
+                  placeholder="0"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="new-product-unit">Unit</Label>
                 <Input
@@ -344,7 +415,29 @@ const ProductPickerDialog = ({
                   placeholder="e.g. kg, piece, item, etc."
                 />
               </div>
+              {addForm.item_type === "product" && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="new-product-stock">Initial stock</Label>
+                  <Input
+                    id="new-product-stock"
+                    inputMode="decimal"
+                    value={addForm.stock_quantity}
+                    onChange={(e) =>
+                      setAddForm((p) => ({
+                        ...p,
+                        stock_quantity: e.target.value.replace(/[^\d.]/g, ""),
+                      }))
+                    }
+                    placeholder="0"
+                  />
+                </div>
+              )}
             </div>
+            {Number(addForm.selling_price || 0) < Number(addForm.base_price || 0) && (
+              <p className="text-destructive text-xs">
+                Selling price must be equal to or above the base price.
+              </p>
+            )}
           </div>
 
           <DialogFooter>
@@ -357,7 +450,11 @@ const ProductPickerDialog = ({
             </Button>
             <Button
               onClick={handleAddProduct}
-              disabled={!addForm.name.trim()}
+              disabled={
+                !addForm.name.trim() ||
+                !addForm.selling_price.trim() ||
+                Number(addForm.selling_price || 0) < Number(addForm.base_price || 0)
+              }
               isLoading={createProduct.isPending}
             >
               Add & Use Item

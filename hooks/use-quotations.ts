@@ -8,13 +8,7 @@ import { ToastAlert } from "@/config/toast";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
 import type { Tables } from "@/database.types";
 
-export type QuotationStatus =
-  | "draft"
-  | "sent"
-  | "viewed"
-  | "accepted"
-  | "expired"
-  | "cancelled";
+export type QuotationStatus = "draft" | "sent" | "viewed" | "accepted" | "expired" | "cancelled";
 
 export type QuotationItem = Tables<"quotation_items">;
 
@@ -31,6 +25,9 @@ export type Quotation = Tables<"quotations"> & {
 export type QuotationItemInput = {
   id?: string;
   product_id?: string | null;
+  item_type?: string;
+  base_price?: number;
+  stock_quantity?: number;
   description: string;
   quantity: number;
   unit_price: number;
@@ -240,7 +237,8 @@ export const useCreateQuotation = () => {
     onError: (error: Error) => {
       if (isPlanLimitError(error)) {
         ToastAlert.error("Plan limit reached. Upgrade to create more quotations.");
-        if (typeof window !== "undefined") window.location.assign(getSubscribeUrlForPlanLimit(error));
+        if (typeof window !== "undefined")
+          window.location.assign(getSubscribeUrlForPlanLimit(error));
         return;
       }
       ToastAlert.error(error.message || "Failed to create quotation");
@@ -256,7 +254,8 @@ export const useUpdateQuotation = () => {
 
       if (payload.client_id) updates.client_id = payload.client_id;
       if (payload.issue_date) updates.issue_date = payload.issue_date;
-      if (payload.valid_until !== undefined) updates.valid_until = payload.valid_until?.trim() || null;
+      if (payload.valid_until !== undefined)
+        updates.valid_until = payload.valid_until?.trim() || null;
       if (payload.currency) updates.currency = payload.currency;
       if (payload.template_id) updates.template_id = payload.template_id;
       if (payload.accent_color !== undefined)

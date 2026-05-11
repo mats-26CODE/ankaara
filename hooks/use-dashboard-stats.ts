@@ -13,6 +13,17 @@ export type InvoiceStats = {
   currency: string;
 };
 
+export type SalesStats = {
+  totalSales: number;
+  totalProfit: number;
+  todaySales: number;
+  todayProfit: number;
+};
+
+export type InventoryStats = {
+  inventoryValue: number;
+};
+
 const defaultStats: InvoiceStats = {
   total: 0,
   draft: 0,
@@ -23,12 +34,26 @@ const defaultStats: InvoiceStats = {
   currency: "TZS",
 };
 
+const defaultSalesStats: SalesStats = {
+  totalSales: 0,
+  totalProfit: 0,
+  todaySales: 0,
+  todayProfit: 0,
+};
+
+const defaultInventoryStats: InventoryStats = {
+  inventoryValue: 0,
+};
+
 export const DASHBOARD_STATS_QUERY_KEY = ["dashboard-stats"] as const;
 
 const fetchDashboardStats = async (
   userId: string | undefined,
+  businessId?: string | null,
 ): Promise<{
   invoiceStats: InvoiceStats;
+  salesStats: SalesStats;
+  inventoryStats: InventoryStats;
   clientCount: number;
   productCount: number;
   quotationCount: number;
@@ -36,6 +61,8 @@ const fetchDashboardStats = async (
   if (!userId) {
     return {
       invoiceStats: defaultStats,
+      salesStats: defaultSalesStats,
+      inventoryStats: defaultInventoryStats,
       clientCount: 0,
       productCount: 0,
       quotationCount: 0,
@@ -44,14 +71,19 @@ const fetchDashboardStats = async (
 
   const supabase = createClient();
 
-  const { data: businesses } = await supabase
-    .from("businesses")
-    .select("id, currency")
-    .eq("owner_id", userId);
+  let businessesQuery = supabase.from("businesses").select("id, currency").eq("owner_id", userId);
+
+  if (businessId) {
+    businessesQuery = businessesQuery.eq("id", businessId);
+  }
+
+  const { data: businesses } = await businessesQuery;
 
   if (!businesses || businesses.length === 0) {
     return {
       invoiceStats: defaultStats,
+      salesStats: defaultSalesStats,
+      inventoryStats: defaultInventoryStats,
       clientCount: 0,
       productCount: 0,
       quotationCount: 0,
@@ -67,6 +99,9 @@ const fetchDashboardStats = async (
     .in("business_id", bizIds);
 
   const stats: InvoiceStats = { ...defaultStats, currency };
+  const salesStats: SalesStats = { ...defaultSalesStats };
+  const inventoryStats: InventoryStats = { ...defaultInventoryStats };
+  const today = new Date().toISOString().slice(0, 10);
 
   if (invoices) {
     stats.total = invoices.length;
@@ -81,6 +116,24 @@ const fetchDashboardStats = async (
     }
   }
 
+  const { data: sales } = await supabase
+    .from("sales")
+    .select("sale_date, total, profit")
+    .in("business_id", bizIds);
+
+  if (sales) {
+    for (const sale of sales) {
+      const total = Number(sale.total) || 0;
+      const profit = Number(sale.profit) || 0;
+      salesStats.totalSales += total;
+      salesStats.totalProfit += profit;
+      if (sale.sale_date === today) {
+        salesStats.todaySales += total;
+        salesStats.todayProfit += profit;
+      }
+    }
+  }
+
   const { count: clientCountResult } = await supabase
     .from("clients")
     .select("id", { count: "exact", head: true })
@@ -91,6 +144,20 @@ const fetchDashboardStats = async (
     .select("id", { count: "exact", head: true })
     .in("business_id", bizIds);
 
+  const { data: inventoryProducts } = await supabase
+    .from("products")
+    .select("base_price, stock_quantity")
+    .in("business_id", bizIds)
+    .eq("item_type", "product");
+
+  if (inventoryProducts) {
+    inventoryStats.inventoryValue = inventoryProducts.reduce(
+      (sum, product) =>
+        sum + (Number(product.base_price) || 0) * (Number(product.stock_quantity) || 0),
+      0,
+    );
+  }
+
   const { count: quotationCountResult } = await supabase
     .from("quotations")
     .select("id", { count: "exact", head: true })
@@ -98,22 +165,26 @@ const fetchDashboardStats = async (
 
   return {
     invoiceStats: stats,
+    salesStats,
+    inventoryStats,
     clientCount: clientCountResult || 0,
     productCount: productCountResult || 0,
     quotationCount: quotationCountResult || 0,
   };
 };
 
-export const useDashboardStats = (userId: string | undefined) => {
+export const useDashboardStats = (userId: string | undefined, businessId?: string | null) => {
   const { data, isLoading, refetch } = useQuery({
-    queryKey: [...DASHBOARD_STATS_QUERY_KEY, userId ?? "anon"],
-    queryFn: () => fetchDashboardStats(userId),
+    queryKey: [...DASHBOARD_STATS_QUERY_KEY, userId ?? "anon", businessId ?? "all"],
+    queryFn: () => fetchDashboardStats(userId, businessId),
     enabled: !!userId,
     staleTime: 60 * 1000,
   });
 
   return {
     invoiceStats: data?.invoiceStats ?? defaultStats,
+    salesStats: data?.salesStats ?? defaultSalesStats,
+    inventoryStats: data?.inventoryStats ?? defaultInventoryStats,
     clientCount: data?.clientCount ?? 0,
     productCount: data?.productCount ?? 0,
     quotationCount: data?.quotationCount ?? 0,

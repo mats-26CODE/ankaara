@@ -7,7 +7,10 @@ import {
   useCreateProduct,
   useUpdateProduct,
   useDeleteProduct,
+  useAdjustProductStock,
+  useInventoryMovements,
   type Product,
+  type ProductItemType,
 } from "@/hooks/use-products";
 import { useBusinesses } from "@/hooks/use-businesses";
 import { useCurrentBusinessId } from "@/lib/stores/business-store";
@@ -38,6 +41,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -46,6 +56,7 @@ import {
   MoreHorizontal,
   Pencil,
   Trash2,
+  PackagePlus,
   Building2,
   ChevronLeft,
   ChevronRight,
@@ -54,15 +65,37 @@ import {
 type FormState = {
   name: string;
   description: string;
-  unit_price: string;
+  item_type: ProductItemType;
+  base_price: string;
+  selling_price: string;
+  stock_quantity: string;
+  low_stock_threshold: string;
   unit: string;
+  sku: string;
 };
 
 const emptyForm: FormState = {
   name: "",
   description: "",
-  unit_price: "",
+  item_type: "product",
+  base_price: "",
+  selling_price: "",
+  stock_quantity: "",
+  low_stock_threshold: "",
   unit: "",
+  sku: "",
+};
+
+type StockFormState = {
+  quantity_delta: string;
+  movement_type: "adjustment" | "restock";
+  reason: string;
+};
+
+const emptyStockForm: StockFormState = {
+  quantity_delta: "",
+  movement_type: "restock",
+  reason: "",
 };
 
 const PAGE_SIZE = 10;
@@ -97,13 +130,22 @@ const ProductsPage = () => {
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
+  const adjustProductStock = useAdjustProductStock();
 
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [stockDialogOpen, setStockDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
+  const [stockProduct, setStockProduct] = useState<Product | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [stockForm, setStockForm] = useState<StockFormState>(emptyStockForm);
+  const {
+    movements,
+    loading: movementsLoading,
+    refetch: refetchMovements,
+  } = useInventoryMovements(stockProduct?.id ?? null);
 
   const total = totalCount ?? 0;
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -127,7 +169,9 @@ const ProductsPage = () => {
       (p) =>
         p.name.toLowerCase().includes(q) ||
         p.description?.toLowerCase().includes(q) ||
-        p.unit?.toLowerCase().includes(q),
+        p.unit?.toLowerCase().includes(q) ||
+        p.sku?.toLowerCase().includes(q) ||
+        p.item_type.toLowerCase().includes(q),
     );
   }, [products, search]);
 
@@ -142,8 +186,14 @@ const ProductsPage = () => {
     setForm({
       name: product.name || "",
       description: product.description || "",
-      unit_price: String(product.unit_price ?? ""),
+      item_type: (product.item_type as ProductItemType) || "product",
+      base_price: String(product.base_price ?? ""),
+      selling_price: String(product.selling_price ?? product.unit_price ?? ""),
+      stock_quantity: String(product.stock_quantity ?? ""),
+      low_stock_threshold:
+        product.low_stock_threshold == null ? "" : String(product.low_stock_threshold),
       unit: product.unit || "",
+      sku: product.sku || "",
     });
     setDialogOpen(true);
   };
@@ -153,18 +203,51 @@ const ProductsPage = () => {
     setDeleteDialogOpen(true);
   };
 
+  const openStock = (product: Product) => {
+    setStockProduct(product);
+    setStockForm(emptyStockForm);
+    setStockDialogOpen(true);
+  };
+
   const handleSubmit = () => {
     if (!form.name.trim()) return;
 
-    const unitPrice = Number(form.unit_price);
+    const itemType = form.item_type;
+    const basePrice = Number(form.base_price);
+    const sellingPrice = Number(form.selling_price);
+    const stockQuantity = Number(form.stock_quantity);
+    const lowStockThreshold = Number(form.low_stock_threshold);
+    if (
+      Number.isNaN(basePrice) ||
+      Number.isNaN(sellingPrice) ||
+      basePrice < 0 ||
+      sellingPrice < basePrice
+    ) {
+      return;
+    }
+
+    const productFields = {
+      name: form.name.trim(),
+      description: form.description.trim() || null,
+      item_type: itemType,
+      base_price: basePrice,
+      selling_price: sellingPrice,
+      unit_price: sellingPrice,
+      unit: form.unit.trim() || null,
+      sku: form.sku.trim() || null,
+      stock_quantity:
+        itemType === "service" ? 0 : Number.isNaN(stockQuantity) ? 0 : Math.max(0, stockQuantity),
+      low_stock_threshold:
+        itemType === "service" || Number.isNaN(lowStockThreshold)
+          ? null
+          : Math.max(0, lowStockThreshold),
+    };
+
     if (editingProduct) {
       updateProduct.mutate(
         {
           id: editingProduct.id,
-          name: form.name.trim(),
-          description: form.description.trim() || null,
-          unit_price: isNaN(unitPrice) ? 0 : unitPrice,
-          unit: form.unit.trim() || null,
+          ...productFields,
         },
         {
           onSuccess: () => {
@@ -178,10 +261,7 @@ const ProductsPage = () => {
       createProduct.mutate(
         {
           business_id: currentBusinessId,
-          name: form.name.trim(),
-          description: form.description.trim() || undefined,
-          unit_price: isNaN(unitPrice) ? 0 : unitPrice,
-          unit: form.unit.trim() || undefined,
+          ...productFields,
         },
         {
           onSuccess: () => {
@@ -191,6 +271,31 @@ const ProductsPage = () => {
         },
       );
     }
+  };
+
+  const handleAdjustStock = () => {
+    if (!stockProduct) return;
+    const rawQuantity = Number(stockForm.quantity_delta);
+    if (Number.isNaN(rawQuantity) || rawQuantity === 0) return;
+    const quantityDelta =
+      stockForm.movement_type === "restock" ? Math.abs(rawQuantity) : rawQuantity;
+
+    adjustProductStock.mutate(
+      {
+        product_id: stockProduct.id,
+        quantity_delta: quantityDelta,
+        movement_type: stockForm.movement_type,
+        reason: stockForm.reason.trim() || null,
+        unit_cost: Number(stockProduct.base_price) || null,
+      },
+      {
+        onSuccess: () => {
+          setStockForm(emptyStockForm);
+          refetch();
+          refetchMovements();
+        },
+      },
+    );
   };
 
   const handleDelete = () => {
@@ -204,7 +309,11 @@ const ProductsPage = () => {
     });
   };
 
-  const isMutating = createProduct.isPending || updateProduct.isPending || deleteProduct.isPending;
+  const isMutating =
+    createProduct.isPending ||
+    updateProduct.isPending ||
+    deleteProduct.isPending ||
+    adjustProductStock.isPending;
 
   if (bizLoading) {
     return (
@@ -237,9 +346,9 @@ const ProductsPage = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Products & Services</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Inventory</h1>
           <p className="text-muted-foreground text-sm">
-            Add items to reuse when creating invoices. For{" "}
+            Manage products, services, prices, and stock for{" "}
             <span className="font-medium">
               {businesses.find((b) => b.id === currentBusinessId)?.name ?? "your business"}
             </span>
@@ -248,7 +357,7 @@ const ProductsPage = () => {
         </div>
         <Button size="sm" onClick={openCreate}>
           <Plus className="mr-1 size-4" />
-          Add Product
+          Add Item
         </Button>
       </div>
 
@@ -273,7 +382,7 @@ const ProductsPage = () => {
             <div className="py-8 text-center">
               <p className="text-muted-foreground text-sm">
                 {products.length === 0
-                  ? "No products or services yet. Add items to use when creating invoices."
+                  ? "No products or services yet. Add inventory items to start selling."
                   : "No items match your search."}
               </p>
             </div>
@@ -282,22 +391,50 @@ const ProductsPage = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead className="hidden sm:table-cell">Description</TableHead>
-                  <TableHead>Unit Price</TableHead>
-                  <TableHead className="hidden md:table-cell">Unit</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead className="hidden md:table-cell">Base</TableHead>
+                  <TableHead>Selling</TableHead>
+                  <TableHead className="hidden lg:table-cell">Stock</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filtered.map((product) => (
                   <TableRow key={product.id}>
-                    <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell className="text-muted-foreground hidden max-w-[200px] truncate sm:table-cell">
-                      {product.description || "—"}
+                    <TableCell>
+                      <div className="space-y-1">
+                        <p className="font-medium">{product.name}</p>
+                        <p className="text-muted-foreground max-w-[220px] truncate text-xs">
+                          {[product.sku, product.description, product.unit]
+                            .filter(Boolean)
+                            .join(" · ") || "—"}
+                        </p>
+                      </div>
                     </TableCell>
-                    <TableCell>{Number(product.unit_price).toLocaleString()}</TableCell>
-                    <TableCell className="text-muted-foreground hidden md:table-cell">
-                      {product.unit || "—"}
+                    <TableCell>
+                      <Badge variant={product.item_type === "service" ? "secondary" : "default"}>
+                        {product.item_type === "service" ? "Service" : "Product"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {Number(product.base_price).toLocaleString()}
+                    </TableCell>
+                    <TableCell>{Number(product.selling_price).toLocaleString()}</TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      {product.item_type === "product" ? (
+                        <span
+                          className={
+                            product.low_stock_threshold != null &&
+                            Number(product.stock_quantity) <= Number(product.low_stock_threshold)
+                              ? "text-destructive font-medium"
+                              : undefined
+                          }
+                        >
+                          {Number(product.stock_quantity).toLocaleString()}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
@@ -311,6 +448,12 @@ const ProductsPage = () => {
                             <Pencil className="mr-2 size-4" />
                             Edit
                           </DropdownMenuItem>
+                          {product.item_type === "product" && (
+                            <DropdownMenuItem onClick={() => openStock(product)}>
+                              <PackagePlus className="mr-2 size-4" />
+                              Stock history
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem
                             onClick={() => openDelete(product)}
                             className="text-destructive focus:text-destructive"
@@ -378,6 +521,23 @@ const ProductsPage = () => {
 
           <div className="space-y-4 py-2">
             <div className="space-y-2">
+              <Label>Item Type *</Label>
+              <Select
+                value={form.item_type}
+                onValueChange={(value) =>
+                  setForm((p) => ({ ...p, item_type: value as ProductItemType }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="product">Product</SelectItem>
+                  <SelectItem value="service">Service</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="product-name">Name *</Label>
               <Input
                 id="product-name"
@@ -398,17 +558,31 @@ const ProductsPage = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="product-price">Unit Price *</Label>
+                <Label htmlFor="product-base-price">Base Price *</Label>
                 <Input
-                  id="product-price"
+                  id="product-base-price"
                   inputMode="decimal"
-                  value={formatPriceDisplay(form.unit_price)}
+                  value={formatPriceDisplay(form.base_price)}
                   onChange={(e) =>
-                    setForm((p) => ({ ...p, unit_price: parsePriceInput(e.target.value) }))
+                    setForm((p) => ({ ...p, base_price: parsePriceInput(e.target.value) }))
                   }
                   placeholder="0"
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="product-selling-price">Selling Price *</Label>
+                <Input
+                  id="product-selling-price"
+                  inputMode="decimal"
+                  value={formatPriceDisplay(form.selling_price)}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, selling_price: parsePriceInput(e.target.value) }))
+                  }
+                  placeholder="0"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="product-unit">Unit</Label>
                 <Input
@@ -418,7 +592,56 @@ const ProductsPage = () => {
                   placeholder="e.g. kg, piece, item, etc."
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="product-sku">SKU</Label>
+                <Input
+                  id="product-sku"
+                  value={form.sku}
+                  onChange={(e) => setForm((p) => ({ ...p, sku: e.target.value }))}
+                  placeholder="Optional"
+                />
+              </div>
             </div>
+            {form.item_type === "product" && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="product-stock">Current Stock</Label>
+                  <Input
+                    id="product-stock"
+                    inputMode="decimal"
+                    value={form.stock_quantity}
+                    onChange={(e) =>
+                      setForm((p) => ({
+                        ...p,
+                        stock_quantity: e.target.value.replace(/[^\d.-]/g, ""),
+                      }))
+                    }
+                    placeholder="0"
+                    disabled={!!editingProduct}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="product-low-stock">Low Stock Alert</Label>
+                  <Input
+                    id="product-low-stock"
+                    inputMode="decimal"
+                    value={form.low_stock_threshold}
+                    onChange={(e) =>
+                      setForm((p) => ({
+                        ...p,
+                        low_stock_threshold: e.target.value.replace(/[^\d.]/g, ""),
+                      }))
+                    }
+                    placeholder="Optional"
+                  />
+                </div>
+              </div>
+            )}
+            {Number(form.selling_price || 0) < Number(form.base_price || 0) && (
+              <p className="text-destructive text-sm">
+                Selling price must be equal to or above the base price.
+              </p>
+            )}
           </div>
 
           <DialogFooter>
@@ -431,12 +654,151 @@ const ProductsPage = () => {
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={!form.name.trim() || isMutating}
+              disabled={
+                !form.name.trim() ||
+                !form.selling_price.trim() ||
+                Number(form.selling_price || 0) < Number(form.base_price || 0) ||
+                isMutating
+              }
               isLoading={editingProduct ? updateProduct.isPending : createProduct.isPending}
             >
               {editingProduct ? "Save" : "Add"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Stock history / adjustment */}
+      <Dialog open={stockDialogOpen} onOpenChange={setStockDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Stock history</DialogTitle>
+            <DialogDescription>
+              Add stock or adjust quantity for{" "}
+              <span className="font-medium">{stockProduct?.name ?? "this product"}</span>.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5 py-2">
+            <div className="grid grid-cols-3 gap-3 rounded-lg border p-3">
+              <div>
+                <p className="text-muted-foreground text-xs">Current stock</p>
+                <p className="font-semibold">
+                  {Number(stockProduct?.stock_quantity ?? 0).toLocaleString()}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs">Base price</p>
+                <p className="font-semibold">
+                  {Number(stockProduct?.base_price ?? 0).toLocaleString()}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs">Selling price</p>
+                <p className="font-semibold">
+                  {Number(stockProduct?.selling_price ?? 0).toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Movement</Label>
+                <Select
+                  value={stockForm.movement_type}
+                  onValueChange={(value) =>
+                    setStockForm((p) => ({
+                      ...p,
+                      movement_type: value as "adjustment" | "restock",
+                    }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="restock">Add stock</SelectItem>
+                    <SelectItem value="adjustment">Adjustment</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="stock-quantity">Quantity Change</Label>
+                <Input
+                  id="stock-quantity"
+                  inputMode="decimal"
+                  value={stockForm.quantity_delta}
+                  onChange={(e) =>
+                    setStockForm((p) => ({
+                      ...p,
+                      quantity_delta: e.target.value.replace(/[^\d.-]/g, ""),
+                    }))
+                  }
+                  placeholder={stockForm.movement_type === "restock" ? "10" : "-2 or 5"}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="stock-reason">Reason</Label>
+              <Textarea
+                id="stock-reason"
+                value={stockForm.reason}
+                onChange={(e) => setStockForm((p) => ({ ...p, reason: e.target.value }))}
+                placeholder="e.g. Supplier restock, manual recount"
+                rows={2}
+              />
+            </div>
+
+            <Button
+              onClick={handleAdjustStock}
+              disabled={!stockForm.quantity_delta.trim() || adjustProductStock.isPending}
+              isLoading={adjustProductStock.isPending}
+              className="w-full"
+            >
+              Save Stock Movement
+            </Button>
+
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Recent movements</p>
+              <div className="max-h-56 space-y-2 overflow-y-auto">
+                {movementsLoading ? (
+                  <div className="flex justify-center py-4">
+                    <Spinner className="size-5" />
+                  </div>
+                ) : movements.length === 0 ? (
+                  <p className="text-muted-foreground rounded-md border p-3 text-sm">
+                    No stock movement recorded yet.
+                  </p>
+                ) : (
+                  movements.map((movement) => (
+                    <div key={movement.id} className="rounded-md border p-3 text-sm">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="font-medium capitalize">
+                          {movement.movement_type.replace("_", " ")}
+                        </span>
+                        <span
+                          className={
+                            Number(movement.quantity_delta) < 0
+                              ? "text-destructive font-medium"
+                              : "font-medium text-emerald-600"
+                          }
+                        >
+                          {Number(movement.quantity_delta) > 0 ? "+" : ""}
+                          {Number(movement.quantity_delta).toLocaleString()}
+                        </span>
+                      </div>
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        {Number(movement.quantity_before).toLocaleString()} -&gt;{" "}
+                        {Number(movement.quantity_after).toLocaleString()}
+                        {movement.reason ? ` · ${movement.reason}` : ""}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 

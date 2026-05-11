@@ -25,6 +25,9 @@ export type Invoice = Tables<"invoices"> & {
 export type InvoiceItemInput = {
   id?: string;
   product_id?: string | null;
+  item_type?: string;
+  base_price?: number;
+  stock_quantity?: number;
   description: string;
   quantity: number;
   unit_price: number;
@@ -234,7 +237,8 @@ export const useCreateInvoice = () => {
     onError: (error: Error) => {
       if (isPlanLimitError(error)) {
         ToastAlert.error("Plan limit reached. Upgrade to create more invoices.");
-        if (typeof window !== "undefined") window.location.assign(getSubscribeUrlForPlanLimit(error));
+        if (typeof window !== "undefined")
+          window.location.assign(getSubscribeUrlForPlanLimit(error));
         return;
       }
       ToastAlert.error(error.message || "Failed to create invoice");

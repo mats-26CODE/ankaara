@@ -7,7 +7,7 @@ import { ToastAlert } from "@/config/toast";
 import type { Tables } from "@/database.types";
 
 /**
- * App-facing profile shape. Normalized from DB row (phone_number → phone, image_url → avatar_url).
+ * App-facing profile shape. Normalized from DB row (image_url -> avatar_url).
  */
 export type Profile = {
   id: string;
@@ -38,7 +38,7 @@ const normalizeRow = (row: ProfileRow): Profile => ({
   id: row.id,
   full_name: row.full_name ?? null,
   email: row.email ?? null,
-  phone: row.phone ?? row.phone_number ?? null,
+  phone: row.phone ?? null,
   avatar_url: normalizeAvatarUrl(row.avatar_url ?? null, row.image_url),
   preferred_currency: row.preferred_currency ?? "TZS",
   onboarding_completed: row.onboarding_completed ?? false,
@@ -131,10 +131,7 @@ export const useUpdateProfile = () => {
         if (value !== undefined) fields[key] = value;
       }
 
-      const { error } = await supabase
-        .from("profiles")
-        .update(fields)
-        .eq("id", user.id);
+      const { error } = await supabase.from("profiles").update(fields).eq("id", user.id);
 
       if (error) throw error;
     },

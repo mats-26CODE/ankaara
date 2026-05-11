@@ -46,6 +46,9 @@ import {
   Check,
   ChevronDown,
   Zap,
+  ShoppingCart,
+  TrendingUp,
+  Package,
 } from "lucide-react";
 
 /**
@@ -70,8 +73,15 @@ const DashboardPage = () => {
   const { businesses, loading: businessesLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
   const { format: formatAmount } = useFormatAmount();
-  const { invoiceStats, clientCount, productCount, quotationCount, loading: statsLoading } =
-    useDashboardStats(user?.id);
+  const {
+    invoiceStats,
+    salesStats,
+    inventoryStats,
+    clientCount,
+    productCount,
+    quotationCount,
+    loading: statsLoading,
+  } = useDashboardStats(user?.id, currentBusinessId);
   const { data: subscription, isLoading: subscriptionLoading } = useCurrentSubscription(user?.id);
   const { data: plans } = useSubscriptionPlans();
   const currentPlanSlug = (subscription?.planSlug ?? "free") as SubscriptionPlanSlug;
@@ -245,18 +255,20 @@ const DashboardPage = () => {
         <CardContent>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
             <div className="space-y-1">
-              <p className="text-muted-foreground text-sm">Total Revenue</p>
+              <p className="text-muted-foreground text-sm">Total Sales</p>
               <p className="text-lg font-bold">
                 {statsLoading
                   ? "—"
-                  : formatAmount(invoiceStats.totalRevenue, {
+                  : formatAmount(salesStats.totalSales, {
                       decimalDigits: 0,
                     })}
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-muted-foreground text-sm">Invoices</p>
-              <p className="text-lg font-bold">{statsLoading ? "—" : invoiceStats.total}</p>
+              <p className="text-muted-foreground text-sm">Profit</p>
+              <p className="text-lg font-bold">
+                {statsLoading ? "—" : formatAmount(salesStats.totalProfit, { decimalDigits: 0 })}
+              </p>
             </div>
             <div className="space-y-1">
               <p className="text-muted-foreground text-sm">Clients</p>
@@ -285,88 +297,146 @@ const DashboardPage = () => {
         </CardContent>
       </Card>
 
-      {/* ────── Stats Grid ────── */}
+      {/* ────── Core POS Stats ────── */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Paid</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Profit</CardTitle>
+            <TrendingUp className="size-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {statsLoading ? "—" : formatAmount(salesStats.totalProfit, { decimalDigits: 0 })}
+            </div>
+            <p className="text-muted-foreground mt-1 text-xs">From recorded sales</p>
+          </CardContent>
+          <CardFooter>
+            <Button variant="outline" size="sm" asChild className="w-full">
+              <Link href="/dashboard/sales">View sales</Link>
+            </Button>
+          </CardFooter>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
+            <ShoppingCart className="size-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {statsLoading ? "—" : formatAmount(salesStats.totalSales, { decimalDigits: 0 })}
+            </div>
+            <p className="text-muted-foreground mt-1 text-xs">POS sales ledger</p>
+          </CardContent>
+          <CardFooter>
+            <Button variant="outline" size="sm" asChild className="w-full">
+              <Link href="/dashboard/sales/create">Record sale</Link>
+            </Button>
+          </CardFooter>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Inventory Value</CardTitle>
+            <Package className="size-4 text-violet-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {statsLoading
+                ? "—"
+                : formatAmount(inventoryStats.inventoryValue, { decimalDigits: 0 })}
+            </div>
+            <p className="text-muted-foreground mt-1 text-xs">Stock at base price</p>
+          </CardContent>
+          <CardFooter>
+            <Button variant="outline" size="sm" asChild className="w-full">
+              <Link href="/dashboard/products">Manage inventory</Link>
+            </Button>
+          </CardFooter>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Today's Sales</CardTitle>
+            <CheckCircle2 className="size-4 text-emerald-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {statsLoading ? "—" : formatAmount(salesStats.todaySales, { decimalDigits: 0 })}
+            </div>
+            <p className="text-muted-foreground mt-1 text-xs">Sales dated today</p>
+          </CardContent>
+          <CardFooter>
+            <Button variant="outline" size="sm" asChild className="w-full">
+              <Link href="/dashboard/sales">View timeline</Link>
+            </Button>
+          </CardFooter>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Today's Profit</CardTitle>
             <CheckCircle2 className="size-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{statsLoading ? "—" : invoiceStats.paid}</div>
-            <p className="text-muted-foreground mt-1 text-xs">Invoices collected</p>
+            <div className="text-2xl font-bold">
+              {statsLoading ? "—" : formatAmount(salesStats.todayProfit, { decimalDigits: 0 })}
+            </div>
+            <p className="text-muted-foreground mt-1 text-xs">Profit dated today</p>
           </CardContent>
           <CardFooter>
             <Button variant="outline" size="sm" asChild className="w-full">
-              <Link href="/dashboard/invoices?status=paid">View all</Link>
-            </Button>
-          </CardFooter>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sent</CardTitle>
-            <Send className="size-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{statsLoading ? "—" : invoiceStats.sent}</div>
-            <p className="text-muted-foreground mt-1 text-xs">Awaiting payment</p>
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" size="sm" asChild className="w-full">
-              <Link href="/dashboard/invoices?status=sent">View all</Link>
-            </Button>
-          </CardFooter>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Overdue</CardTitle>
-            <AlertTriangle className="text-destructive size-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{statsLoading ? "—" : invoiceStats.overdue}</div>
-            <p className="text-muted-foreground mt-1 text-xs">Need follow-up</p>
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" size="sm" asChild className="w-full">
-              <Link href="/dashboard/invoices?status=overdue">View all</Link>
-            </Button>
-          </CardFooter>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Drafts</CardTitle>
-            <Clock className="size-4 text-yellow-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{statsLoading ? "—" : invoiceStats.draft}</div>
-            <p className="text-muted-foreground mt-1 text-xs">Not yet sent</p>
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" size="sm" asChild className="w-full">
-              <Link href="/dashboard/invoices?status=draft">View all</Link>
-            </Button>
-          </CardFooter>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Quotations</CardTitle>
-            <Quote className="size-4 text-violet-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{statsLoading ? "—" : quotationCount}</div>
-            <p className="text-muted-foreground mt-1 text-xs">Total quotations</p>
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" size="sm" asChild className="w-full">
-              <Link href="/dashboard/quotations">View all</Link>
+              <Link href="/dashboard/sales">View sales</Link>
             </Button>
           </CardFooter>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Invoice Stats</CardTitle>
+          <CardDescription>Invoice status overview for the active business.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+            <Link href="/dashboard/invoices?status=paid" className="rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">Paid</p>
+                <CheckCircle2 className="size-4 text-green-600" />
+              </div>
+              <p className="mt-2 text-2xl font-bold">{statsLoading ? "—" : invoiceStats.paid}</p>
+            </Link>
+            <Link href="/dashboard/invoices?status=sent" className="rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">Sent</p>
+                <Send className="size-4 text-blue-600" />
+              </div>
+              <p className="mt-2 text-2xl font-bold">{statsLoading ? "—" : invoiceStats.sent}</p>
+            </Link>
+            <Link href="/dashboard/invoices?status=overdue" className="rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">Overdue</p>
+                <AlertTriangle className="text-destructive size-4" />
+              </div>
+              <p className="mt-2 text-2xl font-bold">{statsLoading ? "—" : invoiceStats.overdue}</p>
+            </Link>
+            <Link href="/dashboard/invoices?status=draft" className="rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">Drafts</p>
+                <Clock className="size-4 text-yellow-600" />
+              </div>
+              <p className="mt-2 text-2xl font-bold">{statsLoading ? "—" : invoiceStats.draft}</p>
+            </Link>
+            <Link href="/dashboard/invoices" className="rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">Total</p>
+                <FileText className="text-muted-foreground size-4" />
+              </div>
+              <p className="mt-2 text-2xl font-bold">{statsLoading ? "—" : invoiceStats.total}</p>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* ────── Quick Actions + Account Summary ────── */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -376,6 +446,12 @@ const DashboardPage = () => {
             <CardDescription>Common tasks and shortcuts</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link href="/dashboard/sales/create">
+                <ShoppingCart className="mr-2 size-4" />
+                Record Sale
+              </Link>
+            </Button>
             <Button variant="outline" className="w-full justify-start" asChild>
               <Link href="/dashboard/invoices/create">
                 <Plus className="mr-2 size-4" />

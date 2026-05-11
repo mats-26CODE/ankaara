@@ -10,8 +10,10 @@ import {
   useSendInvoice,
   type InvoiceStatus,
 } from "@/hooks/use-invoices";
+import { useConvertInvoiceToSale, useSaleByInvoice } from "@/hooks/use-sales";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Dialog,
   DialogContent,
@@ -23,8 +25,11 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { InvoiceTemplate } from "@/lib/invoice-templates/registry";
 import { ShareInvoiceDialog } from "@/components/shared/share-invoice-dialog";
-import { INVOICE_ELEMENT_ID, InvoiceExportButtons } from "@/components/shared/invoice-export-buttons";
-import { ArrowLeft, Pencil, Trash2, Share2, Quote } from "lucide-react";
+import {
+  INVOICE_ELEMENT_ID,
+  InvoiceExportButtons,
+} from "@/components/shared/invoice-export-buttons";
+import { ArrowLeft, Pencil, Trash2, Share2, Quote, ShoppingCart } from "lucide-react";
 import dayjs from "dayjs";
 
 const STATUS_CONFIG: Record<
@@ -63,10 +68,18 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params);
   const router = useRouter();
   const { invoice, loading, refetch } = useInvoice(id);
+  const {
+    sale: linkedSale,
+    loading: saleLoading,
+    refetch: refetchLinkedSale,
+  } = useSaleByInvoice(id);
   const deleteInvoice = useDeleteInvoice();
   const sendInvoice = useSendInvoice();
+  const convertInvoiceToSale = useConvertInvoiceToSale();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [convertDialogOpen, setConvertDialogOpen] = useState(false);
+  const [saleDate, setSaleDate] = useState(dayjs().format("YYYY-MM-DD"));
 
   if (loading) {
     return (
@@ -102,6 +115,7 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
     );
   const canShare = !isDraft || draftHasRequiredDetails;
   const shareUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/invoice/${invoice.id}`;
+  const canConvertToSale = invoice.status === "paid" && !linkedSale && !saleLoading;
 
   const handleDelete = () => {
     deleteInvoice.mutate(invoice.id, {
@@ -110,6 +124,22 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
         router.replace("/dashboard/invoices");
       },
     });
+  };
+
+  const handleConvertToSale = () => {
+    convertInvoiceToSale.mutate(
+      {
+        invoice_id: invoice.id,
+        sale_date: saleDate,
+      },
+      {
+        onSuccess: (sale) => {
+          setConvertDialogOpen(false);
+          refetchLinkedSale();
+          router.push(`/dashboard/sales/${sale.id}`);
+        },
+      },
+    );
   };
 
   return (
@@ -132,7 +162,7 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   {" · "}
                   <Link
                     href={`/dashboard/quotations/${invoice.quotation_id}`}
-                    className="inline-flex items-center gap-1 text-primary hover:underline"
+                    className="text-primary inline-flex items-center gap-1 hover:underline"
                   >
                     <Quote className="size-3.5" />
                     Linked quotation
@@ -150,6 +180,26 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
                 Edit
               </Link>
             </Button>
+          )}
+          {linkedSale ? (
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/dashboard/sales/${linkedSale.id}`}>
+                <ShoppingCart className="mr-1 size-4" />
+                View Sale
+              </Link>
+            </Button>
+          ) : (
+            invoice.status === "paid" && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setConvertDialogOpen(true)}
+                disabled={!canConvertToSale}
+              >
+                <ShoppingCart className="mr-1 size-4" />
+                Convert to Sale
+              </Button>
+            )
           )}
           <InvoiceExportButtons invoiceNumber={invoice.invoice_number} />
           <Button
@@ -229,6 +279,37 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
         onShare={() => sendInvoice.mutate(invoice.id, { onSuccess: () => refetch() })}
         invoiceElementId={INVOICE_ELEMENT_ID}
       />
+
+      {/* Convert to sale */}
+      <Dialog open={convertDialogOpen} onOpenChange={setConvertDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Convert invoice to sale</DialogTitle>
+            <DialogDescription>
+              This records the paid invoice as a sale and deducts stock for product items.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <DatePicker value={saleDate} onChange={setSaleDate} placeholder="Sale date" />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setConvertDialogOpen(false)}
+              disabled={convertInvoiceToSale.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConvertToSale}
+              disabled={!saleDate || convertInvoiceToSale.isPending}
+              isLoading={convertInvoiceToSale.isPending}
+            >
+              Convert
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
