@@ -8,11 +8,7 @@ import { useTranslation } from "@/hooks/use-translation";
 import Link from "next/link";
 import { useUser } from "@/hooks/use-user";
 import { Check, Users, Cloud, Zap, Mail, Loader2 } from "lucide-react";
-import {
-  PAYMENT_GATEWAY_NAME,
-  PAYMENT_GATEWAY_URL,
-  SUPPORT_EMAIL,
-} from "@/constants/values";
+import { PAYMENT_GATEWAY_NAME, PAYMENT_GATEWAY_URL, SUPPORT_EMAIL } from "@/constants/values";
 import {
   useSubscriptionPlans,
   formatPlanFeature,
@@ -47,38 +43,39 @@ const PricingSection = () => {
   const { data: plans, isLoading: plansLoading } = useSubscriptionPlans();
   const grouped = plans ? groupPlansByTier(plans) : { free: null, pro: [], business: [] };
   const [selectedProSlug, setSelectedProSlug] = useState<SubscriptionPlanSlug | null>(null);
-  const [selectedBusinessSlug, setSelectedBusinessSlug] = useState<SubscriptionPlanSlug | null>(null);
+  const [selectedBusinessSlug, setSelectedBusinessSlug] = useState<SubscriptionPlanSlug | null>(
+    null,
+  );
 
   useEffect(() => {
-    if (grouped.pro[0]) setSelectedProSlug((prev) => prev ?? (grouped.pro[0].slug as SubscriptionPlanSlug));
-    if (grouped.business[0]) setSelectedBusinessSlug((prev) => prev ?? (grouped.business[0].slug as SubscriptionPlanSlug));
+    if (grouped.pro[0])
+      setSelectedProSlug((prev) => prev ?? (grouped.pro[0].slug as SubscriptionPlanSlug));
+    if (grouped.business[0])
+      setSelectedBusinessSlug((prev) => prev ?? (grouped.business[0].slug as SubscriptionPlanSlug));
   }, [plans]);
 
   const formatPrice = (amount: number | null, currency: string | null) => {
     if (amount === null || amount === undefined) return null;
     if (amount === 0) return "$0";
-    const symbol = currency === "USD" ? "$" : currency ?? "$";
+    const symbol = currency === "USD" ? "$" : (currency ?? "$");
     return `${symbol}${Number(amount).toFixed(2)}`;
   };
 
   if (plansLoading || !plans?.length) {
     return (
-      <section
-        id="pricing"
-        className="border-border/60 bg-muted/20 border-t px-4 py-12 md:py-16"
-      >
+      <section id="pricing" className="border-border/60 bg-muted/20 border-t px-4 py-12 md:py-16">
         <div className="container mx-auto w-full md:max-w-6xl">
-          <h2 className="text-foreground font-brand mb-12 text-center text-2xl font-semibold capitalize md:mb-16 md:text-4xl xl:text-5xl">
+          <h2 className="text-foreground mb-12 text-center text-2xl font-semibold capitalize md:mb-16 md:text-3xl xl:text-4xl">
             {t("landing.pricing.title")}
           </h2>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
             {[1, 2, 3].map((i) => (
               <Card
                 key={i}
-                className="flex flex-col overflow-hidden rounded-2xl border-2 border-muted"
+                className="border-muted flex flex-col overflow-hidden rounded-2xl border-2"
               >
                 <CardHeader className="pb-4">
-                  <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                  <div className="bg-muted mb-2 flex h-10 w-10 items-center justify-center rounded-lg">
                     <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
                   </div>
                   <div className="bg-muted h-6 w-32 rounded" />
@@ -88,10 +85,7 @@ const PricingSection = () => {
                 <CardContent className="flex flex-1 flex-col pt-0">
                   <ul className="flex-1 space-y-3">
                     {[1, 2, 3, 4].map((j) => (
-                      <li
-                        key={j}
-                        className="bg-muted h-4 w-full rounded"
-                      />
+                      <li key={j} className="bg-muted h-4 w-full rounded" />
                     ))}
                   </ul>
                   <div className="bg-muted mt-6 h-12 w-full rounded-lg" />
@@ -105,12 +99,9 @@ const PricingSection = () => {
   }
 
   return (
-    <section
-      id="pricing"
-      className="border-border/60 bg-muted/20 border-t px-4 py-12 md:py-16"
-    >
+    <section id="pricing" className="border-border/60 bg-muted/20 border-t px-4 py-12 md:py-16">
       <div className="container mx-auto w-full md:max-w-6xl">
-        <h2 className="text-foreground font-brand mb-12 text-center text-2xl font-semibold capitalize md:mb-16 md:text-4xl xl:text-5xl">
+        <h2 className="text-foreground mb-12 text-center text-2xl font-semibold capitalize md:mb-16 md:text-3xl xl:text-4xl">
           {t("landing.pricing.title")}
         </h2>
 
@@ -124,21 +115,24 @@ const PricingSection = () => {
               return (
                 <Card
                   key="free"
-                  className="relative flex flex-col overflow-hidden rounded-2xl border-2 border-muted bg-card shadow-xs"
+                  className="border-muted bg-card relative flex flex-col overflow-hidden rounded-2xl border-2 shadow-xs"
                 >
                   <CardHeader className="pb-4">
                     <div className="mb-2 flex items-center gap-2">
                       <span className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-lg">
                         <Icon className="h-5 w-5" />
                       </span>
-                      <CardTitle className="text-xl font-semibold md:text-2xl">{plan.name}</CardTitle>
+                      <CardTitle className="text-xl font-semibold md:text-2xl">
+                        {plan.name}
+                      </CardTitle>
                     </div>
                     <p className="text-muted-foreground text-sm">
-                      {plan.description ?? t(`landing.pricing.${tier}.description`)}
+                      {t(`landing.pricing.${tier}.description`)}
                     </p>
                     <div className="flex items-baseline gap-1 pt-2">
                       <span className="text-foreground text-3xl font-bold md:text-4xl">
-                        {formatPrice(plan.price_amount, plan.price_currency) ?? t(`landing.pricing.${tier}.price`)}
+                        {formatPrice(plan.price_amount, plan.price_currency) ??
+                          t(`landing.pricing.${tier}.price`)}
                       </span>
                     </div>
                   </CardHeader>
@@ -146,13 +140,19 @@ const PricingSection = () => {
                     <ul className="flex-1 space-y-3">
                       {plan.features.length > 0
                         ? plan.features.map((f) => (
-                            <li key={f.id} className="text-muted-foreground flex items-start gap-2 text-sm">
+                            <li
+                              key={f.id}
+                              className="text-muted-foreground flex items-start gap-2 text-sm"
+                            >
                               <Check className="text-primary mt-0.5 h-4 w-4 shrink-0" />
                               <span>{formatPlanFeature(f)}</span>
                             </li>
                           ))
                         : [0, 1, 2, 3].map((i) => (
-                            <li key={i} className="text-muted-foreground flex items-start gap-2 text-sm">
+                            <li
+                              key={i}
+                              className="text-muted-foreground flex items-start gap-2 text-sm"
+                            >
                               <Check className="text-primary mt-0.5 h-4 w-4 shrink-0" />
                               <span>{t(`landing.pricing.${tier}.features.${i}`)}</span>
                             </li>
@@ -174,7 +174,10 @@ const PricingSection = () => {
               setSelectedSlug: (s: SubscriptionPlanSlug) => void,
             ) => {
               if (tierPlans.length === 0) return null;
-              const activeSlug = selectedSlug && tierPlans.some((p) => p.slug === selectedSlug) ? selectedSlug : (tierPlans[0]?.slug as SubscriptionPlanSlug);
+              const activeSlug =
+                selectedSlug && tierPlans.some((p) => p.slug === selectedSlug)
+                  ? selectedSlug
+                  : (tierPlans[0]?.slug as SubscriptionPlanSlug);
               const activePlan = tierPlans.find((p) => p.slug === activeSlug) ?? tierPlans[0]!;
               const Icon = PLAN_TIER_ICONS[tier];
               const popular = tier === "pro";
@@ -201,10 +204,18 @@ const PricingSection = () => {
                       <span className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-lg">
                         <Icon className="h-5 w-5" />
                       </span>
-                      <CardTitle className="text-xl font-semibold md:text-2xl">{tierLabel}</CardTitle>
+                      <CardTitle className="text-xl font-semibold md:text-2xl">
+                        {tierLabel}
+                      </CardTitle>
                     </div>
-                    <p className="text-muted-foreground text-sm">{t(`landing.pricing.${tier}.description`)}</p>
-                    <Tabs value={activeSlug} onValueChange={(v) => setSelectedSlug(v as SubscriptionPlanSlug)} className="mt-3 w-full">
+                    <p className="text-muted-foreground text-sm">
+                      {t(`landing.pricing.${tier}.description`)}
+                    </p>
+                    <Tabs
+                      value={activeSlug}
+                      onValueChange={(v) => setSelectedSlug(v as SubscriptionPlanSlug)}
+                      className="mt-3 w-full"
+                    >
                       <TabsList className="grid w-full grid-cols-3">
                         {tierPlans.map((p) => (
                           <TabsTrigger key={p.id} value={p.slug} className="text-xs sm:text-sm">
@@ -213,15 +224,24 @@ const PricingSection = () => {
                         ))}
                       </TabsList>
                       {tierPlans.map((p) => (
-                        <TabsContent key={p.id} value={p.slug} className="mt-3 focus-visible:outline-none">
+                        <TabsContent
+                          key={p.id}
+                          value={p.slug}
+                          className="mt-3 focus-visible:outline-none"
+                        >
                           {p.is_contact_sales ? (
-                            <p className="text-foreground text-lg font-semibold">{t("landing.pricing.contactUs")}</p>
+                            <p className="text-foreground text-lg font-semibold">
+                              {t("landing.pricing.contactUs")}
+                            </p>
                           ) : (
                             <div className="flex items-baseline gap-1">
                               <span className="text-foreground text-2xl font-bold md:text-3xl">
-                                {formatPrice(p.price_amount, p.price_currency) ?? t(`landing.pricing.${tier}.price`)}
+                                {formatPrice(p.price_amount, p.price_currency) ??
+                                  t(`landing.pricing.${tier}.price`)}
                               </span>
-                              <span className="text-muted-foreground">{getPeriodSuffix(p.billing_interval)}</span>
+                              <span className="text-muted-foreground">
+                                {getPeriodSuffix(p.billing_interval)}
+                              </span>
                             </div>
                           )}
                         </TabsContent>
@@ -232,13 +252,19 @@ const PricingSection = () => {
                     <ul className="flex-1 space-y-3">
                       {activePlan.features.length > 0
                         ? activePlan.features.map((f) => (
-                            <li key={f.id} className="text-muted-foreground flex items-start gap-2 text-sm">
+                            <li
+                              key={f.id}
+                              className="text-muted-foreground flex items-start gap-2 text-sm"
+                            >
                               <Check className="text-primary mt-0.5 h-4 w-4 shrink-0" />
                               <span>{formatPlanFeature(f)}</span>
                             </li>
                           ))
                         : [0, 1, 2, 3].map((i) => (
-                            <li key={i} className="text-muted-foreground flex items-start gap-2 text-sm">
+                            <li
+                              key={i}
+                              className="text-muted-foreground flex items-start gap-2 text-sm"
+                            >
                               <Check className="text-primary mt-0.5 h-4 w-4 shrink-0" />
                               <span>{t(`landing.pricing.${tier}.features.${i}`)}</span>
                             </li>
@@ -262,7 +288,12 @@ const PricingSection = () => {
                         </a>
                       </Button>
                     ) : authLoading ? (
-                      <Button variant={popular ? "default" : "outline"} className={`mt-6 w-full rounded-lg py-6 font-medium ${popular ? "bg-primary" : ""}`} size="lg" disabled>
+                      <Button
+                        variant={popular ? "default" : "outline"}
+                        className={`mt-6 w-full rounded-lg py-6 font-medium ${popular ? "bg-primary" : ""}`}
+                        size="lg"
+                        disabled
+                      >
                         <Loader2 className="h-4 w-4 animate-spin" />
                         {cta}
                       </Button>
@@ -273,7 +304,11 @@ const PricingSection = () => {
                         className={`mt-6 w-full rounded-lg py-6 font-medium ${popular ? "bg-primary" : ""}`}
                         size="lg"
                       >
-                        {user ? <Link href={subscribeHref}>{cta}</Link> : <Link href={loginHref}>{cta}</Link>}
+                        {user ? (
+                          <Link href={subscribeHref}>{cta}</Link>
+                        ) : (
+                          <Link href={loginHref}>{cta}</Link>
+                        )}
                       </Button>
                     )}
                   </CardContent>

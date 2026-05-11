@@ -1,22 +1,22 @@
 "use client";
 
 import { useTranslation } from "@/hooks/use-translation";
-import { FileText, Send, CreditCard, BarChart3 } from "lucide-react";
+import { BarChart3, FileText, PackageCheck, ShoppingCart } from "lucide-react";
 
 const SimplePowerfulSection = () => {
   const { t } = useTranslation();
 
   const items = [
     {
-      icon: FileText,
+      icon: ShoppingCart,
       text: t("landing.simpleSection.createInvoices"),
     },
     {
-      icon: Send,
+      icon: PackageCheck,
       text: t("landing.simpleSection.sendAndTrack"),
     },
     {
-      icon: CreditCard,
+      icon: FileText,
       text: t("landing.simpleSection.acceptPayments"),
     },
     {
@@ -28,7 +28,7 @@ const SimplePowerfulSection = () => {
   return (
     <section id="features" className="border-border/60 bg-muted/20 border-t px-4 py-12 md:py-16">
       <div className="container mx-auto w-full md:max-w-4xl">
-        <h2 className="text-foreground font-brand mb-12 text-center text-2xl font-semibold capitalize md:mb-16 md:text-4xl xl:text-5xl">
+        <h2 className="text-foreground mb-12 text-center text-2xl font-semibold capitalize md:mb-16 md:text-3xl xl:text-4xl">
           {t("landing.simpleSection.title")}
         </h2>
         <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:gap-8">

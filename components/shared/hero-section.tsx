@@ -4,13 +4,27 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/use-translation";
 import { useUser } from "@/hooks/use-user";
 import Link from "next/link";
-import { Star } from "lucide-react";
+import { Quote, Star, TrendingUp } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage, AvatarGroup } from "../ui/avatar";
-import { Card, CardContent } from "@/components/ui/card";
 
 const HeroSection = () => {
   const { t } = useTranslation();
   const { user } = useUser();
+  const testimonialKeys = ["one", "two", "three"] as const;
+  const trustMetrics = [
+    {
+      value: t("landing.trustMetrics.salesValue"),
+      label: t("landing.trustMetrics.salesLabel"),
+    },
+    {
+      value: t("landing.trustMetrics.inventoryValue"),
+      label: t("landing.trustMetrics.inventoryLabel"),
+    },
+    {
+      value: t("landing.trustMetrics.reportsValue"),
+      label: t("landing.trustMetrics.reportsLabel"),
+    },
+  ];
 
   return (
     <section className="relative overflow-hidden">
@@ -82,28 +96,65 @@ const HeroSection = () => {
         </div>
 
         {/* Trusted by + Testimonials */}
-        <div className="border-border/50 mt-14 border-t pt-8 md:mt-18">
-          <p className="text-muted-foreground mb-8 text-center text-xl font-medium">
-            {t("landing.trustedBy")}
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            {(["one", "two", "three"] as const).map((key) => (
-              <Card
-                key={key}
-                className="bg-card border-border w-full rounded-xl border p-1 shadow-xs md:w-auto"
-              >
-                <CardContent className="flex flex-col gap-4 p-4 md:px-4 md:py-3">
-                  <p className="text-foreground text-sm leading-relaxed md:text-base">
+        <div className="relative mt-14 overflow-hidden rounded-3xl border border-border/70 bg-card/70 p-4 shadow-sm backdrop-blur md:mt-18 md:p-6">
+          <div
+            className="from-primary/10 via-transparent to-accent/10 pointer-events-none absolute inset-0 bg-linear-to-br"
+            aria-hidden
+          />
+          <div className="relative space-y-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="text-center md:text-left">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+                  {t("landing.trustedBy")}
+                </p>
+                <p className="mt-2 text-sm text-muted-foreground">{t("landing.socialProof")}</p>
+              </div>
+
+              <div className="grid grid-cols-3 overflow-hidden rounded-2xl border bg-background/70 text-center">
+                {trustMetrics.map((metric) => (
+                  <div key={metric.label} className="border-r px-3 py-3 last:border-r-0">
+                    <p className="text-sm font-semibold text-foreground">{metric.value}</p>
+                    <p className="text-[11px] text-muted-foreground">{metric.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              {testimonialKeys.map((key, index) => (
+                <div
+                  key={key}
+                  className="group relative overflow-hidden rounded-2xl border bg-background/85 p-4 text-left shadow-xs transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+                >
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <Star
+                          key={i}
+                          className="h-3.5 w-3.5 fill-amber-400 text-amber-400"
+                          aria-hidden
+                        />
+                      ))}
+                    </div>
+                    {index === 0 ? (
+                      <TrendingUp className="h-4 w-4 text-primary" aria-hidden />
+                    ) : (
+                      <Quote className="h-4 w-4 text-primary" aria-hidden />
+                    )}
+                  </div>
+
+                  <p className="text-sm leading-relaxed text-foreground">
                     &ldquo;{t(`landing.testimonials.${key}.quoteStart`)}
-                    <strong className="font-semibold">
+                    <strong className="font-semibold text-primary">
                       {t(`landing.testimonials.${key}.quoteHighlight`)}
                     </strong>
                     {t(`landing.testimonials.${key}.quoteEnd`)}&rdquo;
                   </p>
-                  <div className="mt-auto flex items-center gap-3">
-                    <Avatar className="border-border size-10 shrink-0 border">
+
+                  <div className="mt-5 flex items-center gap-3">
+                    <Avatar className="size-9 border border-border">
                       <AvatarImage src="" alt="" />
-                      <AvatarFallback className="bg-muted text-muted-foreground text-sm font-medium">
+                      <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
                         {t(`landing.testimonials.${key}.name`)
                           .split(" ")
                           .map((n) => n[0])
@@ -111,17 +162,17 @@ const HeroSection = () => {
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <p className="text-foreground truncate text-sm font-medium">
+                      <p className="truncate text-sm font-medium text-foreground">
                         {t(`landing.testimonials.${key}.name`)}
                       </p>
-                      <p className="text-muted-foreground truncate text-xs">
+                      <p className="truncate text-xs text-muted-foreground">
                         {t(`landing.testimonials.${key}.affiliation`)}
                       </p>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

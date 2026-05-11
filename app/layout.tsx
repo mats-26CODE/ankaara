@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Figtree, Pacifico } from "next/font/google";
+import { Figtree } from "next/font/google";
 import "./globals.css";
 import Providers from "@/providers/providers";
 import { AuthHashHandler } from "@/components/auth/auth-hash-handler";
@@ -8,12 +8,6 @@ import { APP_NAME } from "@/constants/values";
 
 const figtree = Figtree({
   variable: "--font-figtree",
-  subsets: ["latin"],
-});
-
-const pacifico = Pacifico({
-  variable: "--font-pacifico",
-  weight: "400",
   subsets: ["latin"],
 });
 
@@ -33,10 +27,7 @@ export default function RootLayout({
       <head>
         <meta name="apple-mobile-web-app-title" content="Ankaara" />
       </head>
-      <body
-        className={`${figtree.variable} ${pacifico.variable} antialiased`}
-        suppressHydrationWarning
-      >
+      <body className={`${figtree.variable} antialiased`} suppressHydrationWarning>
         <script
           dangerouslySetInnerHTML={{
             __html: `

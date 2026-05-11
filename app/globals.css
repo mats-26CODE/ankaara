@@ -5,7 +5,7 @@
 
 @theme inline {
   --font-sans: "Figtree", "Figtree Fallback", "sans-serif";
-  --font-brand: var(--font-pacifico);
+  --font-brand: var(--font-figtree), "Figtree", "Figtree Fallback", sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
