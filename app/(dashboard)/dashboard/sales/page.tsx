@@ -138,18 +138,18 @@ const SalesPage = () => {
                 className="pl-9"
               />
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex w-full items-center gap-3 lg:w-auto">
               <DatePicker
                 value={fromDate}
                 onChange={setFromDate}
                 placeholder="From date"
-                className="w-fit"
+                className="min-w-0 flex-1 lg:w-fit lg:flex-none"
               />
               <DatePicker
                 value={toDate}
                 onChange={setToDate}
                 placeholder="To date"
-                className="w-fit"
+                className="min-w-0 flex-1 lg:w-fit lg:flex-none"
               />
               {(fromDate || toDate) && (
                 <Button
@@ -158,7 +158,7 @@ const SalesPage = () => {
                     setFromDate("");
                     setToDate("");
                   }}
-                  className="w-fit"
+                  className="shrink-0"
                 >
                   <X className="size-4 text-red-400" />
                   Clear

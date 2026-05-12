@@ -311,7 +311,7 @@ const CreateQuotationPage = () => {
 
       {/* Template selection + small preview */}
       <Card className="border-primary/80 gap-2 border shadow-xs">
-        <CardHeader className="flex items-end justify-between pb-3">
+        <CardHeader className="flex flex-col items-start gap-3 pb-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <CardTitle className="text-base">Template</CardTitle>
             <p className="text-muted-foreground text-sm">
@@ -319,7 +319,7 @@ const CreateQuotationPage = () => {
             </p>
           </div>
 
-          <div>
+          <div className="w-full sm:w-auto">
             <Button
               type="button"
               variant="outline"

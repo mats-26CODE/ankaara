@@ -125,12 +125,12 @@ const ClientPickerDialog = ({
   return (
     <>
       {/* Trigger row: picker button + add client button */}
-      <div className="flex justify-between gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row">
         <Button
           type="button"
           variant="outline"
           onClick={() => setPickerOpen(true)}
-          className="basis-4/6 justify-start font-normal"
+          className="w-full min-w-0 justify-start font-normal sm:flex-1"
         >
           <User className="text-muted-foreground mr-2 size-4 shrink-0" />
           {selectedClient ? (
@@ -148,7 +148,7 @@ const ClientPickerDialog = ({
             setAddOpen(true);
           }}
           title="Add new client"
-          className="basis-auto"
+          className="w-full shrink-0 sm:w-auto"
         >
           <Plus className="size-4" />
           Add new client

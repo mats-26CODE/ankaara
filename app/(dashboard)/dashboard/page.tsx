@@ -115,17 +115,17 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="mt-4 space-y-6 md:mt-0">
       {/* ────── Welcome Header ────── */}
-      <div className="flex items-end justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-4xl">
             {getCasualGreeting()}
             {profile?.full_name?.trim() ? ` ${profile.full_name.trim().split(/\s+/)[0]}` : ""}
           </h1>
           <p className="text-muted-foreground">{t("dashboard.home.greetingSubtitle")}</p>
           {activeBusiness && (
-            <div className="flex items-center gap-2 pt-1">
+            <div className="flex flex-wrap items-center gap-2 pt-1">
               <span className="text-muted-foreground text-sm">Viewing:</span>
               <Badge variant="secondary" className="font-medium">
                 <Building2 className="mr-1 size-3.5" />
@@ -136,7 +136,7 @@ const DashboardPage = () => {
         </div>
 
         {/* Current subscription plan badge; upgrade CTA when on free */}
-        <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           {!subscriptionLoading && (
             <>
               <Badge
@@ -190,19 +190,19 @@ const DashboardPage = () => {
       {/* ────── Profile Card ────── */}
       <Card>
         <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
               <ProfileAvatar
                 name={profile?.full_name || undefined}
                 image={profile?.avatar_url}
                 size="xl"
                 className="border-border border-2"
               />
-              <div className="space-y-1">
-                <CardTitle className="text-2xl">
+              <div className="min-w-0 space-y-1">
+                <CardTitle className="text-xl wrap-break-word sm:text-2xl">
                   {profile?.full_name || profile?.email || "Your Account"}
                 </CardTitle>
-                <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
                   {profile?.email && <span>{profile.email}</span>}
                   {profile?.phone && (
                     <>
@@ -226,14 +226,20 @@ const DashboardPage = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center lg:w-auto lg:justify-end">
               {!businessesLoading && businesses.length > 0 && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="min-w-40 justify-between">
-                      <span className="flex items-center gap-2 truncate">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-between sm:min-w-40 lg:w-auto"
+                    >
+                      <span className="flex min-w-0 items-center gap-2 truncate">
                         <Building2 className="size-4 shrink-0" />
-                        {activeBusiness?.name ?? "Select business"}
+                        <span className="truncate">
+                          {activeBusiness?.name ?? "Select business"}
+                        </span>
                       </span>
                       <ChevronDown className="size-4 shrink-0 opacity-50" />
                     </Button>
@@ -255,7 +261,7 @@ const DashboardPage = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
-              <Button asChild variant="outline" size="sm">
+              <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
                 <Link href="/dashboard/settings">
                   <Settings className="mr-2 size-4" />
                   Settings

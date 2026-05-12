@@ -251,7 +251,7 @@ const QuotationsContent = () => {
                 router.replace(`${pathname}?${params.toString()}`, { scroll: false });
               }}
             >
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-full sm:w-[160px]">
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
@@ -325,9 +325,7 @@ const QuotationsContent = () => {
                       {dayjs(quo.issue_date).format("MMM D, YYYY")}
                     </TableCell>
                     <TableCell className="text-muted-foreground hidden md:table-cell">
-                      {quo.valid_until
-                        ? dayjs(quo.valid_until).format("MMM D, YYYY")
-                        : "—"}
+                      {quo.valid_until ? dayjs(quo.valid_until).format("MMM D, YYYY") : "—"}
                     </TableCell>
                     <TableCell className="text-right font-medium">
                       {format(Number(quo.total))}
@@ -427,8 +425,8 @@ const QuotationsContent = () => {
             <DialogTitle>Delete Quotation</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete{" "}
-              <span className="font-medium">{deletingQuotation?.quotation_number}</span>? This cannot
-              be undone.
+              <span className="font-medium">{deletingQuotation?.quotation_number}</span>? This
+              cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

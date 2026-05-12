@@ -197,14 +197,14 @@ const BusinessesSettingsPage = () => {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <CardHeader className="flex flex-col items-start gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle>Your Businesses</CardTitle>
             <CardDescription>
               Manage your businesses. Clients and invoices are scoped to the active business.
             </CardDescription>
           </div>
-          <Button size="sm" onClick={openCreate}>
+          <Button size="sm" onClick={openCreate} className="w-full sm:w-auto">
             <Plus className="mr-1 size-4" />
             Add Business
           </Button>

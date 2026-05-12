@@ -419,8 +419,12 @@ const NavBar = () => {
         <div className="flex items-center gap-2 md:hidden">
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu className="size-7" />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hover:text-foreground transition-all duration-200 hover:scale-105 hover:bg-neutral-50 md:hidden"
+              >
+                <Menu className="size-7 transition-all duration-200" />
                 <span className="sr-only">Open menu</span>
               </Button>
             </SheetTrigger>
@@ -573,7 +577,7 @@ const NavBar = () => {
           </Sheet>
         </div>
       </div>
-      <hr className="via-primary/20 h-0.5 bg-linear-to-r from-transparent to-transparent" />
+      <hr className="from-background to-background via-primary/20 h-0.5 bg-linear-to-r" />
     </nav>
   );
 };
