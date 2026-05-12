@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useUser, useLogout } from "@/hooks/use-user";
 import { useLanguage, translations } from "@/lib/stores/preferences-store";
 import { useTranslation } from "@/hooks/use-translation";
@@ -9,19 +9,211 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { Menu, Sun, Moon, LogOut, Languages } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import {
+  AlertTriangle,
+  Building2,
+  CheckCircle2,
+  Clock,
+  Eye,
+  FileText,
+  Languages,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Moon,
+  Package,
+  Palette,
+  Plus,
+  Quote,
+  Send,
+  ShoppingCart,
+  Sun,
+  User,
+  Users,
+  XCircle,
+} from "lucide-react";
 import Logo from "./logo";
 import { useTheme } from "@/lib/stores/preferences-store";
 import { ProfileAvatar } from "./profile-avatar";
+import { cn } from "@/lib/utils";
+
+type DashboardNavMatcher = (pathname: string, status: string | null) => boolean;
+
+interface DashboardNavItem {
+  label: string;
+  href: string;
+  Icon: LucideIcon;
+  isActive: DashboardNavMatcher;
+}
+
+interface DashboardNavGroup {
+  label: string;
+  items: DashboardNavItem[];
+}
+
+const DASHBOARD_MOBILE_NAV_GROUPS: DashboardNavGroup[] = [
+  {
+    label: "Main",
+    items: [
+      {
+        label: "Overview",
+        href: "/dashboard",
+        Icon: LayoutDashboard,
+        isActive: (pathname) => pathname === "/dashboard" || pathname === "/dashboard/",
+      },
+      {
+        label: "Sales",
+        href: "/dashboard/sales",
+        Icon: ShoppingCart,
+        isActive: (pathname) => pathname.startsWith("/dashboard/sales"),
+      },
+      {
+        label: "Inventory",
+        href: "/dashboard/products",
+        Icon: Package,
+        isActive: (pathname) => pathname === "/dashboard/products",
+      },
+      {
+        label: "Clients",
+        href: "/dashboard/clients",
+        Icon: Users,
+        isActive: (pathname) => pathname === "/dashboard/clients",
+      },
+      {
+        label: "Invoice Templates",
+        href: "/dashboard/settings/templates",
+        Icon: Palette,
+        isActive: (pathname) => pathname === "/dashboard/settings/templates",
+      },
+    ],
+  },
+  {
+    label: "Invoices",
+    items: [
+      {
+        label: "All Invoices",
+        href: "/dashboard/invoices",
+        Icon: FileText,
+        isActive: (pathname, status) => pathname === "/dashboard/invoices" && !status,
+      },
+      {
+        label: "Create Invoice",
+        href: "/dashboard/invoices/create",
+        Icon: Plus,
+        isActive: (pathname) => pathname === "/dashboard/invoices/create",
+      },
+      {
+        label: "Drafts",
+        href: "/dashboard/invoices?status=draft",
+        Icon: Clock,
+        isActive: (pathname, status) => pathname === "/dashboard/invoices" && status === "draft",
+      },
+      {
+        label: "Sent",
+        href: "/dashboard/invoices?status=sent",
+        Icon: Send,
+        isActive: (pathname, status) => pathname === "/dashboard/invoices" && status === "sent",
+      },
+      {
+        label: "Paid",
+        href: "/dashboard/invoices?status=paid",
+        Icon: CheckCircle2,
+        isActive: (pathname, status) => pathname === "/dashboard/invoices" && status === "paid",
+      },
+      {
+        label: "Overdue",
+        href: "/dashboard/invoices?status=overdue",
+        Icon: AlertTriangle,
+        isActive: (pathname, status) => pathname === "/dashboard/invoices" && status === "overdue",
+      },
+    ],
+  },
+  {
+    label: "Quotations",
+    items: [
+      {
+        label: "All Quotations",
+        href: "/dashboard/quotations",
+        Icon: Quote,
+        isActive: (pathname, status) => pathname === "/dashboard/quotations" && !status,
+      },
+      {
+        label: "Create Quotation",
+        href: "/dashboard/quotations/create",
+        Icon: Plus,
+        isActive: (pathname) => pathname === "/dashboard/quotations/create",
+      },
+      {
+        label: "Drafts",
+        href: "/dashboard/quotations?status=draft",
+        Icon: Clock,
+        isActive: (pathname, status) => pathname === "/dashboard/quotations" && status === "draft",
+      },
+      {
+        label: "Sent",
+        href: "/dashboard/quotations?status=sent",
+        Icon: Send,
+        isActive: (pathname, status) => pathname === "/dashboard/quotations" && status === "sent",
+      },
+      {
+        label: "Viewed",
+        href: "/dashboard/quotations?status=viewed",
+        Icon: Eye,
+        isActive: (pathname, status) => pathname === "/dashboard/quotations" && status === "viewed",
+      },
+      {
+        label: "Accepted",
+        href: "/dashboard/quotations?status=accepted",
+        Icon: CheckCircle2,
+        isActive: (pathname, status) =>
+          pathname === "/dashboard/quotations" && status === "accepted",
+      },
+      {
+        label: "Expired",
+        href: "/dashboard/quotations?status=expired",
+        Icon: AlertTriangle,
+        isActive: (pathname, status) =>
+          pathname === "/dashboard/quotations" && status === "expired",
+      },
+      {
+        label: "Cancelled",
+        href: "/dashboard/quotations?status=cancelled",
+        Icon: XCircle,
+        isActive: (pathname, status) =>
+          pathname === "/dashboard/quotations" && status === "cancelled",
+      },
+    ],
+  },
+  {
+    label: "Account",
+    items: [
+      {
+        label: "Profile",
+        href: "/dashboard/settings/profile",
+        Icon: User,
+        isActive: (pathname) => pathname === "/dashboard/settings/profile",
+      },
+      {
+        label: "Businesses",
+        href: "/dashboard/settings/businesses",
+        Icon: Building2,
+        isActive: (pathname) => pathname === "/dashboard/settings/businesses",
+      },
+    ],
+  },
+];
 
 const NavBar = () => {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user } = useUser();
   const logout = useLogout();
   const { language, setLanguage } = useLanguage();
   const { t } = useTranslation();
   const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const status = searchParams.get("status");
 
   const isLanding =
     pathname === "/" ||
@@ -48,9 +240,41 @@ const NavBar = () => {
   const getThemeTitle = () =>
     theme === "light" ? "Dark theme (click to switch)" : "Light theme (click to switch)";
 
+  const renderDashboardMobileNav = () => (
+    <div className="space-y-5 border-b pb-5">
+      {DASHBOARD_MOBILE_NAV_GROUPS.map((group) => (
+        <div key={group.label}>
+          <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
+            {group.label}
+          </p>
+          <nav className="flex flex-col gap-0.5" aria-label={`${group.label} dashboard navigation`}>
+            {group.items.map(({ href, label, Icon, isActive }) => {
+              const active = isActive(pathname, status);
+
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={handleLinkClick}
+                  className={cn(
+                    "text-foreground flex items-center gap-3 rounded-lg px-2 py-3 text-base transition-colors",
+                    active ? "bg-muted text-primary font-semibold" : "hover:bg-muted/80",
+                  )}
+                >
+                  <Icon className="size-4 shrink-0 opacity-90" />
+                  {label}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <nav className="bg-background/95 supports-backdrop-filter:bg-background/60 sticky top-0 z-50 w-full backdrop-blur">
-      <div className="container mx-auto flex h-20 w-full items-center justify-between px-4 md:max-w-6xl">
+      <div className="container mx-auto flex w-full items-center justify-between px-4 py-4 md:max-w-6xl">
         <div className="flex items-center gap-4 md:gap-8">
           <Logo size="sm" />
 
@@ -200,46 +424,68 @@ const NavBar = () => {
                 <span className="sr-only">Open menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-full! p-0 sm:max-w-full!">
-              <SheetHeader className="px-6 pt-6 pb-4">
+            <SheetContent
+              side="right"
+              className="flex h-full max-h-dvh w-full! flex-col gap-0 overflow-hidden p-0 sm:max-w-full!"
+            >
+              <SheetHeader className="shrink-0 border-b px-6 pt-6 pb-4">
                 <SheetTitle>Menu</SheetTitle>
               </SheetHeader>
-              <div className="flex flex-col gap-4 px-6 pb-6">
-                {isLanding
-                  ? navLinks.map((link) => {
-                      const isActive = !link.href.startsWith("/#") && pathname === link.href;
-                      return (
-                        <Link
-                          key={link.href}
-                          href={link.href}
-                          onClick={handleLinkClick}
-                          className={`py-2 text-base transition-colors ${
-                            isActive
-                              ? "text-primary font-medium"
-                              : "text-muted-foreground hover:text-foreground"
-                          }`}
-                        >
-                          {link.label}
-                        </Link>
-                      );
-                    })
-                  : dashboardLinks.map((link) => (
-                      <Link
-                        key={link.href}
-                        href={link.href}
-                        onClick={handleLinkClick}
-                        className={`py-2 text-base transition-colors ${
-                          pathname === link.href
-                            ? "text-primary font-medium"
-                            : "text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
-                        {link.label}
-                      </Link>
-                    ))}
-                <div className="mt-4 space-y-4 border-t pt-4">
-                  {/* Theme & Language - Mobile Menu */}
-                  <div className="flex items-center justify-between">
+
+              <div className="flex min-h-0 flex-1 flex-col">
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-4">
+                  <div className="flex flex-col gap-5 pb-2">
+                    {user ? renderDashboardMobileNav() : null}
+
+                    {isLanding ? (
+                      <div className="flex flex-col gap-1">
+                        <p className="text-muted-foreground mb-1 text-xs font-semibold tracking-wide uppercase">
+                          Explore
+                        </p>
+                        {navLinks.map((link) => {
+                          const isActive = !link.href.startsWith("/#") && pathname === link.href;
+
+                          return (
+                            <Link
+                              key={link.href}
+                              href={link.href}
+                              onClick={handleLinkClick}
+                              className={cn(
+                                "rounded-lg px-2 py-3 text-base transition-colors",
+                                isActive
+                                  ? "text-primary bg-muted font-medium"
+                                  : "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
+                              )}
+                            >
+                              {link.label}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    ) : !user ? (
+                      <div className="flex flex-col gap-1">
+                        {dashboardLinks.map((link) => (
+                          <Link
+                            key={link.href}
+                            href={link.href}
+                            onClick={handleLinkClick}
+                            className={cn(
+                              "rounded-lg px-2 py-3 text-base transition-colors",
+                              pathname === link.href
+                                ? "text-primary bg-muted font-medium"
+                                : "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
+                            )}
+                          >
+                            {link.label}
+                          </Link>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="bg-background shrink-0 space-y-4 border-t px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                  <div className="flex items-center justify-between gap-3">
                     <span className="text-muted-foreground text-sm">Theme</span>
                     <Button
                       variant="outline"
@@ -255,9 +501,9 @@ const NavBar = () => {
                       )}
                     </Button>
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-3">
                     <span className="text-muted-foreground text-sm">Language</span>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap justify-end gap-2">
                       {Object.keys(translations).map((lang) => (
                         <Button
                           key={lang}

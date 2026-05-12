@@ -340,11 +340,11 @@ const PricingSection = () => {
           })()}
         </div>
 
-        <p className="text-muted-foreground text-md mt-10 text-center uppercase">
+        {/* <p className="text-muted-foreground text-md mt-10 text-center uppercase">
           {t("landing.pricing.noHiddenFees")}
-        </p>
+        </p> */}
 
-        <div className="mt-5 flex flex-col items-center gap-2 py-4">
+        {/* <div className="mt-5 flex flex-col items-center gap-2 py-4">
           <p className="text-muted-foreground text-center text-2xl">
             {t("landing.pricing.poweredBy")}{" "}
             <a
@@ -356,7 +356,7 @@ const PricingSection = () => {
               {PAYMENT_GATEWAY_NAME}
             </a>
           </p>
-        </div>
+        </div> */}
       </div>
     </section>
   );

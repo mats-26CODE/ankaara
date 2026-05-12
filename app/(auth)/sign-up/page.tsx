@@ -6,17 +6,12 @@ import Link from "next/link";
 import Logo from "@/components/shared/logo";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Phone } from "lucide-react";
+import { Home, Phone } from "lucide-react";
 import { useGoogleOAuth, useSendOtp } from "@/hooks/use-auth";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { APP_NAME } from "@/constants/values";
 import { useTranslation } from "@/hooks/use-translation";
 import { validatePhoneNumber } from "@/helpers/helpers";
-
 
 const SignUpPage = () => {
   const { t } = useTranslation();
@@ -53,14 +48,12 @@ const SignUpPage = () => {
       { phone: formData.phone },
       {
         onSuccess: () => {
-          router.push(
-            `/verify-otp?phone=${encodeURIComponent(formData.phone)}`
-          );
+          router.push(`/verify-otp?phone=${encodeURIComponent(formData.phone)}`);
         },
         onError: (err) => {
           setError(err instanceof Error ? err.message : t("auth.signup.error"));
         },
-      }
+      },
     );
   };
 
@@ -69,43 +62,40 @@ const SignUpPage = () => {
   };
 
   const testimonial = {
-    quote:
-      `${APP_NAME} makes invoicing and getting paid so much simpler. I create invoices in minutes, share a link, and get paid via mobile money. Perfect for freelancers and small businesses.`,
+    quote: `${APP_NAME} makes invoicing and getting paid so much simpler. I create invoices in minutes, share a link, and get paid via mobile money. Perfect for freelancers and small businesses.`,
     author: `@${APP_NAME.toLowerCase()}_user`,
   };
 
   return (
-    <div className="min-h-screen flex">
-      <div className="flex-1 flex flex-col bg-background overflow-y-auto">
-        <div className="flex-1 flex items-center justify-center p-8">
+    <div className="flex min-h-screen">
+      <div className="bg-background flex flex-1 flex-col overflow-y-auto">
+        <div className="flex flex-1 items-center justify-center p-8">
           <div className="w-full max-w-md space-y-8">
             <div className="mb-8">
-              <Logo />
+              <Logo size="sm" />
             </div>
 
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold text-foreground">
-                {t("auth.signup.title")}
-              </h1>
-              <p className="text-muted-foreground">
-                {t("auth.signup.subtitle")}
-              </p>
+              <Button variant="outline" size="sm" asChild className="mb-4 rounded-full">
+                <Link href="/">
+                  <Home className="mr-1 size-4" />
+                  Back to home
+                </Link>
+              </Button>
+              <h1 className="text-foreground text-3xl font-bold">{t("auth.signup.title")}</h1>
+              <p className="text-muted-foreground">{t("auth.signup.subtitle")}</p>
             </div>
 
             {/* Google OAuth Button - Primary */}
             <Button
               type="button"
               variant="outline"
-              className="w-full h-12 border-2"
+              className="h-12 w-full border-2"
               onClick={handleGoogleSignIn}
               disabled={sendOtpMutation.isPending}
               isLoading={googleOAuthMutation.isPending}
             >
-              <svg
-                className="w-5 h-5 mr-2"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
+              <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                 <path
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                   fill="#4285F4"
@@ -131,14 +121,14 @@ const SignUpPage = () => {
                 <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
+                <span className="bg-background text-muted-foreground px-2">
                   {t("auth.signup.orContinueWith")}
                 </span>
               </div>
             </div>
 
             {(error || sendOtpMutation.isError) && (
-              <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+              <div className="text-destructive bg-destructive/10 border-destructive/20 rounded-md border p-3 text-sm">
                 {error ||
                   (sendOtpMutation.error instanceof Error
                     ? sendOtpMutation.error.message
@@ -149,7 +139,7 @@ const SignUpPage = () => {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="phone">{t("auth.signup.phone")}</Label>
-                <InputGroup className="bg-muted/50 border border-primary/20 text-foreground placeholder:text-muted-foreground h-10 flex-1">
+                <InputGroup className="bg-muted/50 border-primary/20 text-foreground placeholder:text-muted-foreground h-10 flex-1 border">
                   <InputGroupAddon align="inline-start">
                     <Phone className="size-4" />
                   </InputGroupAddon>
@@ -164,7 +154,7 @@ const SignUpPage = () => {
                     maxLength={10}
                   />
                 </InputGroup>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Phone number must start with 0 and contain only numbers
                 </p>
               </div>
@@ -179,17 +169,14 @@ const SignUpPage = () => {
               </Button>
             </form>
 
-            <p className="text-center text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-center text-sm">
               Already have an account?{" "}
-              <Link
-                href="/login"
-                className="text-primary hover:underline font-medium"
-              >
+              <Link href="/login" className="text-primary font-medium hover:underline">
                 Sign in
               </Link>
             </p>
 
-            <p className="text-xs text-center text-muted-foreground">
+            <p className="text-muted-foreground text-center text-xs">
               By continuing, you agree to {APP_NAME}&apos;s{" "}
               <Link href="/terms" className="hover:underline">
                 Terms of Service
@@ -204,8 +191,8 @@ const SignUpPage = () => {
         </div>
       </div>
 
-      <div className="hidden lg:flex flex-1 bg-muted/30 items-center justify-center p-12 relative overflow-hidden">
-        <div className="w-full max-w-lg space-y-8 relative z-10">
+      <div className="bg-muted/30 relative hidden flex-1 items-center justify-center overflow-hidden p-12 lg:flex">
+        <div className="relative z-10 w-full max-w-lg space-y-8">
           <div className="text-muted-foreground/40">
             <svg
               width="64"
@@ -222,14 +209,12 @@ const SignUpPage = () => {
             </svg>
           </div>
 
-          <blockquote className="text-2xl lg:text-3xl font-medium text-foreground leading-relaxed">
+          <blockquote className="text-foreground text-2xl leading-relaxed font-medium lg:text-3xl">
             {testimonial.quote}
           </blockquote>
 
           <div className="flex items-center gap-3">
-            <div className="font-medium text-foreground">
-              {testimonial.author}
-            </div>
+            <div className="text-foreground font-medium">{testimonial.author}</div>
           </div>
         </div>
       </div>

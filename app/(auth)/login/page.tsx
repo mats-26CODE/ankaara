@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Logo from "@/components/shared/logo";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Phone } from "lucide-react";
+import { Home, Phone } from "lucide-react";
 import { useGoogleOAuth, useSendOtp } from "@/hooks/use-auth";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { APP_NAME } from "@/constants/values";
@@ -83,7 +83,7 @@ const LoginContent = () => {
     return (
       <div className="bg-background flex min-h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Logo />
+          <Logo size="sm" />
           <p className="text-muted-foreground text-sm">Completing sign in...</p>
           <Spinner className="size-6" />
         </div>
@@ -102,10 +102,16 @@ const LoginContent = () => {
         <div className="flex flex-1 items-center justify-center p-8">
           <div className="w-full max-w-md space-y-8">
             <div className="mb-8">
-              <Logo />
+              <Logo size="sm" />
             </div>
 
             <div className="space-y-2">
+              <Button variant="outline" size="sm" asChild className="mb-4 rounded-full">
+                <Link href="/">
+                  <Home className="mr-1 size-4" />
+                  Back to home
+                </Link>
+              </Button>
               <h1 className="text-foreground text-3xl font-bold">{t("auth.login.welcome")}</h1>
               <p className="text-muted-foreground">{t("auth.login.subtitle")}</p>
             </div>
