@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
+import { useBusinessStore } from "@/lib/stores/business-store";
 import type { Tables, TablesInsert, TablesUpdate } from "@/database.types";
 
 export type Business = Tables<"businesses">;
@@ -23,6 +24,7 @@ export const useBusinesses = () => {
     } = await supabase.auth.getUser();
     if (!user) {
       setBusinesses([]);
+      useBusinessStore.getState().setCurrentBusiness(null);
       setLoading(false);
       return;
     }
@@ -31,12 +33,24 @@ export const useBusinesses = () => {
       .from("businesses")
       .select("*")
       .eq("owner_id", user.id)
+      .order("is_primary", { ascending: false })
       .order("created_at", { ascending: true });
 
     if (error) {
       setBusinesses([]);
     } else {
-      setBusinesses(data ?? []);
+      const rows = data ?? [];
+      const currentBusinessId = useBusinessStore.getState().currentBusinessId;
+      const hasSelectedBusiness = rows.some((business) => business.id === currentBusinessId);
+
+      if (rows.length === 0) {
+        useBusinessStore.getState().setCurrentBusiness(null);
+      } else if (!currentBusinessId || !hasSelectedBusiness) {
+        const primaryBusiness = rows.find((business) => business.is_primary);
+        useBusinessStore.getState().setCurrentBusiness(primaryBusiness?.id ?? rows[0].id);
+      }
+
+      setBusinesses(rows);
     }
     setLoading(false);
   }, []);
@@ -70,6 +84,7 @@ export const useCreateBusiness = () => {
           logo_url: payload.logo_url || null,
           logo_text: payload.logo_text?.trim() || null,
           brand_color: payload.brand_color || null,
+          is_primary: payload.is_primary ?? false,
         })
         .select()
         .single();
@@ -77,14 +92,18 @@ export const useCreateBusiness = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
+      if (data?.is_primary) {
+        useBusinessStore.getState().setCurrentBusiness(data.id);
+      }
       ToastAlert.success("Business created successfully");
     },
     onError: (error: Error) => {
       if (isPlanLimitError(error)) {
         ToastAlert.error("Plan limit reached. Upgrade to add more businesses.");
-        if (typeof window !== "undefined") window.location.assign(getSubscribeUrlForPlanLimit(error));
+        if (typeof window !== "undefined")
+          window.location.assign(getSubscribeUrlForPlanLimit(error));
         return;
       }
       ToastAlert.error(error.message || "Failed to create business");
@@ -113,7 +132,10 @@ export const useUpdateBusiness = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (data?.is_primary) {
+        useBusinessStore.getState().setCurrentBusiness(data.id);
+      }
       ToastAlert.success("Business updated successfully");
     },
     onError: (error: Error) => {
@@ -133,9 +155,7 @@ export const useDeleteBusiness = () => {
         .eq("business_id", id);
 
       if (count && count > 0) {
-        throw new Error(
-          "Cannot delete this business — it still has clients. Remove them first."
-        );
+        throw new Error("Cannot delete this business — it still has clients. Remove them first.");
       }
 
       const { count: invoiceCount } = await supabase
@@ -144,15 +164,10 @@ export const useDeleteBusiness = () => {
         .eq("business_id", id);
 
       if (invoiceCount && invoiceCount > 0) {
-        throw new Error(
-          "Cannot delete this business — it still has invoices. Remove them first."
-        );
+        throw new Error("Cannot delete this business — it still has invoices. Remove them first.");
       }
 
-      const { error } = await supabase
-        .from("businesses")
-        .delete()
-        .eq("id", id);
+      const { error } = await supabase.from("businesses").delete().eq("id", id);
 
       if (error) throw error;
     },

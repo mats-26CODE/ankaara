@@ -13,6 +13,7 @@ export type OnboardingPending = {
   capacity: string;
   taxNumber?: string;
   currency: string;
+  isPrimary?: boolean;
 };
 
 export const setOnboardingPendingCookie = (data: OnboardingPending) => {

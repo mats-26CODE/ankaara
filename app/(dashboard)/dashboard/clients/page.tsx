@@ -14,13 +14,7 @@ import { useCurrentBusinessId } from "@/lib/stores/business-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -71,11 +65,7 @@ const ClientsPage = () => {
   const { businesses, loading: bizLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
   const [page, setPage] = useState(1);
-  const { clients, loading, refetch, totalCount } = useClients(
-    currentBusinessId,
-    page,
-    PAGE_SIZE,
-  );
+  const { clients, loading, refetch, totalCount } = useClients(currentBusinessId, page, PAGE_SIZE);
   const createClient = useCreateClient();
   const updateClient = useUpdateClient();
   const deleteClient = useDeleteClient();
@@ -95,7 +85,7 @@ const ClientsPage = () => {
   // Auto-select first business
   useEffect(() => {
     if (!currentBusinessId && businesses.length > 0) {
-      setCurrentBusiness(businesses[0].id);
+      setCurrentBusiness((businesses.find((business) => business.is_primary) ?? businesses[0]).id);
     }
   }, [businesses, currentBusinessId, setCurrentBusiness]);
 
@@ -111,7 +101,7 @@ const ClientsPage = () => {
       (c) =>
         c.name.toLowerCase().includes(q) ||
         c.email?.toLowerCase().includes(q) ||
-        c.phone?.toLowerCase().includes(q)
+        c.phone?.toLowerCase().includes(q),
     );
   }, [clients, search]);
 
@@ -154,7 +144,7 @@ const ClientsPage = () => {
             setDialogOpen(false);
             refetch();
           },
-        }
+        },
       );
     } else {
       if (!currentBusinessId) return;
@@ -171,7 +161,7 @@ const ClientsPage = () => {
             setDialogOpen(false);
             refetch();
           },
-        }
+        },
       );
     }
   };
@@ -187,10 +177,7 @@ const ClientsPage = () => {
     });
   };
 
-  const isMutating =
-    createClient.isPending ||
-    updateClient.isPending ||
-    deleteClient.isPending;
+  const isMutating = createClient.isPending || updateClient.isPending || deleteClient.isPending;
 
   if (bizLoading) {
     return (
@@ -203,12 +190,12 @@ const ClientsPage = () => {
   // No business exists yet
   if (businesses.length === 0) {
     return (
-      <Card className="max-w-lg mx-auto mt-12">
+      <Card className="mx-auto mt-12 max-w-lg">
         <CardContent className="flex flex-col items-center gap-4 py-12">
-          <Building2 className="size-12 text-muted-foreground" />
-          <div className="text-center space-y-1">
+          <Building2 className="text-muted-foreground size-12" />
+          <div className="space-y-1 text-center">
             <p className="font-medium">No business yet</p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Create a business first to start adding clients.
             </p>
           </div>
@@ -225,17 +212,16 @@ const ClientsPage = () => {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Clients</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Manage your clients for{" "}
             <span className="font-medium">
-              {businesses.find((b) => b.id === currentBusinessId)?.name ||
-                "your business"}
+              {businesses.find((b) => b.id === currentBusinessId)?.name || "your business"}
             </span>
             .
           </p>
         </div>
         <Button size="sm" onClick={openCreate}>
-          <Plus className="size-4 mr-1" />
+          <Plus className="mr-1 size-4" />
           Add Client
         </Button>
       </div>
@@ -243,7 +229,7 @@ const ClientsPage = () => {
       <Card>
         <CardHeader className="pb-3">
           <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -258,8 +244,8 @@ const ClientsPage = () => {
               <Spinner className="size-6" />
             </div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-sm text-muted-foreground">
+            <div className="py-8 text-center">
+              <p className="text-muted-foreground text-sm">
                 {clients.length === 0
                   ? "No clients yet. Add your first client to get started."
                   : "No clients match your search."}
@@ -289,13 +275,13 @@ const ClientsPage = () => {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell text-muted-foreground">
+                    <TableCell className="text-muted-foreground hidden sm:table-cell">
                       {client.email || "—"}
                     </TableCell>
-                    <TableCell className="hidden md:table-cell text-muted-foreground">
+                    <TableCell className="text-muted-foreground hidden md:table-cell">
                       {client.phone || "—"}
                     </TableCell>
-                    <TableCell className="hidden lg:table-cell text-muted-foreground truncate max-w-[200px]">
+                    <TableCell className="text-muted-foreground hidden max-w-[200px] truncate lg:table-cell">
                       {client.address || "—"}
                     </TableCell>
                     <TableCell>
@@ -311,14 +297,14 @@ const ClientsPage = () => {
                           ) : (
                             <>
                               <DropdownMenuItem onClick={() => openEdit(client)}>
-                                <Pencil className="size-4 mr-2" />
+                                <Pencil className="mr-2 size-4" />
                                 Edit
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => openDelete(client)}
                                 className="text-destructive focus:text-destructive"
                               >
-                                <Trash2 className="size-4 mr-2" />
+                                <Trash2 className="mr-2 size-4" />
                                 Delete
                               </DropdownMenuItem>
                             </>
@@ -332,8 +318,8 @@ const ClientsPage = () => {
             </Table>
           )}
           {total > 0 && (
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-t pt-4 mt-4">
-              <p className="text-sm text-muted-foreground">
+            <div className="mt-4 flex flex-col gap-2 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-muted-foreground text-sm">
                 Showing {from}–{to} of {total}
               </p>
               <div className="flex items-center gap-2">
@@ -343,7 +329,7 @@ const ClientsPage = () => {
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page <= 1 || loading}
                 >
-                  <ChevronLeft className="size-4 mr-1" />
+                  <ChevronLeft className="mr-1 size-4" />
                   Previous
                 </Button>
                 <Button
@@ -353,7 +339,7 @@ const ClientsPage = () => {
                   disabled={page >= lastPage || loading}
                 >
                   Next
-                  <ChevronRight className="size-4 ml-1" />
+                  <ChevronRight className="ml-1 size-4" />
                 </Button>
               </div>
             </div>
@@ -365,9 +351,7 @@ const ClientsPage = () => {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>
-              {editingClient ? "Edit Client" : "Add Client"}
-            </DialogTitle>
+            <DialogTitle>{editingClient ? "Edit Client" : "Add Client"}</DialogTitle>
             <DialogDescription className="flex flex-col gap-2">
               {editingClient
                 ? "Update the client's information."
@@ -400,9 +384,7 @@ const ClientsPage = () => {
                   id="client-email"
                   type="email"
                   value={form.email}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, email: e.target.value }))
-                  }
+                  onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
                   placeholder="client@example.com"
                 />
               </div>
@@ -412,9 +394,7 @@ const ClientsPage = () => {
                   id="client-phone"
                   type="tel"
                   value={form.phone}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, phone: e.target.value }))
-                  }
+                  onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
                   placeholder="2557XXXXXXXX"
                 />
               </div>
@@ -424,27 +404,17 @@ const ClientsPage = () => {
               <Input
                 id="client-address"
                 value={form.address}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, address: e.target.value }))
-                }
+                onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
                 placeholder="Client address"
               />
             </div>
           </div>
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDialogOpen(false)}
-              disabled={isMutating}
-            >
+            <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={isMutating}>
               Cancel
             </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={!form.name.trim()}
-              isLoading={isMutating}
-            >
+            <Button onClick={handleSubmit} disabled={!form.name.trim()} isLoading={isMutating}>
               {editingClient ? "Save" : "Add Client"}
             </Button>
           </DialogFooter>
@@ -458,8 +428,7 @@ const ClientsPage = () => {
             <DialogTitle>Delete Client</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete{" "}
-              <span className="font-medium">{deletingClient?.name}</span>? This
-              cannot be undone.
+              <span className="font-medium">{deletingClient?.name}</span>? This cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -470,11 +439,7 @@ const ClientsPage = () => {
             >
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              isLoading={deleteClient.isPending}
-            >
+            <Button variant="destructive" onClick={handleDelete} isLoading={deleteClient.isPending}>
               Delete
             </Button>
           </DialogFooter>

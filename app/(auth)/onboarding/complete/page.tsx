@@ -26,9 +26,7 @@ const OnboardingCompletePage = () => {
     if (userLoading || profileLoading || !user || startedRef.current) return;
 
     const pendingRaw =
-      typeof window !== "undefined"
-        ? sessionStorage.getItem(ONBOARDING_PENDING_KEY)
-        : null;
+      typeof window !== "undefined" ? sessionStorage.getItem(ONBOARDING_PENDING_KEY) : null;
     const pendingFromCookie = getOnboardingPendingCookie();
 
     const pending = pendingRaw
@@ -39,6 +37,7 @@ const OnboardingCompletePage = () => {
           capacity: string;
           taxNumber?: string;
           currency: string;
+          isPrimary?: boolean;
         })
       : pendingFromCookie;
 
@@ -51,10 +50,7 @@ const OnboardingCompletePage = () => {
     if (pendingFromCookie) clearOnboardingPendingCookie();
 
     const businessName =
-      pending.businessName.trim() ||
-      pending.fullName.trim() ||
-      profile?.full_name ||
-      "My Business";
+      pending.businessName.trim() || pending.fullName.trim() || profile?.full_name || "My Business";
 
     completeOnboarding.mutate(
       {
@@ -66,6 +62,7 @@ const OnboardingCompletePage = () => {
         taxNumber: pending.taxNumber || undefined,
         fullName: pending.fullName.trim() || profile?.full_name || undefined,
         email: user.email ?? undefined,
+        isPrimary: pending.isPrimary ?? true,
       },
       {
         onSuccess: async () => {
@@ -77,19 +74,18 @@ const OnboardingCompletePage = () => {
         onError: (err) => {
           setError(err.message);
         },
-      }
+      },
     );
   }, [user, userLoading, profile, profileLoading, router, completeOnboarding, refetch]);
 
   if (error) {
     return (
       <div className="bg-background flex min-h-screen flex-col items-center justify-center p-8">
-        <Logo size="sm" />{" "}
-        <p className="mt-4 text-destructive text-sm">{error}</p>
+        <Logo size="sm" /> <p className="text-destructive mt-4 text-sm">{error}</p>
         <button
           type="button"
           onClick={() => router.replace("/onboarding")}
-          className="mt-4 text-primary hover:underline text-sm"
+          className="text-primary mt-4 text-sm hover:underline"
         >
           Back to onboarding
         </button>
@@ -100,9 +96,7 @@ const OnboardingCompletePage = () => {
   return (
     <div className="bg-background flex min-h-screen flex-col items-center justify-center p-8">
       <Logo size="sm" />
-      <p className="mt-4 text-muted-foreground text-sm">
-        Completing your setup...
-      </p>
+      <p className="text-muted-foreground mt-4 text-sm">Completing your setup...</p>
       <Spinner className="mt-4 size-6" />
     </div>
   );

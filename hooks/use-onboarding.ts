@@ -14,6 +14,7 @@ type CompleteOnboardingPayload = {
   fullName?: string;
   phone?: string;
   email?: string;
+  isPrimary?: boolean;
 };
 
 type SkipOnboardingPayload = {
@@ -34,6 +35,7 @@ const upsertBusiness = async (
     capacity?: string | null;
     tax_number?: string | null;
     currency: string;
+    is_primary?: boolean;
   },
 ) => {
   const { data: existing } = await supabase
@@ -79,6 +81,7 @@ export const useCompleteOnboarding = () => {
         capacity: payload.capacity?.trim() || null,
         tax_number: payload.taxNumber?.trim() || null,
         currency: payload.currency,
+        is_primary: payload.isPrimary ?? true,
       });
     },
     onSuccess: () => {
@@ -114,6 +117,7 @@ export const useSkipOnboarding = () => {
       await upsertBusiness(supabase, payload.userId, {
         name: payload.fullName || "My Business",
         currency: payload.currency,
+        is_primary: true,
       });
     },
     onError: (error: Error) => {

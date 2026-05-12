@@ -16,6 +16,7 @@ export type Database = {
           created_at: string;
           currency: string;
           id: string;
+          is_primary: boolean;
           logo_text: string | null;
           logo_url: string | null;
           name: string;
@@ -30,6 +31,7 @@ export type Database = {
           created_at?: string;
           currency?: string;
           id?: string;
+          is_primary?: boolean;
           logo_text?: string | null;
           logo_url?: string | null;
           name: string;
@@ -44,6 +46,7 @@ export type Database = {
           created_at?: string;
           currency?: string;
           id?: string;
+          is_primary?: boolean;
           logo_text?: string | null;
           logo_url?: string | null;
           name?: string;

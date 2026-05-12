@@ -6,6 +6,7 @@ import Logo from "@/components/shared/logo";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -49,6 +50,7 @@ const OnboardingPage = () => {
     currency: "TZS",
     phone: "",
     email: "",
+    isPrimary: true,
   });
   const [prefilled, setPrefilled] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
@@ -146,6 +148,7 @@ const OnboardingPage = () => {
           capacity: form.capacity,
           taxNumber: form.taxNumber,
           currency: form.currency,
+          isPrimary: form.isPrimary,
         });
         await updateUserEmailMutation.mutateAsync({
           email: emailTrimmed,
@@ -174,6 +177,7 @@ const OnboardingPage = () => {
         capacity: form.capacity,
         taxNumber: form.taxNumber || undefined,
         fullName: form.fullName.trim() || profile?.full_name || undefined,
+        isPrimary: form.isPrimary,
       },
       {
         onSuccess: async () => {
@@ -313,6 +317,20 @@ const OnboardingPage = () => {
                     />
                   </div>
                 )}
+              </div>
+
+              <div className="flex items-start justify-between gap-4 rounded-lg border p-3">
+                <div className="space-y-1">
+                  <Label htmlFor="primaryBusiness">Primary business</Label>
+                  <p className="text-muted-foreground text-xs">
+                    Use this business by default when you open the dashboard.
+                  </p>
+                </div>
+                <Switch
+                  id="primaryBusiness"
+                  checked={form.isPrimary}
+                  onCheckedChange={(checked) => setForm((p) => ({ ...p, isPrimary: checked }))}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">

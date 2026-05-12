@@ -56,7 +56,7 @@ const SalesPage = () => {
 
   useEffect(() => {
     if (!currentBusinessId && businesses.length > 0) {
-      setCurrentBusiness(businesses[0].id);
+      setCurrentBusiness((businesses.find((business) => business.is_primary) ?? businesses[0]).id);
     }
   }, [businesses, currentBusinessId, setCurrentBusiness]);
 

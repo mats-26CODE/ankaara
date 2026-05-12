@@ -93,6 +93,7 @@ const VerifyOtpContent = () => {
               capacity: string;
               taxNumber?: string;
               currency: string;
+              isPrimary?: boolean;
             };
             const businessName =
               pending.businessName.trim() ||
@@ -110,6 +111,7 @@ const VerifyOtpContent = () => {
                 taxNumber: pending.taxNumber || undefined,
                 fullName: pending.fullName.trim() || profile?.full_name || undefined,
                 phone,
+                isPrimary: pending.isPrimary ?? true,
               },
               {
                 onSuccess: async () => {

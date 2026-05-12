@@ -17,6 +17,7 @@ import { ToastAlert } from "@/config/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -51,6 +52,7 @@ type FormState = {
   logo_url: string;
   logo_text: string;
   brand_color: string;
+  is_primary: boolean;
 };
 
 const emptyForm: FormState = {
@@ -63,6 +65,7 @@ const emptyForm: FormState = {
   logo_url: "",
   logo_text: "",
   brand_color: "",
+  is_primary: true,
 };
 
 const BusinessesSettingsPage = () => {
@@ -85,7 +88,7 @@ const BusinessesSettingsPage = () => {
   // Auto-select first business if none selected
   useEffect(() => {
     if (!currentBusinessId && businesses.length > 0) {
-      setCurrentBusiness(businesses[0].id);
+      setCurrentBusiness((businesses.find((business) => business.is_primary) ?? businesses[0]).id);
     }
   }, [businesses, currentBusinessId, setCurrentBusiness]);
 
@@ -141,6 +144,7 @@ const BusinessesSettingsPage = () => {
       logo_url: undefined,
       logo_text: logoText || undefined,
       brand_color: form.brand_color.trim() || undefined,
+      is_primary: form.is_primary,
     };
 
     createBusiness.mutate(payload, {
@@ -165,6 +169,19 @@ const BusinessesSettingsPage = () => {
     });
   };
 
+  const handleMakePrimary = (biz: Business) => {
+    if (biz.is_primary) return;
+    updateBusiness.mutate(
+      { id: biz.id, is_primary: true },
+      {
+        onSuccess: () => {
+          setCurrentBusiness(biz.id);
+          refetch();
+        },
+      },
+    );
+  };
+
   const handleDelete = () => {
     if (!deletingBusiness) return;
     deleteBusiness.mutate(deletingBusiness.id, {
@@ -173,7 +190,9 @@ const BusinessesSettingsPage = () => {
         setDeletingBusiness(null);
         if (currentBusinessId === deletingBusiness.id) {
           const remaining = businesses.filter((b) => b.id !== deletingBusiness.id);
-          setCurrentBusiness(remaining[0]?.id || null);
+          const fallbackBusiness =
+            remaining.find((business) => business.is_primary) ?? remaining[0];
+          setCurrentBusiness(fallbackBusiness?.id || null);
         }
         refetch();
       },
@@ -244,6 +263,11 @@ const BusinessesSettingsPage = () => {
                               Active
                             </Badge>
                           )}
+                          {biz.is_primary && (
+                            <Badge variant="outline" className="shrink-0 text-xs">
+                              Primary
+                            </Badge>
+                          )}
                         </div>
                         <p className="text-muted-foreground truncate text-xs">
                           {[biz.currency, biz.address].filter(Boolean).join(" · ") || "No details"}
@@ -251,6 +275,17 @@ const BusinessesSettingsPage = () => {
                       </div>
                     </div>
                     <div className="ml-2 flex shrink-0 items-center gap-1">
+                      {!biz.is_primary && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleMakePrimary(biz)}
+                          disabled={isMutating}
+                          title="Make primary business"
+                        >
+                          Make primary
+                        </Button>
+                      )}
                       <Button variant="ghost" size="icon" asChild title="Edit business">
                         <Link href={`/dashboard/settings/businesses/edit/${biz.id}`}>
                           <Pencil className="size-4" />
@@ -295,6 +330,10 @@ const BusinessesSettingsPage = () => {
               <div>
                 <p className="text-muted-foreground text-xs font-semibold uppercase">Currency</p>
                 <p>{activeBusiness.currency}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs font-semibold uppercase">Primary</p>
+                <p>{activeBusiness.is_primary ? "Yes" : "No"}</p>
               </div>
               <div>
                 <p className="text-muted-foreground text-xs font-semibold uppercase">Address</p>
@@ -402,6 +441,19 @@ const BusinessesSettingsPage = () => {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="flex items-start justify-between gap-4 rounded-lg border p-3">
+              <div className="space-y-1">
+                <Label htmlFor="biz-primary">Primary business</Label>
+                <p className="text-muted-foreground text-xs">
+                  Used as the default when no business is selected on this device.
+                </p>
+              </div>
+              <Switch
+                id="biz-primary"
+                checked={form.is_primary}
+                onCheckedChange={(checked) => setForm((p) => ({ ...p, is_primary: checked }))}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="biz-address">Address</Label>
