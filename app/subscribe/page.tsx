@@ -20,7 +20,7 @@ import {
 import { useSetSubscription } from "@/hooks/use-set-subscription";
 import { getNextPlanSlug } from "@/lib/subscription-limits";
 import { useTranslation } from "@/hooks/use-translation";
-import { Check, Loader2, ArrowRight, Mail, Users, Cloud, Zap } from "lucide-react";
+import { Check, Loader2, ArrowRight, ArrowLeft, Mail, Users, Cloud, Zap } from "lucide-react";
 import { SUPPORT_EMAIL } from "@/constants/values";
 import { ToastAlert } from "@/config/toast";
 
@@ -170,7 +170,17 @@ const SubscribeContent = () => {
   return (
     <div className="bg-muted/30 min-h-screen">
       <div className="mx-auto max-w-5xl px-4 py-8 sm:py-12">
-        <div className="mb-6 flex justify-center">
+        <div className="relative mb-6 flex items-center justify-center">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => router.back()}
+            className="absolute left-0 rounded-full"
+          >
+            <ArrowLeft className="mr-1 size-4" />
+            Go Back
+          </Button>
           <Logo size="sm" />
         </div>
 

@@ -226,9 +226,6 @@ const NavBar = () => {
     { label: t("nav.features"), href: "/#features" },
     { label: t("nav.pricing"), href: "/#pricing" },
     { label: t("footer.aboutUs"), href: "/about-us" },
-    { label: t("footer.helpCenter"), href: "/support" },
-    { label: t("footer.termsOfService"), href: "/terms" },
-    { label: t("footer.privacyPolicy"), href: "/privacy" },
   ];
 
   const dashboardLinks = [{ label: t("nav.dashboard"), href: "/dashboard" }];
@@ -274,32 +271,32 @@ const NavBar = () => {
 
   return (
     <nav className="bg-background/95 supports-backdrop-filter:bg-background/60 sticky top-0 z-50 w-full backdrop-blur">
-      <div className="container mx-auto flex w-full items-center justify-between px-4 py-4 md:max-w-6xl">
-        <div className="flex items-center gap-4 md:gap-8">
+      <div className="relative container mx-auto flex w-full items-center justify-between px-4 py-4 md:max-w-6xl">
+        <div className="flex items-center">
           <Logo size="sm" />
-
-          {/* Desktop Navigation */}
-          {isLanding && (
-            <div className="hidden items-center gap-6 md:flex">
-              {navLinks.map((link) => {
-                const isActive = !link.href.startsWith("/#") && pathname === link.href;
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={`text-sm transition-colors ${
-                      isActive
-                        ? "text-primary font-medium"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                );
-              })}
-            </div>
-          )}
         </div>
+
+        {/* Desktop Navigation */}
+        {isLanding && (
+          <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-6 md:flex">
+            {navLinks.map((link) => {
+              const isActive = !link.href.startsWith("/#") && pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`text-sm transition-colors ${
+                    isActive
+                      ? "text-primary font-medium"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </div>
+        )}
 
         {/* Desktop Actions */}
         <div className="hidden items-center gap-2 md:flex">
