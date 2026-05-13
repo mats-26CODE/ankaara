@@ -21,6 +21,9 @@ export type Database = {
           logo_url: string | null;
           name: string;
           owner_id: string;
+          phone: string | null;
+          second_phone: string | null;
+          send_sale_alert: boolean;
           tax_number: string | null;
           updated_at: string;
         };
@@ -36,6 +39,9 @@ export type Database = {
           logo_url?: string | null;
           name: string;
           owner_id: string;
+          phone?: string | null;
+          second_phone?: string | null;
+          send_sale_alert?: boolean;
           tax_number?: string | null;
           updated_at?: string;
         };
@@ -51,6 +57,9 @@ export type Database = {
           logo_url?: string | null;
           name?: string;
           owner_id?: string;
+          phone?: string | null;
+          second_phone?: string | null;
+          send_sale_alert?: boolean;
           tax_number?: string | null;
           updated_at?: string;
         };

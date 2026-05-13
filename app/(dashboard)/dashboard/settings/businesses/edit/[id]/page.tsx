@@ -10,6 +10,7 @@ import {
   removeBusinessLogo,
   validateBusinessLogoFile,
 } from "@/lib/storage/business-logo";
+import { addCountryCode, formatPhoneForDisplay, clampPhoneDigitInput } from "@/helpers/helpers";
 import { ToastAlert } from "@/config/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,8 +23,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, ImageIcon, Type, Upload, X } from "lucide-react";
 import Image from "next/image";
 
@@ -35,6 +45,9 @@ type FormState = {
   address: string;
   tax_number: string;
   capacity: string;
+  phone: string;
+  second_phone: string;
+  send_sale_alert: boolean;
   logo_mode: LogoMode;
   logo_url: string;
   logo_text: string;
@@ -47,10 +60,48 @@ const emptyForm: FormState = {
   address: "",
   tax_number: "",
   capacity: "",
+  phone: "",
+  second_phone: "",
+  send_sale_alert: false,
   logo_mode: "text",
   logo_url: "",
   logo_text: "",
   brand_color: "",
+};
+
+const toStored255Digits = (raw: string): string | null => {
+  const t = raw.trim();
+  if (!t) return null;
+  const digits = addCountryCode(t).replace(/\D/g, "");
+  if (!/^255\d{9}$/.test(digits)) return null;
+  return digits;
+};
+
+const normalizePhonesForSave = (
+  phoneTrim: string,
+  secondTrim: string,
+): { phone: string | null; second_phone: string | null; error?: string } => {
+  const phoneStored = phoneTrim ? toStored255Digits(phoneTrim) : null;
+  const secondStored = secondTrim ? toStored255Digits(secondTrim) : null;
+  if (phoneTrim && !phoneStored) {
+    return {
+      phone: null,
+      second_phone: null,
+      error: "Business phone looks invalid. Enter a Tanzanian mobile (e.g. 0767 123 456).",
+    };
+  }
+  if (secondTrim && !secondStored) {
+    return {
+      phone: null,
+      second_phone: null,
+      error: "Second phone looks invalid. Enter a Tanzanian mobile (e.g. 0767 123 456).",
+    };
+  }
+  let secondOut = secondStored;
+  if (phoneStored && secondStored && phoneStored === secondStored) {
+    secondOut = null;
+  }
+  return { phone: phoneStored, second_phone: secondOut };
 };
 
 const EditBusinessPage = () => {
@@ -67,6 +118,7 @@ const EditBusinessPage = () => {
   const [prefilled, setPrefilled] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoError, setLogoError] = useState<string | null>(null);
+  const [saleSmsDialog, setSaleSmsDialog] = useState<"enable" | "disable" | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -77,6 +129,11 @@ const EditBusinessPage = () => {
       address: business.address || "",
       tax_number: business.tax_number || "",
       capacity: business.capacity || "",
+      phone: business.phone ? clampPhoneDigitInput(formatPhoneForDisplay(business.phone)) : "",
+      second_phone: business.second_phone
+        ? clampPhoneDigitInput(formatPhoneForDisplay(business.second_phone))
+        : "",
+      send_sale_alert: business.send_sale_alert ?? false,
       logo_mode: business.logo_url ? "image" : "text",
       logo_url: business.logo_url || "",
       logo_text: business.logo_text || "",
@@ -134,6 +191,21 @@ const EditBusinessPage = () => {
   const handleSubmit = () => {
     if (!business || !form.name.trim()) return;
 
+    const phoneTrim = form.phone.trim();
+    const secondTrim = form.second_phone.trim();
+    if (form.send_sale_alert && !phoneTrim && !secondTrim) {
+      ToastAlert.error("Add at least one phone number to receive sale SMS alerts.");
+      return;
+    }
+
+    const normalized = normalizePhonesForSave(phoneTrim, secondTrim);
+    if (normalized.error) {
+      ToastAlert.error(normalized.error);
+      return;
+    }
+
+    const { phone: phoneStored, second_phone: secondPhoneOut } = normalized;
+
     // Persist both logo_url and logo_text; editing one must not clear the other
     const logoUrl = form.logo_url.trim() || null;
     const logoText = form.logo_text.trim() || null;
@@ -146,6 +218,9 @@ const EditBusinessPage = () => {
         address: form.address.trim() || null,
         tax_number: form.tax_number.trim() || null,
         capacity: form.capacity.trim() || null,
+        phone: phoneStored,
+        second_phone: secondPhoneOut,
+        send_sale_alert: form.send_sale_alert,
         logo_url: logoUrl,
         logo_text: logoText,
         brand_color: form.brand_color.trim() || null,
@@ -157,6 +232,54 @@ const EditBusinessPage = () => {
         },
       },
     );
+  };
+
+  const persistSaleSmsEnable = async () => {
+    if (!business) return;
+    const phoneTrim = form.phone.trim();
+    const secondTrim = form.second_phone.trim();
+    if (!phoneTrim && !secondTrim) {
+      ToastAlert.error("Add at least one phone number first.");
+      return;
+    }
+    const normalized = normalizePhonesForSave(phoneTrim, secondTrim);
+    if (normalized.error) {
+      ToastAlert.error(normalized.error);
+      return;
+    }
+    const { phone: phoneStored, second_phone: secondPhoneOut } = normalized;
+    try {
+      const data = await updateBusiness.mutateAsync({
+        id: business.id,
+        phone: phoneStored,
+        second_phone: secondPhoneOut,
+        send_sale_alert: true,
+      });
+      setForm((p) => ({
+        ...p,
+        send_sale_alert: data.send_sale_alert,
+        phone: data.phone ? clampPhoneDigitInput(formatPhoneForDisplay(data.phone)) : "",
+        second_phone: data.second_phone
+          ? clampPhoneDigitInput(formatPhoneForDisplay(data.second_phone))
+          : "",
+      }));
+      await refetch();
+      setSaleSmsDialog(null);
+    } catch {
+      // Toast from useUpdateBusiness onError
+    }
+  };
+
+  const persistSaleSmsDisable = async () => {
+    if (!business) return;
+    try {
+      const data = await updateBusiness.mutateAsync({ id: business.id, send_sale_alert: false });
+      setForm((p) => ({ ...p, send_sale_alert: data.send_sale_alert }));
+      await refetch();
+      setSaleSmsDialog(null);
+    } catch {
+      // Toast from useUpdateBusiness onError
+    }
   };
 
   if (loading || currenciesLoading) {
@@ -186,6 +309,8 @@ const EditBusinessPage = () => {
   }
 
   const isMutating = updateBusiness.isPending;
+  const hasSaleSmsPhoneInput = !!(form.phone.trim() || form.second_phone.trim());
+  const saleSmsSwitchDisabled = !form.send_sale_alert && !hasSaleSmsPhoneInput;
 
   return (
     <div className="space-y-6">
@@ -256,6 +381,74 @@ const EditBusinessPage = () => {
                 value={form.capacity}
                 onChange={(e) => setForm((p) => ({ ...p, capacity: e.target.value }))}
                 placeholder="e.g. 1-10 employees"
+              />
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-sm font-medium">SMS notifications</h3>
+              <p className="text-muted-foreground text-xs">
+                Enter your business phone numbers. We will use these to send SMS notifications.
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="biz-phone">Business phone</Label>
+                <Input
+                  id="biz-phone"
+                  value={form.phone}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, phone: clampPhoneDigitInput(e.target.value) }))
+                  }
+                  placeholder="0767 XXX XXX"
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  autoComplete="tel"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="biz-second-phone">Second phone (optional)</Label>
+                <Input
+                  id="biz-second-phone"
+                  value={form.second_phone}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, second_phone: clampPhoneDigitInput(e.target.value) }))
+                  }
+                  placeholder="0767 XXX XXX"
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  autoComplete="tel"
+                />
+              </div>
+            </div>
+            <div className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-1">
+                <Label htmlFor="biz-sale-sms" className="text-sm font-medium">
+                  Sale SMS alerts
+                </Label>
+                <p className="text-muted-foreground text-xs">
+                  Turning alerts on or off saves immediately. Add at least one phone before you can
+                  turn alerts on.
+                </p>
+              </div>
+              <Switch
+                id="biz-sale-sms"
+                checked={form.send_sale_alert}
+                disabled={saleSmsSwitchDisabled || isMutating}
+                title={
+                  saleSmsSwitchDisabled && !form.send_sale_alert
+                    ? "Add a business phone number to enable sale SMS alerts"
+                    : undefined
+                }
+                onCheckedChange={(checked) => {
+                  if (checked) setSaleSmsDialog("enable");
+                  else setSaleSmsDialog("disable");
+                }}
               />
             </div>
           </div>
@@ -429,6 +622,70 @@ const EditBusinessPage = () => {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog
+        open={saleSmsDialog !== null}
+        onOpenChange={(open) => !open && setSaleSmsDialog(null)}
+      >
+        <DialogContent showCloseButton className="sm:max-w-md">
+          {saleSmsDialog === "enable" && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Enable sale SMS alerts?</DialogTitle>
+                <DialogDescription>
+                  You are opting in to SMS when a sale is recorded for this business. This saves
+                  now. Messages use the phone numbers entered above (valid Tanzanian mobiles).
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setSaleSmsDialog(null)}
+                  disabled={isMutating}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => void persistSaleSmsEnable()}
+                  isLoading={isMutating}
+                >
+                  Enable alerts
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+          {saleSmsDialog === "disable" && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Turn off sale SMS alerts?</DialogTitle>
+                <DialogDescription>
+                  You will no longer receive SMS notifications when sales are recorded for this
+                  business. This saves now.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setSaleSmsDialog(null)}
+                  disabled={isMutating}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => void persistSaleSmsDisable()}
+                  isLoading={isMutating}
+                >
+                  Turn off
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

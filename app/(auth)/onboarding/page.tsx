@@ -18,7 +18,7 @@ import { useUser } from "@/hooks/use-user";
 import { useProfile } from "@/hooks/use-profile";
 import { useTranslation } from "@/hooks/use-translation";
 import { Spinner } from "@/components/ui/spinner";
-import { addCountryCode } from "@/helpers/helpers";
+import { addCountryCode, clampPhoneDigitInput, formatPhoneForDisplay } from "@/helpers/helpers";
 import { useSendOtpForOnboarding, useUpdateUserEmail } from "@/hooks/use-auth";
 import { useCurrencies } from "@/hooks/use-currencies";
 import { useCompleteOnboarding } from "@/hooks/use-onboarding";
@@ -66,7 +66,11 @@ const OnboardingPage = () => {
         profile.full_name?.trim() || (user.user_metadata?.full_name as string) || prev.fullName,
       currency: profile.preferred_currency || prev.currency,
       email: user.email ?? prev.email,
-      phone: profile.phone || user.phone || prev.phone,
+      phone: (() => {
+        const raw = profile.phone || user.phone || prev.phone;
+        if (!raw) return prev.phone;
+        return clampPhoneDigitInput(formatPhoneForDisplay(raw));
+      })(),
     }));
     setPrefilled(true);
   }, [profile, prefilled, user]);
@@ -294,8 +298,12 @@ const OnboardingPage = () => {
                     <Input
                       id="phone"
                       type="tel"
+                      inputMode="numeric"
+                      maxLength={10}
                       value={form.phone}
-                      onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, phone: clampPhoneDigitInput(e.target.value) }))
+                      }
                       placeholder={t("auth.onboarding.phonePlaceholder")}
                       required
                     />

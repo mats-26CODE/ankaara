@@ -70,6 +70,10 @@ export function formatPhoneForDisplay(phoneNumber: string): string {
   return cleanNumber;
 }
 
+/** Digits only, max length (default 10 for TZ local input e.g. 0767123456). */
+export const clampPhoneDigitInput = (raw: string, maxDigits = 10): string =>
+  raw.replace(/\D/g, "").slice(0, maxDigits);
+
 /**
  * Streamlined currency formatter, fully compatible with web and mobile with optional compact notation K,M,B,T.
  * It uses Intl.NumberFormat for web and a simplified fallback for mobile.
