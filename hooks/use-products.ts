@@ -89,6 +89,36 @@ export const useProducts = (
   return { products, loading, refetch, totalCount };
 };
 
+export const useProduct = (productId: string | null) => {
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const refetch = useCallback(async () => {
+    if (!productId) {
+      setProduct(null);
+      setLoading(false);
+      return;
+    }
+
+    const supabase = createClient();
+    const { data, error } = await supabase.from("products").select("*").eq("id", productId).single();
+
+    if (error) {
+      setProduct(null);
+    } else {
+      setProduct((data as Product) ?? null);
+    }
+    setLoading(false);
+  }, [productId]);
+
+  useEffect(() => {
+    setLoading(true);
+    refetch();
+  }, [refetch]);
+
+  return { product, loading, refetch };
+};
+
 export const useCreateProduct = () => {
   const queryClient = useQueryClient();
   return useMutation({

@@ -154,12 +154,14 @@ const SalesPage = () => {
                 onChange={setFromDate}
                 placeholder="From date"
                 className="min-w-0 flex-1 lg:w-fit lg:flex-none"
+                disableFuture
               />
               <DatePicker
                 value={toDate}
                 onChange={setToDate}
                 placeholder="To date"
                 className="min-w-0 flex-1 lg:w-fit lg:flex-none"
+                disableFuture
               />
               {(fromDate || toDate) && (
                 <Button

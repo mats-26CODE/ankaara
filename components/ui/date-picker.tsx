@@ -2,16 +2,12 @@
 
 import * as React from "react";
 import { CalendarIcon } from "lucide-react";
-import { format, parse, isValid } from "date-fns";
+import { format, parse, isValid, isAfter, startOfDay, startOfToday } from "date-fns";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 type DatePickerProps = {
   value?: string;
@@ -19,6 +15,8 @@ type DatePickerProps = {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  /** When true, dates after today (local calendar) cannot be chosen. */
+  disableFuture?: boolean;
 };
 
 const toDate = (str?: string): Date | undefined => {
@@ -33,9 +31,15 @@ const DatePicker = ({
   placeholder = "Pick a date",
   className,
   disabled,
+  disableFuture,
 }: DatePickerProps) => {
   const [open, setOpen] = React.useState(false);
   const selected = toDate(value);
+
+  const disableFutureDays = React.useMemo(
+    () => (disableFuture ? (date: Date) => isAfter(startOfDay(date), startOfToday()) : undefined),
+    [disableFuture],
+  );
 
   const handleSelect = (day: Date | undefined) => {
     if (day) {
@@ -53,7 +57,7 @@ const DatePicker = ({
           className={cn(
             "w-full justify-start text-left font-normal",
             !selected && "text-muted-foreground",
-            className
+            className,
           )}
         >
           <CalendarIcon className="mr-2 size-4 shrink-0" />
@@ -67,6 +71,7 @@ const DatePicker = ({
           onSelect={handleSelect}
           defaultMonth={selected}
           autoFocus
+          disabled={disableFutureDays}
         />
       </PopoverContent>
     </Popover>

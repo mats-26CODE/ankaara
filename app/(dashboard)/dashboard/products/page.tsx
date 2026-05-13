@@ -2,13 +2,12 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   useProducts,
   useCreateProduct,
   useUpdateProduct,
   useDeleteProduct,
-  useAdjustProductStock,
-  useInventoryMovements,
   type Product,
   type ProductItemType,
 } from "@/hooks/use-products";
@@ -86,18 +85,6 @@ const emptyForm: FormState = {
   sku: "",
 };
 
-type StockFormState = {
-  quantity_delta: string;
-  movement_type: "adjustment" | "restock";
-  reason: string;
-};
-
-const emptyStockForm: StockFormState = {
-  quantity_delta: "",
-  movement_type: "restock",
-  reason: "",
-};
-
 const PAGE_SIZE = 10;
 
 const formatPriceDisplay = (val: string): string => {
@@ -119,6 +106,7 @@ const parsePriceInput = (raw: string): string => {
 };
 
 const ProductsPage = () => {
+  const router = useRouter();
   const { businesses, loading: bizLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
   const [page, setPage] = useState(1);
@@ -130,22 +118,13 @@ const ProductsPage = () => {
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
-  const adjustProductStock = useAdjustProductStock();
 
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [stockDialogOpen, setStockDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
-  const [stockProduct, setStockProduct] = useState<Product | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
-  const [stockForm, setStockForm] = useState<StockFormState>(emptyStockForm);
-  const {
-    movements,
-    loading: movementsLoading,
-    refetch: refetchMovements,
-  } = useInventoryMovements(stockProduct?.id ?? null);
 
   const total = totalCount ?? 0;
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -201,12 +180,6 @@ const ProductsPage = () => {
   const openDelete = (product: Product) => {
     setDeletingProduct(product);
     setDeleteDialogOpen(true);
-  };
-
-  const openStock = (product: Product) => {
-    setStockProduct(product);
-    setStockForm(emptyStockForm);
-    setStockDialogOpen(true);
   };
 
   const handleSubmit = () => {
@@ -273,31 +246,6 @@ const ProductsPage = () => {
     }
   };
 
-  const handleAdjustStock = () => {
-    if (!stockProduct) return;
-    const rawQuantity = Number(stockForm.quantity_delta);
-    if (Number.isNaN(rawQuantity) || rawQuantity === 0) return;
-    const quantityDelta =
-      stockForm.movement_type === "restock" ? Math.abs(rawQuantity) : rawQuantity;
-
-    adjustProductStock.mutate(
-      {
-        product_id: stockProduct.id,
-        quantity_delta: quantityDelta,
-        movement_type: stockForm.movement_type,
-        reason: stockForm.reason.trim() || null,
-        unit_cost: Number(stockProduct.base_price) || null,
-      },
-      {
-        onSuccess: () => {
-          setStockForm(emptyStockForm);
-          refetch();
-          refetchMovements();
-        },
-      },
-    );
-  };
-
   const handleDelete = () => {
     if (!deletingProduct) return;
     deleteProduct.mutate(deletingProduct.id, {
@@ -309,11 +257,7 @@ const ProductsPage = () => {
     });
   };
 
-  const isMutating =
-    createProduct.isPending ||
-    updateProduct.isPending ||
-    deleteProduct.isPending ||
-    adjustProductStock.isPending;
+  const isMutating = createProduct.isPending || updateProduct.isPending || deleteProduct.isPending;
 
   if (bizLoading) {
     return (
@@ -400,7 +344,11 @@ const ProductsPage = () => {
               </TableHeader>
               <TableBody>
                 {filtered.map((product) => (
-                  <TableRow key={product.id}>
+                  <TableRow
+                    key={product.id}
+                    className="hover:bg-muted/50 cursor-pointer"
+                    onClick={() => router.push(`/dashboard/products/${product.id}/stock-history`)}
+                  >
                     <TableCell>
                       <div className="space-y-1">
                         <p className="font-medium">{product.name}</p>
@@ -436,7 +384,7 @@ const ProductsPage = () => {
                         <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="w-10" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="size-8">
@@ -449,9 +397,11 @@ const ProductsPage = () => {
                             Edit
                           </DropdownMenuItem>
                           {product.item_type === "product" && (
-                            <DropdownMenuItem onClick={() => openStock(product)}>
-                              <PackagePlus className="mr-2 size-4" />
-                              Stock history
+                            <DropdownMenuItem asChild>
+                              <Link href={`/dashboard/products/${product.id}/stock-history`}>
+                                <PackagePlus className="mr-2 size-4" />
+                                Stock history
+                              </Link>
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem
@@ -665,140 +615,6 @@ const ProductsPage = () => {
               {editingProduct ? "Save" : "Add"}
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Stock history / adjustment */}
-      <Dialog open={stockDialogOpen} onOpenChange={setStockDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Stock history</DialogTitle>
-            <DialogDescription>
-              Add stock or adjust quantity for{" "}
-              <span className="font-medium">{stockProduct?.name ?? "this product"}</span>.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-5 py-2">
-            <div className="grid grid-cols-3 gap-3 rounded-lg border p-3">
-              <div>
-                <p className="text-muted-foreground text-xs">Current stock</p>
-                <p className="font-semibold">
-                  {Number(stockProduct?.stock_quantity ?? 0).toLocaleString()}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-xs">Base price</p>
-                <p className="font-semibold">
-                  {Number(stockProduct?.base_price ?? 0).toLocaleString()}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-xs">Selling price</p>
-                <p className="font-semibold">
-                  {Number(stockProduct?.selling_price ?? 0).toLocaleString()}
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Movement</Label>
-                <Select
-                  value={stockForm.movement_type}
-                  onValueChange={(value) =>
-                    setStockForm((p) => ({
-                      ...p,
-                      movement_type: value as "adjustment" | "restock",
-                    }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="restock">Add stock</SelectItem>
-                    <SelectItem value="adjustment">Adjustment</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="stock-quantity">Quantity Change</Label>
-                <Input
-                  id="stock-quantity"
-                  inputMode="decimal"
-                  value={stockForm.quantity_delta}
-                  onChange={(e) =>
-                    setStockForm((p) => ({
-                      ...p,
-                      quantity_delta: e.target.value.replace(/[^\d.-]/g, ""),
-                    }))
-                  }
-                  placeholder={stockForm.movement_type === "restock" ? "10" : "-2 or 5"}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="stock-reason">Reason</Label>
-              <Textarea
-                id="stock-reason"
-                value={stockForm.reason}
-                onChange={(e) => setStockForm((p) => ({ ...p, reason: e.target.value }))}
-                placeholder="e.g. Supplier restock, manual recount"
-                rows={2}
-              />
-            </div>
-
-            <Button
-              onClick={handleAdjustStock}
-              disabled={!stockForm.quantity_delta.trim() || adjustProductStock.isPending}
-              isLoading={adjustProductStock.isPending}
-              className="w-full"
-            >
-              Save Stock Movement
-            </Button>
-
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Recent movements</p>
-              <div className="max-h-56 space-y-2 overflow-y-auto">
-                {movementsLoading ? (
-                  <div className="flex justify-center py-4">
-                    <Spinner className="size-5" />
-                  </div>
-                ) : movements.length === 0 ? (
-                  <p className="text-muted-foreground rounded-md border p-3 text-sm">
-                    No stock movement recorded yet.
-                  </p>
-                ) : (
-                  movements.map((movement) => (
-                    <div key={movement.id} className="rounded-md border p-3 text-sm">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="font-medium capitalize">
-                          {movement.movement_type.replace("_", " ")}
-                        </span>
-                        <span
-                          className={
-                            Number(movement.quantity_delta) < 0
-                              ? "text-destructive font-medium"
-                              : "font-medium text-emerald-600"
-                          }
-                        >
-                          {Number(movement.quantity_delta) > 0 ? "+" : ""}
-                          {Number(movement.quantity_delta).toLocaleString()}
-                        </span>
-                      </div>
-                      <p className="text-muted-foreground mt-1 text-xs">
-                        {Number(movement.quantity_before).toLocaleString()} -&gt;{" "}
-                        {Number(movement.quantity_after).toLocaleString()}
-                        {movement.reason ? ` · ${movement.reason}` : ""}
-                      </p>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
         </DialogContent>
       </Dialog>
 
