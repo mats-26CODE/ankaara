@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
+import { ensureRowId, type SupabaseRowId } from "@/lib/ensure-supabase-row-id";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
@@ -134,6 +135,8 @@ export const useInvoices = (
 export const useInvoice = (invoiceId: string | null) => {
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
+  const latestIdRef = useRef(invoiceId);
+  latestIdRef.current = invoiceId;
 
   const refetch = useCallback(async () => {
     if (!invoiceId) {
@@ -141,14 +144,18 @@ export const useInvoice = (invoiceId: string | null) => {
       setLoading(false);
       return;
     }
+
+    const requestedId = invoiceId;
     const supabase = createClient();
     const { data, error } = await supabase
       .from("invoices")
       .select(
         "*, client:clients(id, name, email, phone, address), business:businesses!invoices_business_id_fkey(id, name, address, logo_url, logo_text, tax_number, brand_color, currency)",
       )
-      .eq("id", invoiceId)
+      .eq("id", requestedId)
       .single();
+
+    if (latestIdRef.current !== requestedId) return;
 
     if (error) {
       setInvoice(null);
@@ -159,8 +166,10 @@ export const useInvoice = (invoiceId: string | null) => {
     const { data: items } = await supabase
       .from("invoice_items")
       .select("*")
-      .eq("invoice_id", invoiceId)
+      .eq("invoice_id", requestedId)
       .order("id", { ascending: true });
+
+    if (latestIdRef.current !== requestedId) return;
 
     setInvoice({
       ...(data as unknown as Invoice),
@@ -180,7 +189,7 @@ export const useInvoice = (invoiceId: string | null) => {
 export const useCreateInvoice = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: CreateInvoicePayload) => {
+    mutationFn: async (payload: CreateInvoicePayload): Promise<SupabaseRowId> => {
       const supabase = createClient();
       const { subtotal, tax, total } = computeTotals(payload.items, payload.tax);
 
@@ -208,15 +217,15 @@ export const useCreateInvoice = () => {
           notes: payload.notes?.trim() || null,
           quotation_id: payload.quotation_id ?? null,
         })
-        .select()
+        .select("id")
         .single();
 
       if (error) throw error;
-      const invoice = data;
+      const insertedId = ensureRowId(data, "Invoice insert");
 
       if (payload.items.length > 0) {
         const rows = payload.items.map((item) => ({
-          invoice_id: invoice.id,
+          invoice_id: insertedId,
           product_id: item.product_id ?? null,
           description: item.description,
           quantity: item.quantity,
@@ -228,7 +237,7 @@ export const useCreateInvoice = () => {
         if (itemsError) throw itemsError;
       }
 
-      return invoice;
+      return { id: insertedId };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
@@ -248,7 +257,7 @@ export const useCreateInvoice = () => {
 
 export const useUpdateInvoice = () => {
   return useMutation({
-    mutationFn: async (payload: UpdateInvoicePayload) => {
+    mutationFn: async (payload: UpdateInvoicePayload): Promise<SupabaseRowId> => {
       const supabase = createClient();
       const updates: Record<string, unknown> = {};
 
@@ -275,13 +284,14 @@ export const useUpdateInvoice = () => {
         if (payload.tax_percentage !== undefined) updates.tax_percentage = payload.tax_percentage;
       }
 
-      const { data, error } = await supabase
+      const { data: afterUpdate, error } = await supabase
         .from("invoices")
         .update(updates)
         .eq("id", payload.id)
-        .select()
+        .select("id")
         .single();
       if (error) throw error;
+      const rowId = ensureRowId(afterUpdate, "Invoice update");
 
       if (payload.items) {
         await supabase.from("invoice_items").delete().eq("invoice_id", payload.id);
@@ -301,7 +311,7 @@ export const useUpdateInvoice = () => {
         }
       }
 
-      return data as unknown as Invoice;
+      return { id: rowId };
     },
     onSuccess: () => {
       ToastAlert.success("Invoice updated");
@@ -314,17 +324,17 @@ export const useUpdateInvoice = () => {
 
 export const useSendInvoice = () => {
   return useMutation({
-    mutationFn: async (invoiceId: string) => {
+    mutationFn: async (invoiceId: string): Promise<SupabaseRowId> => {
       const supabase = createClient();
       const { data, error } = await supabase
         .from("invoices")
         .update({ status: "sent" })
         .eq("id", invoiceId)
         .eq("status", "draft")
-        .select()
+        .select("id")
         .single();
       if (error) throw error;
-      return data as unknown as Invoice;
+      return { id: ensureRowId(data, "Invoice send") };
     },
     onSuccess: () => {
       ToastAlert.success("Invoice marked as sent");

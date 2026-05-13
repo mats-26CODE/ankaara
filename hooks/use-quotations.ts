@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
+import { ensureRowId, type SupabaseRowId } from "@/lib/ensure-supabase-row-id";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
@@ -134,6 +135,8 @@ export const useQuotations = (
 export const useQuotation = (quotationId: string | null) => {
   const [quotation, setQuotation] = useState<Quotation | null>(null);
   const [loading, setLoading] = useState(true);
+  const latestIdRef = useRef(quotationId);
+  latestIdRef.current = quotationId;
 
   const refetch = useCallback(async () => {
     if (!quotationId) {
@@ -141,14 +144,18 @@ export const useQuotation = (quotationId: string | null) => {
       setLoading(false);
       return;
     }
+
+    const requestedId = quotationId;
     const supabase = createClient();
     const { data, error } = await supabase
       .from("quotations")
       .select(
         "*, client:clients(id, name, email, phone, address), business:businesses!quotations_business_id_fkey(id, name, address, logo_url, logo_text, tax_number, brand_color, currency)",
       )
-      .eq("id", quotationId)
+      .eq("id", requestedId)
       .single();
+
+    if (latestIdRef.current !== requestedId) return;
 
     if (error) {
       setQuotation(null);
@@ -159,8 +166,10 @@ export const useQuotation = (quotationId: string | null) => {
     const { data: items } = await supabase
       .from("quotation_items")
       .select("*")
-      .eq("quotation_id", quotationId)
+      .eq("quotation_id", requestedId)
       .order("id", { ascending: true });
+
+    if (latestIdRef.current !== requestedId) return;
 
     setQuotation({
       ...(data as unknown as Quotation),
@@ -180,7 +189,7 @@ export const useQuotation = (quotationId: string | null) => {
 export const useCreateQuotation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: CreateQuotationPayload) => {
+    mutationFn: async (payload: CreateQuotationPayload): Promise<SupabaseRowId> => {
       const supabase = createClient();
       const { subtotal, tax, total } = computeTotals(payload.items, payload.tax);
 
@@ -208,15 +217,15 @@ export const useCreateQuotation = () => {
           notes: payload.notes?.trim() || null,
           scope_of_work: payload.scope_of_work?.trim() || null,
         })
-        .select()
+        .select("id")
         .single();
 
       if (error) throw error;
-      const quotation = data;
+      const insertedId = ensureRowId(data, "Quotation insert");
 
       if (payload.items.length > 0) {
         const rows = payload.items.map((item) => ({
-          quotation_id: quotation.id,
+          quotation_id: insertedId,
           product_id: item.product_id ?? null,
           description: item.description,
           quantity: item.quantity,
@@ -228,7 +237,7 @@ export const useCreateQuotation = () => {
         if (itemsError) throw itemsError;
       }
 
-      return quotation;
+      return { id: insertedId };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
@@ -248,7 +257,7 @@ export const useCreateQuotation = () => {
 
 export const useUpdateQuotation = () => {
   return useMutation({
-    mutationFn: async (payload: UpdateQuotationPayload) => {
+    mutationFn: async (payload: UpdateQuotationPayload): Promise<SupabaseRowId> => {
       const supabase = createClient();
       const updates: Record<string, unknown> = {};
 
@@ -277,13 +286,14 @@ export const useUpdateQuotation = () => {
         if (payload.tax_percentage !== undefined) updates.tax_percentage = payload.tax_percentage;
       }
 
-      const { data, error } = await supabase
+      const { data: afterUpdate, error } = await supabase
         .from("quotations")
         .update(updates)
         .eq("id", payload.id)
-        .select()
+        .select("id")
         .single();
       if (error) throw error;
+      const rowId = ensureRowId(afterUpdate, "Quotation update");
 
       if (payload.items) {
         await supabase.from("quotation_items").delete().eq("quotation_id", payload.id);
@@ -303,7 +313,7 @@ export const useUpdateQuotation = () => {
         }
       }
 
-      return data as unknown as Quotation;
+      return { id: rowId };
     },
     onSuccess: () => {
       ToastAlert.success("Quotation updated");
@@ -316,17 +326,17 @@ export const useUpdateQuotation = () => {
 
 export const useCancelQuotation = () => {
   return useMutation({
-    mutationFn: async (quotationId: string) => {
+    mutationFn: async (quotationId: string): Promise<SupabaseRowId> => {
       const supabase = createClient();
       const { data, error } = await supabase
         .from("quotations")
         .update({ status: "cancelled" })
         .eq("id", quotationId)
         .in("status", ["draft", "sent", "viewed"])
-        .select()
+        .select("id")
         .single();
       if (error) throw error;
-      return data as unknown as Quotation;
+      return { id: ensureRowId(data, "Quotation cancel") };
     },
     onSuccess: () => {
       ToastAlert.success("Quotation cancelled");
@@ -339,17 +349,17 @@ export const useCancelQuotation = () => {
 
 export const useSendQuotation = () => {
   return useMutation({
-    mutationFn: async (quotationId: string) => {
+    mutationFn: async (quotationId: string): Promise<SupabaseRowId> => {
       const supabase = createClient();
       const { data, error } = await supabase
         .from("quotations")
         .update({ status: "sent" })
         .eq("id", quotationId)
         .eq("status", "draft")
-        .select()
+        .select("id")
         .single();
       if (error) throw error;
-      return data as unknown as Quotation;
+      return { id: ensureRowId(data, "Quotation send") };
     },
     onSuccess: () => {
       ToastAlert.success("Quotation marked as sent");

@@ -303,14 +303,13 @@ const QuotationsContent = () => {
               </TableHeader>
               <TableBody>
                 {filtered.map((quo) => (
-                  <TableRow key={quo.id}>
+                  <TableRow
+                    key={quo.id}
+                    className="hover:bg-muted/50 cursor-pointer"
+                    onClick={() => router.push(`/dashboard/quotations/${quo.id}`)}
+                  >
                     <TableCell>
-                      <Link
-                        href={`/dashboard/quotations/${quo.id}`}
-                        className="font-medium hover:underline"
-                      >
-                        {quo.quotation_number}
-                      </Link>
+                      <span className="font-medium">{quo.quotation_number}</span>
                       <div className="mt-1 sm:hidden">
                         <StatusBadge status={quo.status} />
                       </div>
@@ -330,7 +329,7 @@ const QuotationsContent = () => {
                     <TableCell className="text-right font-medium">
                       {format(Number(quo.total))}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="w-10" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="size-8">

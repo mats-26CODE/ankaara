@@ -1,7 +1,7 @@
 "use client";
 
-import { use, useState, useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useMemo, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { useQuotation, useUpdateQuotation, type QuotationItemInput } from "@/hooks/use-quotations";
 import { useClients } from "@/hooks/use-clients";
 import { useProducts } from "@/hooks/use-products";
@@ -29,9 +29,11 @@ import Link from "next/link";
 import { QuotationTemplate } from "@/lib/quotation-templates/registry";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import dayjs from "dayjs";
+import { segmentParam } from "@/lib/route-params";
 
-const EditQuotationPage = ({ params }: { params: Promise<{ id: string }> }) => {
-  const { id } = use(params);
+const EditQuotationPage = () => {
+  const params = useParams();
+  const id = segmentParam(params.id);
   const router = useRouter();
   const { quotation, loading } = useQuotation(id);
   const { currencies, loading: currenciesLoading } = useCurrencies();
@@ -217,7 +219,7 @@ const EditQuotationPage = ({ params }: { params: Promise<{ id: string }> }) => {
     );
 
   const handleSubmit = () => {
-    if (!canSubmit) return;
+    if (!canSubmit || !id) return;
     updateQuotation.mutate(
       {
         id,
@@ -243,6 +245,14 @@ const EditQuotationPage = ({ params }: { params: Promise<{ id: string }> }) => {
   };
 
   const isLoading = loading || clientsLoading || currenciesLoading;
+
+  if (!id) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Spinner className="size-6" />
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

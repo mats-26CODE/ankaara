@@ -303,14 +303,13 @@ const InvoicesContent = () => {
               </TableHeader>
               <TableBody>
                 {filtered.map((inv) => (
-                  <TableRow key={inv.id}>
+                  <TableRow
+                    key={inv.id}
+                    className="hover:bg-muted/50 cursor-pointer"
+                    onClick={() => router.push(`/dashboard/invoices/${inv.id}`)}
+                  >
                     <TableCell>
-                      <Link
-                        href={`/dashboard/invoices/${inv.id}`}
-                        className="font-medium hover:underline"
-                      >
-                        {inv.invoice_number}
-                      </Link>
+                      <span className="font-medium">{inv.invoice_number}</span>
                       <div className="mt-1 sm:hidden">
                         <StatusBadge status={inv.status} />
                       </div>
@@ -330,7 +329,7 @@ const InvoicesContent = () => {
                     <TableCell className="text-right font-medium">
                       {format(Number(inv.total))}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="w-10" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="size-8">

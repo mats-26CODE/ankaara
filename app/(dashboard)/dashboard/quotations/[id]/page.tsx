@@ -1,8 +1,7 @@
 "use client";
 
-import { use } from "react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   useQuotation,
@@ -28,6 +27,7 @@ import { QUOTATION_ELEMENT_ID } from "@/components/shared/quotation-export-butto
 import { QuotationExportButtons } from "@/components/shared/quotation-export-buttons";
 import { ArrowLeft, Pencil, Trash2, Share2, FileText, XCircle } from "lucide-react";
 import dayjs from "dayjs";
+import { segmentParam } from "@/lib/route-params";
 
 const STATUS_CONFIG: Record<
   QuotationStatus,
@@ -59,8 +59,9 @@ const StatusBadge = ({ status }: { status: QuotationStatus }) => {
   );
 };
 
-const QuotationDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
-  const { id } = use(params);
+const QuotationDetailPage = () => {
+  const params = useParams();
+  const id = segmentParam(params.id);
   const router = useRouter();
   const { quotation, loading, refetch } = useQuotation(id);
   const deleteQuotation = useDeleteQuotation();
@@ -69,6 +70,14 @@ const QuotationDetailPage = ({ params }: { params: Promise<{ id: string }> }) =>
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+
+  if (!id) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Spinner className="size-6" />
+      </div>
+    );
+  }
 
   if (loading) {
     return (

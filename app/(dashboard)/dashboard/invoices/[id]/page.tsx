@@ -1,8 +1,7 @@
 "use client";
 
-import { use } from "react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   useInvoice,
@@ -31,6 +30,7 @@ import {
 } from "@/components/shared/invoice-export-buttons";
 import { ArrowLeft, Pencil, Trash2, Share2, Quote, ShoppingCart } from "lucide-react";
 import dayjs from "dayjs";
+import { segmentParam } from "@/lib/route-params";
 
 const STATUS_CONFIG: Record<
   InvoiceStatus,
@@ -64,8 +64,9 @@ const StatusBadge = ({ status }: { status: InvoiceStatus }) => {
   );
 };
 
-const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
-  const { id } = use(params);
+const InvoiceDetailPage = () => {
+  const params = useParams();
+  const id = segmentParam(params.id);
   const router = useRouter();
   const { invoice, loading, refetch } = useInvoice(id);
   const {
@@ -80,6 +81,14 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [convertDialogOpen, setConvertDialogOpen] = useState(false);
   const [saleDate, setSaleDate] = useState(dayjs().format("YYYY-MM-DD"));
+
+  if (!id) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Spinner className="size-6" />
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -133,10 +142,10 @@ const InvoiceDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
         sale_date: saleDate,
       },
       {
-        onSuccess: (sale) => {
+        onSuccess: (row) => {
           setConvertDialogOpen(false);
           refetchLinkedSale();
-          router.push(`/dashboard/sales/${sale.id}`);
+          router.push(`/dashboard/sales/${row.id}`);
         },
       },
     );

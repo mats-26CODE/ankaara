@@ -1,8 +1,7 @@
 "use client";
 
-import { use } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import { useSale } from "@/hooks/use-sales";
 import { useFormatAmount } from "@/hooks/use-format-amount";
@@ -18,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { segmentParam } from "@/lib/route-params";
 import {
   ArrowLeft,
   CircleDollarSign,
@@ -27,11 +27,20 @@ import {
   UserRound,
 } from "lucide-react";
 
-const SaleDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
-  const { id } = use(params);
+const SaleDetailPage = () => {
+  const params = useParams();
+  const id = segmentParam(params.id);
   const router = useRouter();
   const { sale, loading } = useSale(id);
   const { format: formatAmount } = useFormatAmount();
+
+  if (!id) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Spinner className="size-6" />
+      </div>
+    );
+  }
 
   if (loading) {
     return (

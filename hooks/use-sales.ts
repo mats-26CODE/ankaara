@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
+import { ensureRowId, type SupabaseRowId } from "@/lib/ensure-supabase-row-id";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
 import type { Json, Tables } from "@/database.types";
@@ -124,6 +125,8 @@ export const useSales = (
 export const useSale = (saleId: string | null) => {
   const [sale, setSale] = useState<Sale | null>(null);
   const [loading, setLoading] = useState(true);
+  const latestIdRef = useRef(saleId);
+  latestIdRef.current = saleId;
 
   const refetch = useCallback(async () => {
     if (!saleId) {
@@ -132,14 +135,17 @@ export const useSale = (saleId: string | null) => {
       return;
     }
 
+    const requestedId = saleId;
     const supabase = createClient();
     const { data, error } = await supabase
       .from("sales")
       .select(
         "*, client:clients(id, name, email, phone, address), invoice:invoices(id, invoice_number, status)",
       )
-      .eq("id", saleId)
+      .eq("id", requestedId)
       .single();
+
+    if (latestIdRef.current !== requestedId) return;
 
     if (error) {
       setSale(null);
@@ -150,8 +156,10 @@ export const useSale = (saleId: string | null) => {
     const { data: items } = await supabase
       .from("sale_items")
       .select("*, product:products(id, name)")
-      .eq("sale_id", saleId)
+      .eq("sale_id", requestedId)
       .order("id", { ascending: true });
+
+    if (latestIdRef.current !== requestedId) return;
 
     setSale({
       ...(data as unknown as Sale),
@@ -171,6 +179,8 @@ export const useSale = (saleId: string | null) => {
 export const useSaleByInvoice = (invoiceId: string | null) => {
   const [sale, setSale] = useState<Sale | null>(null);
   const [loading, setLoading] = useState(true);
+  const latestIdRef = useRef(invoiceId);
+  latestIdRef.current = invoiceId;
 
   const refetch = useCallback(async () => {
     if (!invoiceId) {
@@ -179,12 +189,15 @@ export const useSaleByInvoice = (invoiceId: string | null) => {
       return;
     }
 
+    const requestedId = invoiceId;
     const supabase = createClient();
     const { data, error } = await supabase
       .from("sales")
       .select("*")
-      .eq("invoice_id", invoiceId)
+      .eq("invoice_id", requestedId)
       .maybeSingle();
+
+    if (latestIdRef.current !== requestedId) return;
 
     if (error) {
       setSale(null);
@@ -205,7 +218,7 @@ export const useSaleByInvoice = (invoiceId: string | null) => {
 export const useCreateDirectSale = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: CreateDirectSalePayload) => {
+    mutationFn: async (payload: CreateDirectSalePayload): Promise<SupabaseRowId> => {
       const supabase = createClient();
       const { data, error } = await supabase.rpc("create_direct_sale", {
         p_business_id: payload.business_id,
@@ -217,7 +230,12 @@ export const useCreateDirectSale = () => {
       });
 
       if (error) throw error;
-      return data as Sale;
+      const raw = data as unknown;
+      const row = Array.isArray(raw) ? raw[0] : raw;
+      if (!row || typeof row !== "object") {
+        throw new Error("Invalid response from create_direct_sale");
+      }
+      return { id: ensureRowId(row as { id?: unknown }, "create_direct_sale") };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SALES_QUERY_KEY });
@@ -233,7 +251,7 @@ export const useCreateDirectSale = () => {
 export const useConvertInvoiceToSale = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: ConvertInvoiceToSalePayload) => {
+    mutationFn: async (payload: ConvertInvoiceToSalePayload): Promise<SupabaseRowId> => {
       const supabase = createClient();
       const { data, error } = await supabase.rpc("convert_invoice_to_sale", {
         p_invoice_id: payload.invoice_id,
@@ -241,7 +259,12 @@ export const useConvertInvoiceToSale = () => {
       });
 
       if (error) throw error;
-      return data as Sale;
+      const raw = data as unknown;
+      const row = Array.isArray(raw) ? raw[0] : raw;
+      if (!row || typeof row !== "object") {
+        throw new Error("Invalid response from convert_invoice_to_sale");
+      }
+      return { id: ensureRowId(row as { id?: unknown }, "convert_invoice_to_sale") };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SALES_QUERY_KEY });

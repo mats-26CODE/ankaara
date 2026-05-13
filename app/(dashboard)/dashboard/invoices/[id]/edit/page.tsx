@@ -1,7 +1,7 @@
 "use client";
 
-import { use, useState, useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useMemo, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { useInvoice, useUpdateInvoice, type InvoiceItemInput } from "@/hooks/use-invoices";
 import { useQuotations } from "@/hooks/use-quotations";
 import { useClients } from "@/hooks/use-clients";
@@ -30,9 +30,11 @@ import Link from "next/link";
 import { InvoiceTemplate } from "@/lib/invoice-templates/registry";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import dayjs from "dayjs";
+import { segmentParam } from "@/lib/route-params";
 
-const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
-  const { id } = use(params);
+const EditInvoicePage = () => {
+  const params = useParams();
+  const id = segmentParam(params.id);
   const router = useRouter();
   const { invoice, loading } = useInvoice(id);
   const { currencies, loading: currenciesLoading } = useCurrencies();
@@ -219,7 +221,7 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
     );
 
   const handleSubmit = () => {
-    if (!canSubmit) return;
+    if (!canSubmit || !id) return;
     updateInvoice.mutate(
       {
         id,
@@ -245,6 +247,14 @@ const EditInvoicePage = ({ params }: { params: Promise<{ id: string }> }) => {
   };
 
   const isLoading = loading || clientsLoading || currenciesLoading;
+
+  if (!id) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Spinner className="size-6" />
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

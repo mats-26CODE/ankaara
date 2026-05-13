@@ -159,8 +159,8 @@ const CreateSalePage = () => {
         })),
       },
       {
-        onSuccess: (sale) => {
-          router.push(`/dashboard/sales/${sale.id}`);
+        onSuccess: (row) => {
+          router.push(`/dashboard/sales/${row.id}`);
         },
       },
     );
@@ -178,7 +178,7 @@ const CreateSalePage = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-4 md:space-y-2">
-          <Button variant="outline" size="icon" asChild className="rounded-full">
+          <Button variant="outline" size="icon" asChild>
             <Link href="/dashboard/sales">
               <ArrowLeft className="size-4" />
             </Link>
