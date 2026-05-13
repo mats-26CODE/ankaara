@@ -882,6 +882,32 @@ export type Database = {
           },
         ];
       };
+      sale_short_links: {
+        Row: {
+          created_at: string;
+          sale_id: string;
+          slug: string;
+        };
+        Insert: {
+          created_at?: string;
+          sale_id: string;
+          slug: string;
+        };
+        Update: {
+          created_at?: string;
+          sale_id?: string;
+          slug?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "sale_short_links_sale_id_fkey";
+            columns: ["sale_id"];
+            isOneToOne: true;
+            referencedRelation: "sales";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       sales: {
         Row: {
           business_id: string;
@@ -1331,6 +1357,7 @@ export type Database = {
         Returns: string;
       };
       next_sale_number: { Args: { p_business_id: string }; Returns: string };
+      resolve_sale_short_link: { Args: { p_slug: string }; Returns: string };
       set_confirmation: {
         Args: { code: string; phone_number: string };
         Returns: string;
