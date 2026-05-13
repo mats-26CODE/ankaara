@@ -57,11 +57,11 @@ export const InvoiceExportButtons = ({ invoiceNumber }: { invoiceNumber: string 
     <div className="flex flex-wrap gap-2">
       <Button variant="outline" size="sm" onClick={handleExportImage} disabled={!!exporting}>
         <FileImage className="mr-2 size-4" />
-        {exporting === "image" ? "Exporting..." : "PNG"}
+        {exporting === "image" ? "Downloading..." : "Download as PNG"}
       </Button>
       <Button variant="outline" size="sm" onClick={handleExportPdf} disabled={!!exporting}>
         <FileDown className="mr-2 size-4" />
-        {exporting === "pdf" ? "Exporting..." : "PDF"}
+        {exporting === "pdf" ? "Downloading..." : "Download as PDF"}
       </Button>
     </div>
   );

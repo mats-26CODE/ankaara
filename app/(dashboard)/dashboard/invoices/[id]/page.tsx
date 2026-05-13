@@ -154,14 +154,16 @@ const InvoiceDetailPage = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-3">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1 space-y-3">
           <Button variant="outline" size="icon" onClick={() => router.back()}>
             <ArrowLeft className="size-4" />
           </Button>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold tracking-tight">{invoice.invoice_number}</h1>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight wrap-break-word">
+                {invoice.invoice_number}
+              </h1>
               <StatusBadge status={invoice.status} />
             </div>
             <p className="text-muted-foreground text-sm">
@@ -181,7 +183,7 @@ const InvoiceDetailPage = () => {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full shrink-0 flex-wrap items-center gap-2 sm:ml-auto sm:w-auto sm:justify-end">
           {isDraft && (
             <Button variant="outline" size="sm" asChild>
               <Link href={`/dashboard/invoices/${invoice.id}/edit`}>
@@ -237,7 +239,7 @@ const InvoiceDetailPage = () => {
       </div>
 
       {/* Invoice Preview — rendered with selected template */}
-      <div id={INVOICE_ELEMENT_ID}>
+      <div id={INVOICE_ELEMENT_ID} className="min-w-0 overflow-x-auto">
         <InvoiceTemplate
           templateId={invoice.template_id ?? "classic"}
           invoiceNumber={invoice.invoice_number}
