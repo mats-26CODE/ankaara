@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   useInvoice,
@@ -31,6 +31,7 @@ import {
 import { ArrowLeft, Pencil, Trash2, Share2, Quote, ShoppingCart } from "lucide-react";
 import dayjs from "dayjs";
 import { segmentParam } from "@/lib/route-params";
+import { canConvertInvoiceToSale } from "@/lib/invoice-sale-conversion";
 
 const STATUS_CONFIG: Record<
   InvoiceStatus,
@@ -68,6 +69,7 @@ const InvoiceDetailPage = () => {
   const params = useParams();
   const id = segmentParam(params.id);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { invoice, loading, refetch } = useInvoice(id);
   const {
     sale: linkedSale,
@@ -81,6 +83,12 @@ const InvoiceDetailPage = () => {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [convertDialogOpen, setConvertDialogOpen] = useState(false);
   const [saleDate, setSaleDate] = useState(dayjs().format("YYYY-MM-DD"));
+
+  useEffect(() => {
+    if (!id || searchParams.get("convert") !== "1") return;
+    setConvertDialogOpen(true);
+    router.replace(`/dashboard/invoices/${id}`, { scroll: false });
+  }, [id, searchParams, router]);
 
   if (!id) {
     return (
@@ -124,7 +132,8 @@ const InvoiceDetailPage = () => {
     );
   const canShare = !isDraft || draftHasRequiredDetails;
   const shareUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/invoice/${invoice.id}`;
-  const canConvertToSale = invoice.status === "paid" && !linkedSale && !saleLoading;
+  const canShowConvertToSale =
+    canConvertInvoiceToSale(invoice.status, !!linkedSale) && !saleLoading;
 
   const handleDelete = () => {
     deleteInvoice.mutate(invoice.id, {
@@ -144,7 +153,8 @@ const InvoiceDetailPage = () => {
       {
         onSuccess: (row) => {
           setConvertDialogOpen(false);
-          refetchLinkedSale();
+          void refetch();
+          void refetchLinkedSale();
           router.push(`/dashboard/sales/${row.id}`);
         },
       },
@@ -200,15 +210,14 @@ const InvoiceDetailPage = () => {
               </Link>
             </Button>
           ) : (
-            invoice.status === "paid" && (
+            canShowConvertToSale && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setConvertDialogOpen(true)}
-                disabled={!canConvertToSale}
               >
                 <ShoppingCart className="mr-1 size-4" />
-                Convert to Sale
+                Convert to sale
               </Button>
             )
           )}
@@ -297,7 +306,9 @@ const InvoiceDetailPage = () => {
           <DialogHeader>
             <DialogTitle>Convert invoice to sale</DialogTitle>
             <DialogDescription>
-              This records the paid invoice as a sale and deducts stock for product items.
+              {invoice.status === "paid"
+                ? "This records the invoice as a sale on the date you choose and deducts stock for product line items."
+                : "The invoice will be marked paid, then recorded as a sale on the date you choose. Stock is deducted for product line items."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2 py-2">

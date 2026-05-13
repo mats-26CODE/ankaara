@@ -60,9 +60,11 @@ import {
   FileText,
   ChevronLeft,
   ChevronRight,
+  ShoppingCart,
 } from "lucide-react";
 import dayjs from "dayjs";
 import { ShareInvoiceDialog } from "@/components/shared/share-invoice-dialog";
+import { canConvertInvoiceToSale } from "@/lib/invoice-sale-conversion";
 
 const STATUS_CONFIG: Record<
   InvoiceStatus,
@@ -355,6 +357,14 @@ const InvoicesContent = () => {
                             <DropdownMenuItem onClick={() => handleShare(inv)}>
                               <Share2 className="mr-2 size-4" />
                               Share
+                            </DropdownMenuItem>
+                          )}
+                          {canConvertInvoiceToSale(inv.status, !!inv.linked_sale_id) && (
+                            <DropdownMenuItem asChild>
+                              <Link href={`/dashboard/invoices/${inv.id}?convert=1`}>
+                                <ShoppingCart className="mr-2 size-4" />
+                                Convert to sale
+                              </Link>
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuSeparator />

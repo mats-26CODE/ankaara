@@ -240,13 +240,13 @@ const BusinessesSettingsPage = () => {
                 return (
                   <div
                     key={biz.id}
-                    className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-4 transition-colors"
+                    className="hover:bg-muted/50 flex flex-col gap-3 rounded-lg border p-4 transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                   >
-                    <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
                       <button
                         type="button"
                         onClick={() => setCurrentBusiness(biz.id)}
-                        className={`flex size-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                        className={`mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors sm:mt-0 ${
                           isActive
                             ? "border-primary bg-primary text-primary-foreground"
                             : "border-muted-foreground/30 hover:border-primary/50"
@@ -255,26 +255,30 @@ const BusinessesSettingsPage = () => {
                       >
                         {isActive && <Check className="size-4" />}
                       </button>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="truncate font-medium">{biz.name}</p>
-                          {isActive && (
-                            <Badge variant="secondary" className="shrink-0 text-xs">
-                              Active
-                            </Badge>
-                          )}
-                          {biz.is_primary && (
-                            <Badge variant="outline" className="shrink-0 text-xs">
-                              Primary
-                            </Badge>
-                          )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2">
+                          <p className="font-medium leading-snug wrap-break-word sm:min-w-0 sm:truncate sm:leading-none">
+                            {biz.name}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-1.5 sm:shrink-0">
+                            {isActive && (
+                              <Badge variant="secondary" className="text-xs">
+                                Active
+                              </Badge>
+                            )}
+                            {biz.is_primary && (
+                              <Badge variant="outline" className="text-xs">
+                                Primary
+                              </Badge>
+                            )}
+                          </div>
                         </div>
-                        <p className="text-muted-foreground truncate text-xs">
+                        <p className="text-muted-foreground mt-1.5 text-xs wrap-break-word sm:mt-1 sm:truncate">
                           {[biz.currency, biz.address].filter(Boolean).join(" · ") || "No details"}
                         </p>
                       </div>
                     </div>
-                    <div className="ml-2 flex shrink-0 items-center gap-1">
+                    <div className="flex shrink-0 flex-wrap items-center justify-end gap-1 border-t pt-3 sm:ml-2 sm:border-t-0 sm:pt-0">
                       {!biz.is_primary && (
                         <Button
                           variant="ghost"

@@ -53,6 +53,9 @@ const getSalesErrorMessage = (message: string) => {
     const product = message.split(":").at(-1);
     return product ? `Insufficient stock for ${product}.` : "Insufficient stock.";
   }
+  if (message.includes("INVOICE_STATUS_NOT_ELIGIBLE_FOR_SALE_CONVERSION")) {
+    return "Only sent, viewed, or paid invoices can be converted to a sale.";
+  }
   return message;
 };
 

@@ -15,6 +15,8 @@ export type InvoiceItem = Tables<"invoice_items">;
 
 export type Invoice = Tables<"invoices"> & {
   status: InvoiceStatus;
+  /** Present on list rows when a sale already exists for this invoice */
+  linked_sale_id?: string | null;
   client?: Pick<Tables<"clients">, "id" | "name" | "email" | "phone" | "address">;
   business?: Pick<
     Tables<"businesses">,
@@ -118,7 +120,28 @@ export const useInvoices = (
       setInvoices([]);
       setTotalCount(null);
     } else {
-      setInvoices((data as unknown as Invoice[]) ?? []);
+      const rows = (data as unknown as Invoice[]) ?? [];
+      if (rows.length === 0) {
+        setInvoices([]);
+      } else {
+        const ids = rows.map((r) => r.id);
+        const { data: saleLinks, error: saleLinksError } = await supabase
+          .from("sales")
+          .select("id, invoice_id")
+          .in("invoice_id", ids);
+        const byInvoice = new Map<string, string>();
+        if (!saleLinksError && saleLinks) {
+          for (const s of saleLinks) {
+            if (s.invoice_id) byInvoice.set(s.invoice_id, s.id);
+          }
+        }
+        setInvoices(
+          rows.map((inv) => ({
+            ...inv,
+            linked_sale_id: byInvoice.get(inv.id) ?? null,
+          })),
+        );
+      }
       setTotalCount(count ?? null);
     }
     setLoading(false);

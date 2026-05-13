@@ -75,9 +75,9 @@ export const translations = {
       faq2Question: "Ninawezaje kuongeza bidhaa au huduma?",
       faq2Answer:
         "Nenda Inventory, bonyeza Add Item, chagua kama ni Product au Service, weka base price, selling price na stock kama ni bidhaa.",
-      faq3Question: "Naweza kubadili ankara iliyolipwa kuwa sale?",
+      faq3Question: "Naweza kubadili invoice kuwa sale?",
       faq3Answer:
-        "Ndiyo. Fungua invoice iliyolipwa na utumie Convert to Sale. Mfumo utahifadhi sale na kuzuia invoice hiyo kubadilishwa mara mbili.",
+        "Ndiyo, kwa invoice zilizotumwa, zilizotazamwa, au tayari zimelipwa (sio rasimu, zilizofutwa, au zilizochelewa). Tumia Convert to sale kwenye invoice au menyu ya safu. Zilizotumwa au zilizotazamwa zitaonyeshwa kama zimelipwa unapobadili. Sale inaundwa mara moja kwa kila invoice.",
       faq4Question: "Stock inapungua vipi baada ya sale?",
       faq4Answer:
         "Kwa bidhaa, stock hupunguzwa unapohifadhi sale. Huduma hazipunguzi stock, lakini bado zinaweza kuuzwa na kuonekana kwenye historia ya mauzo.",
@@ -539,9 +539,9 @@ export const translations = {
       faq2Question: "How do I add a product or service?",
       faq2Answer:
         "Go to Inventory, click Add Item, choose Product or Service, then add base price, selling price and stock when the item is a product.",
-      faq3Question: "Can I convert a paid invoice into a sale?",
+      faq3Question: "Can I convert an invoice into a sale?",
       faq3Answer:
-        "Yes. Open a paid invoice and use Convert to Sale. The system records the sale and prevents the same invoice from being converted twice.",
+        "Yes, for invoices that are sent, viewed, or already paid (not draft, cancelled, or overdue). Use Convert to sale from the invoice or the row menu. Sent or viewed invoices are marked paid when you convert. The sale is created once per invoice.",
       faq4Question: "How is stock reduced after a sale?",
       faq4Answer:
         "For products, stock is reduced when the sale is saved. Services do not reduce stock, but still appear in sales history.",
