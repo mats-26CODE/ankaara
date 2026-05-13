@@ -160,6 +160,7 @@ const CreateSalePage = () => {
       },
       {
         onSuccess: (row) => {
+          setItems([]);
           router.push(`/dashboard/sales/${row.id}`);
         },
       },
@@ -209,7 +210,7 @@ const CreateSalePage = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Sale Date</Label>
-                <DatePicker value={saleDate} onChange={setSaleDate} />
+                <DatePicker value={saleDate} onChange={setSaleDate} disableFuture />
               </div>
               <div className="space-y-2">
                 <Label>Client</Label>
