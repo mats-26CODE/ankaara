@@ -5,19 +5,11 @@ import { Button } from "@/components/ui/button";
 import { FileDown, FileImage } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { ToastAlert } from "@/config/toast";
-import {
-  captureElementAsCanvas,
-  downloadAsPng,
-  downloadAsPdf,
-} from "@/lib/capture-invoice";
+import { captureElementAsCanvas, downloadAsPng, downloadAsPdf } from "@/lib/capture-invoice";
 
 export const QUOTATION_ELEMENT_ID = "quotation-to-export";
 
-export const QuotationExportButtons = ({
-  quotationNumber,
-}: {
-  quotationNumber: string;
-}) => {
+export const QuotationExportButtons = ({ quotationNumber }: { quotationNumber: string }) => {
   const [exporting, setExporting] = useState<"pdf" | "image" | null>(null);
 
   const captureCanvas = async () => {
@@ -51,23 +43,13 @@ export const QuotationExportButtons = ({
 
   return (
     <div className="flex gap-2">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleExportImage}
-        disabled={!!exporting}
-      >
+      <Button variant="outline" size="sm" onClick={handleExportImage} disabled={!!exporting}>
         <FileImage className="mr-2 size-4" />
-        {exporting === "image" ? "Exporting..." : "PNG"}
+        {exporting === "image" ? "Exporting..." : "Download as PNG"}
       </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleExportPdf}
-        disabled={!!exporting}
-      >
+      <Button variant="outline" size="sm" onClick={handleExportPdf} disabled={!!exporting}>
         <FileDown className="mr-2 size-4" />
-        {exporting === "pdf" ? "Exporting..." : "PDF"}
+        {exporting === "pdf" ? "Exporting..." : "Download as PDF"}
       </Button>
     </div>
   );

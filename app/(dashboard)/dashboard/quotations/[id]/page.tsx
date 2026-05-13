@@ -132,22 +132,22 @@ const QuotationDetailPage = () => {
   };
 
   const canCancel =
-    quotation.status === "draft" ||
-    quotation.status === "sent" ||
-    quotation.status === "viewed";
+    quotation.status === "draft" || quotation.status === "sent" || quotation.status === "viewed";
 
   const totalDiscount = (quotation.items ?? []).reduce((s, i) => s + Number(i.discount ?? 0), 0);
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-3">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1 space-y-3">
           <Button variant="outline" size="icon" onClick={() => router.back()}>
             <ArrowLeft className="size-4" />
           </Button>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold tracking-tight">{quotation.quotation_number}</h1>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight wrap-break-word">
+                {quotation.quotation_number}
+              </h1>
               <StatusBadge status={quotation.status} />
             </div>
             <p className="text-muted-foreground text-sm">
@@ -155,7 +155,7 @@ const QuotationDetailPage = () => {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full shrink-0 flex-wrap items-center gap-2 sm:ml-auto sm:w-auto sm:justify-end">
           {isDraft && (
             <Button variant="outline" size="sm" asChild>
               <Link href={`/dashboard/quotations/${quotation.id}/edit`}>
@@ -190,7 +190,7 @@ const QuotationDetailPage = () => {
               variant="outline"
               size="sm"
               onClick={() => setCancelDialogOpen(true)}
-              className="text-amber-600 border-amber-200 hover:bg-amber-50 hover:text-amber-700"
+              className="border-amber-200 text-amber-600 hover:bg-amber-50 hover:text-amber-700"
             >
               <XCircle className="mr-1 size-4" />
               Cancel
@@ -207,7 +207,7 @@ const QuotationDetailPage = () => {
         </div>
       </div>
 
-      <div id={QUOTATION_ELEMENT_ID}>
+      <div id={QUOTATION_ELEMENT_ID} className="min-w-0 overflow-x-auto">
         <QuotationTemplate
           templateId={quotation.template_id ?? "classic"}
           quotationNumber={quotation.quotation_number}
