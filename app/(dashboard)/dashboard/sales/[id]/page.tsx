@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import { useSale } from "@/hooks/use-sales";
+import { useFormatAmount } from "@/hooks/use-format-amount";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -17,12 +18,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, FileText } from "lucide-react";
+import {
+  ArrowLeft,
+  CircleDollarSign,
+  FileText,
+  Package,
+  TrendingUp,
+  UserRound,
+} from "lucide-react";
 
 const SaleDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params);
   const router = useRouter();
   const { sale, loading } = useSale(id);
+  const { format: formatAmount } = useFormatAmount();
 
   if (loading) {
     return (
@@ -73,40 +82,55 @@ const SaleDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
         )}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{Number(sale.total).toLocaleString()}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Cost</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{Number(sale.total_cost).toLocaleString()}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Profit</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{Number(sale.profit).toLocaleString()}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Client</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="truncate text-lg font-semibold">{sale.client?.name ?? "Walk-in"}</p>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Sale summary</CardTitle>
+          <CardDescription>Amounts and customer for this sale.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-medium">Total</p>
+                <CircleDollarSign className="size-4 shrink-0 text-blue-600" />
+              </div>
+              <p className="mt-2 text-xl font-bold">
+                {formatAmount(Number(sale.total), { decimalDigits: 0 })}
+              </p>
+            </div>
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-medium">Cost</p>
+                <Package className="size-4 shrink-0 text-violet-600" />
+              </div>
+              <p className="mt-2 text-xl font-bold">
+                {formatAmount(Number(sale.total_cost), { decimalDigits: 0 })}
+              </p>
+            </div>
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-medium">Profit</p>
+                <TrendingUp className="size-4 shrink-0 text-green-600" />
+              </div>
+              <p className="mt-2 text-xl font-bold">
+                {formatAmount(Number(sale.profit), { decimalDigits: 0 })}
+              </p>
+            </div>
+            <div className="min-w-0 rounded-lg border p-4">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-medium">Client</p>
+                <UserRound className="text-muted-foreground size-4 shrink-0" />
+              </div>
+              <p
+                className="mt-2 truncate text-xl font-medium"
+                title={sale.client?.name ?? "Walk-in"}
+              >
+                {sale.client?.name ?? "Walk-in"}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

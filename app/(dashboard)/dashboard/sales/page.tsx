@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import { useBusinesses } from "@/hooks/use-businesses";
-import { useSales } from "@/hooks/use-sales";
+import { useSales, type Sale } from "@/hooks/use-sales";
 import { useCurrentBusinessId } from "@/lib/stores/business-store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -26,7 +27,6 @@ import {
   ChevronRight,
   Eye,
   Plus,
-  RotateCcw,
   Search,
   ShoppingCart,
   X,
@@ -34,7 +34,16 @@ import {
 
 const PAGE_SIZE = 10;
 
+const saleMatchesItemSearch = (sale: Sale, q: string) =>
+  (sale.items ?? []).some((item) => {
+    const label = (item.product?.name?.trim() || item.description?.trim() || "Item").toLowerCase();
+    const desc = item.description?.toLowerCase() ?? "";
+    const prod = item.product?.name?.toLowerCase() ?? "";
+    return label.includes(q) || desc.includes(q) || prod.includes(q);
+  });
+
 const SalesPage = () => {
+  const router = useRouter();
   const { businesses, loading: businessesLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
   const [page, setPage] = useState(1);
@@ -77,7 +86,8 @@ const SalesPage = () => {
         sale.sale_number.toLowerCase().includes(q) ||
         sale.client?.name?.toLowerCase().includes(q) ||
         sale.invoice?.invoice_number?.toLowerCase().includes(q) ||
-        sale.source.toLowerCase().includes(q),
+        sale.source.toLowerCase().includes(q) ||
+        saleMatchesItemSearch(sale, q),
     );
   }, [sales, search]);
 
@@ -134,7 +144,7 @@ const SalesPage = () => {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by sale, client, invoice..."
+                placeholder="Search by  product, sale number, client, invoice..."
                 className="pl-9"
               />
             </div>
@@ -204,7 +214,11 @@ const SalesPage = () => {
               </TableHeader>
               <TableBody>
                 {filtered.map((sale) => (
-                  <TableRow key={sale.id}>
+                  <TableRow
+                    key={sale.id}
+                    className="hover:bg-muted/50 cursor-pointer"
+                    onClick={() => router.push(`/dashboard/sales/${sale.id}`)}
+                  >
                     <TableCell className="font-medium">{sale.sale_number}</TableCell>
                     <TableCell>{dayjs(sale.sale_date).format("MMM D, YYYY")}</TableCell>
                     <TableCell>
@@ -219,7 +233,7 @@ const SalesPage = () => {
                     <TableCell className="hidden md:table-cell">
                       {Number(sale.profit).toLocaleString()}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="w-10" onClick={(e) => e.stopPropagation()}>
                       <Button variant="ghost" size="icon" asChild>
                         <Link href={`/dashboard/sales/${sale.id}`}>
                           <Eye className="size-4" />

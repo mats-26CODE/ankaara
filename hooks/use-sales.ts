@@ -15,7 +15,11 @@ export type Sale = Tables<"sales"> & {
   items?: SaleItem[];
 };
 
-export type SaleItem = Tables<"sale_items">;
+export type SaleItem = Tables<"sale_items"> & {
+  product?: Pick<Tables<"products">, "id" | "name"> | null;
+};
+
+type SaleRowFromList = Omit<Sale, "items"> & { sale_items?: SaleItem[] };
 
 export type DirectSaleItemInput = {
   product_id: string;
@@ -79,12 +83,13 @@ export const useSales = (
     let query = supabase
       .from("sales")
       .select(
-        "*, client:clients(id, name, email, phone, address), invoice:invoices(id, invoice_number, status)",
+        "*, client:clients(id, name, email, phone, address), invoice:invoices(id, invoice_number, status), sale_items(id, quantity, description, item_type, product_id, product:products(id, name))",
         { count: "exact" },
       )
       .eq("business_id", businessId)
       .order("sale_date", { ascending: false })
       .order("recorded_at", { ascending: false })
+      .order("id", { ascending: true, foreignTable: "sale_items" })
       .range(from, to);
 
     if (fromDate) query = query.gte("sale_date", fromDate);
@@ -96,7 +101,13 @@ export const useSales = (
       setSales([]);
       setTotalCount(null);
     } else {
-      setSales((data as unknown as Sale[]) ?? []);
+      const rows = (data ?? []) as SaleRowFromList[];
+      setSales(
+        rows.map(({ sale_items, ...rest }) => ({
+          ...rest,
+          items: sale_items ?? [],
+        })) as Sale[],
+      );
       setTotalCount(count ?? null);
     }
     setLoading(false);
@@ -138,7 +149,7 @@ export const useSale = (saleId: string | null) => {
 
     const { data: items } = await supabase
       .from("sale_items")
-      .select("*")
+      .select("*, product:products(id, name)")
       .eq("sale_id", saleId)
       .order("id", { ascending: true });
 
