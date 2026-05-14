@@ -14,6 +14,7 @@
 // @ts-nocheck
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { formatMoneyAmountForSms } from "../../../lib/format-money-amount-for-sms.ts";
 
 type DbWebhookInsertPayload = {
   type: string;
@@ -33,12 +34,8 @@ const verifyWebhookSecret = (req: Request): boolean => {
   return alt === secret;
 };
 
-const formatAmount = (currency: string, total: number): string => {
-  const n = Number(total);
-  if (!Number.isFinite(n)) return `${currency} 0`;
-  if (Number.isInteger(n)) return `${currency} ${n}`;
-  return `${currency} ${n.toFixed(2)}`;
-};
+const formatAmount = (currency: string, total: number): string =>
+  formatMoneyAmountForSms(Number(total), currency);
 
 /** Webhook `record` fields may be strings; DB returns numeric types. */
 const parseMoney = (v: unknown): number => {

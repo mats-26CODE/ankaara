@@ -402,3 +402,5 @@ export function addCountryCode(phoneNumber: string): string {
   // If no leading zero or country code, assume it's a local number and add country code
   return "255" + cleanedNumber;
 }
+
+export { formatMoneyAmountForSms } from "@/lib/format-money-amount-for-sms";
