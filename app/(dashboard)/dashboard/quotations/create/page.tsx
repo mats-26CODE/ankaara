@@ -290,12 +290,7 @@ const CreateQuotationPage = () => {
   return (
     <div className="space-y-6">
       <div className="space-y-3">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => router.back()}
-          className="rounded-full"
-        >
+        <Button variant="outline" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="size-4" />
         </Button>
         <div>
