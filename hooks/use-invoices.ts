@@ -3,9 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
-import { awaitClientSession } from "@/lib/supabase/await-client-session";
-import { retryNoRowSingle } from "@/lib/supabase/retry-no-row-single";
 import { ensureRowId, type SupabaseRowId } from "@/lib/ensure-supabase-row-id";
+import { runSupabaseDetailQueryWithRetry } from "@/lib/supabase/detail-fetch-retry";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
@@ -159,8 +158,9 @@ export const useInvoices = (
 
 export const useInvoice = (invoiceId: string | null) => {
   const [invoice, setInvoice] = useState<Invoice | null>(null);
-  const [loading, setLoading] = useState(!!invoiceId);
-  const fetchSeqRef = useRef(0);
+  const [loading, setLoading] = useState(true);
+  const latestIdRef = useRef(invoiceId);
+  latestIdRef.current = invoiceId;
 
   const refetch = useCallback(async () => {
     if (!invoiceId) {
@@ -169,24 +169,19 @@ export const useInvoice = (invoiceId: string | null) => {
       return;
     }
 
-    const mySeq = ++fetchSeqRef.current;
-    setLoading(true);
-    setInvoice(null);
-
+    const requestedId = invoiceId;
     const supabase = createClient();
-    await awaitClientSession(supabase);
-
-    const { data, error } = await retryNoRowSingle(supabase, () =>
+    const { data, error } = await runSupabaseDetailQueryWithRetry(supabase, async () =>
       supabase
         .from("invoices")
         .select(
           "*, client:clients(id, name, email, phone, address), business:businesses!invoices_business_id_fkey(id, name, address, logo_url, logo_text, tax_number, brand_color, currency)",
         )
-        .eq("id", invoiceId)
+        .eq("id", requestedId)
         .single(),
     );
 
-    if (mySeq !== fetchSeqRef.current) return;
+    if (latestIdRef.current !== requestedId) return;
 
     if (error) {
       setInvoice(null);
@@ -194,13 +189,13 @@ export const useInvoice = (invoiceId: string | null) => {
       return;
     }
 
-    const { data: items } = await supabase
-      .from("invoice_items")
-      .select("*")
-      .eq("invoice_id", invoiceId)
-      .order("id", { ascending: true });
+    const { data: items } = await runSupabaseDetailQueryWithRetry(supabase, async () =>
+      supabase.from("invoice_items").select("*").eq("invoice_id", requestedId).order("id", {
+        ascending: true,
+      }),
+    );
 
-    if (mySeq !== fetchSeqRef.current) return;
+    if (latestIdRef.current !== requestedId) return;
 
     setInvoice({
       ...(data as unknown as Invoice),
@@ -210,7 +205,8 @@ export const useInvoice = (invoiceId: string | null) => {
   }, [invoiceId]);
 
   useEffect(() => {
-    void refetch();
+    setLoading(true);
+    refetch();
   }, [refetch]);
 
   return { invoice, loading, refetch };

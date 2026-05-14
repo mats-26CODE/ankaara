@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
-import { deferNavigation } from "@/lib/navigation/defer-navigation";
 import { useBusinesses } from "@/hooks/use-businesses";
 import { useSales, type Sale } from "@/hooks/use-sales";
 import { useCurrentBusinessId } from "@/lib/stores/business-store";
@@ -220,9 +219,7 @@ const SalesPage = () => {
                   <TableRow
                     key={sale.id}
                     className="hover:bg-muted/50 cursor-pointer"
-                    onClick={() =>
-                      deferNavigation(() => router.push(`/dashboard/sales/${sale.id}`))
-                    }
+                    onClick={() => router.push(`/dashboard/sales/${sale.id}`)}
                   >
                     <TableCell className="font-medium">{sale.sale_number}</TableCell>
                     <TableCell>{dayjs(sale.sale_date).format("MMM D, YYYY")}</TableCell>

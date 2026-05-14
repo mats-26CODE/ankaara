@@ -3,9 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
-import { awaitClientSession } from "@/lib/supabase/await-client-session";
-import { retryNoRowSingle } from "@/lib/supabase/retry-no-row-single";
 import { ensureRowId, type SupabaseRowId } from "@/lib/ensure-supabase-row-id";
+import { runSupabaseDetailQueryWithRetry } from "@/lib/supabase/detail-fetch-retry";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
@@ -136,8 +135,9 @@ export const useQuotations = (
 
 export const useQuotation = (quotationId: string | null) => {
   const [quotation, setQuotation] = useState<Quotation | null>(null);
-  const [loading, setLoading] = useState(!!quotationId);
-  const fetchSeqRef = useRef(0);
+  const [loading, setLoading] = useState(true);
+  const latestIdRef = useRef(quotationId);
+  latestIdRef.current = quotationId;
 
   const refetch = useCallback(async () => {
     if (!quotationId) {
@@ -146,24 +146,19 @@ export const useQuotation = (quotationId: string | null) => {
       return;
     }
 
-    const mySeq = ++fetchSeqRef.current;
-    setLoading(true);
-    setQuotation(null);
-
+    const requestedId = quotationId;
     const supabase = createClient();
-    await awaitClientSession(supabase);
-
-    const { data, error } = await retryNoRowSingle(supabase, () =>
+    const { data, error } = await runSupabaseDetailQueryWithRetry(supabase, async () =>
       supabase
         .from("quotations")
         .select(
           "*, client:clients(id, name, email, phone, address), business:businesses!quotations_business_id_fkey(id, name, address, logo_url, logo_text, tax_number, brand_color, currency)",
         )
-        .eq("id", quotationId)
+        .eq("id", requestedId)
         .single(),
     );
 
-    if (mySeq !== fetchSeqRef.current) return;
+    if (latestIdRef.current !== requestedId) return;
 
     if (error) {
       setQuotation(null);
@@ -171,13 +166,13 @@ export const useQuotation = (quotationId: string | null) => {
       return;
     }
 
-    const { data: items } = await supabase
-      .from("quotation_items")
-      .select("*")
-      .eq("quotation_id", quotationId)
-      .order("id", { ascending: true });
+    const { data: items } = await runSupabaseDetailQueryWithRetry(supabase, async () =>
+      supabase.from("quotation_items").select("*").eq("quotation_id", requestedId).order("id", {
+        ascending: true,
+      }),
+    );
 
-    if (mySeq !== fetchSeqRef.current) return;
+    if (latestIdRef.current !== requestedId) return;
 
     setQuotation({
       ...(data as unknown as Quotation),
@@ -187,7 +182,8 @@ export const useQuotation = (quotationId: string | null) => {
   }, [quotationId]);
 
   useEffect(() => {
-    void refetch();
+    setLoading(true);
+    refetch();
   }, [refetch]);
 
   return { quotation, loading, refetch };

@@ -31,7 +31,7 @@ const SaleDetailPage = () => {
   const params = useParams();
   const id = segmentParam(params.id);
   const router = useRouter();
-  const { sale, loading, refetch } = useSale(id);
+  const { sale, loading } = useSale(id);
   const { format: formatAmount } = useFormatAmount();
 
   if (!id) {
@@ -54,14 +54,9 @@ const SaleDetailPage = () => {
     return (
       <div className="flex flex-col items-center gap-4 py-12">
         <p className="text-muted-foreground">Sale not found.</p>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <Button type="button" variant="default" onClick={() => void refetch()}>
-            Try again
-          </Button>
-          <Button variant="outline" asChild>
-            <Link href="/dashboard/sales">Back to Sales</Link>
-          </Button>
-        </div>
+        <Button variant="outline" asChild>
+          <Link href="/dashboard/sales">Back to Sales</Link>
+        </Button>
       </div>
     );
   }

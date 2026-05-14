@@ -3,9 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
-import { awaitClientSession } from "@/lib/supabase/await-client-session";
-import { retryNoRowSingle } from "@/lib/supabase/retry-no-row-single";
 import { ensureRowId, type SupabaseRowId } from "@/lib/ensure-supabase-row-id";
+import { runSupabaseDetailQueryWithRetry } from "@/lib/supabase/detail-fetch-retry";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
 import type { Json, Tables } from "@/database.types";
@@ -129,8 +128,9 @@ export const useSales = (
 
 export const useSale = (saleId: string | null) => {
   const [sale, setSale] = useState<Sale | null>(null);
-  const [loading, setLoading] = useState(!!saleId);
-  const fetchSeqRef = useRef(0);
+  const [loading, setLoading] = useState(true);
+  const latestIdRef = useRef(saleId);
+  latestIdRef.current = saleId;
 
   const refetch = useCallback(async () => {
     if (!saleId) {
@@ -139,24 +139,19 @@ export const useSale = (saleId: string | null) => {
       return;
     }
 
-    const mySeq = ++fetchSeqRef.current;
-    setLoading(true);
-    setSale(null);
-
+    const requestedId = saleId;
     const supabase = createClient();
-    await awaitClientSession(supabase);
-
-    const { data, error } = await retryNoRowSingle(supabase, () =>
+    const { data, error } = await runSupabaseDetailQueryWithRetry(supabase, async () =>
       supabase
         .from("sales")
         .select(
           "*, client:clients(id, name, email, phone, address), invoice:invoices(id, invoice_number, status)",
         )
-        .eq("id", saleId)
+        .eq("id", requestedId)
         .single(),
     );
 
-    if (mySeq !== fetchSeqRef.current) return;
+    if (latestIdRef.current !== requestedId) return;
 
     if (error) {
       setSale(null);
@@ -164,13 +159,15 @@ export const useSale = (saleId: string | null) => {
       return;
     }
 
-    const { data: items } = await supabase
-      .from("sale_items")
-      .select("*, product:products(id, name)")
-      .eq("sale_id", saleId)
-      .order("id", { ascending: true });
+    const { data: items } = await runSupabaseDetailQueryWithRetry(supabase, async () =>
+      supabase
+        .from("sale_items")
+        .select("*, product:products(id, name)")
+        .eq("sale_id", requestedId)
+        .order("id", { ascending: true }),
+    );
 
-    if (mySeq !== fetchSeqRef.current) return;
+    if (latestIdRef.current !== requestedId) return;
 
     setSale({
       ...(data as unknown as Sale),
@@ -180,7 +177,8 @@ export const useSale = (saleId: string | null) => {
   }, [saleId]);
 
   useEffect(() => {
-    void refetch();
+    setLoading(true);
+    refetch();
   }, [refetch]);
 
   return { sale, loading, refetch };
@@ -188,8 +186,9 @@ export const useSale = (saleId: string | null) => {
 
 export const useSaleByInvoice = (invoiceId: string | null) => {
   const [sale, setSale] = useState<Sale | null>(null);
-  const [loading, setLoading] = useState(!!invoiceId);
-  const fetchSeqRef = useRef(0);
+  const [loading, setLoading] = useState(true);
+  const latestIdRef = useRef(invoiceId);
+  latestIdRef.current = invoiceId;
 
   const refetch = useCallback(async () => {
     if (!invoiceId) {
@@ -198,20 +197,13 @@ export const useSaleByInvoice = (invoiceId: string | null) => {
       return;
     }
 
-    const mySeq = ++fetchSeqRef.current;
-    setLoading(true);
-    setSale(null);
-
+    const requestedId = invoiceId;
     const supabase = createClient();
-    await awaitClientSession(supabase);
+    const { data, error } = await runSupabaseDetailQueryWithRetry(supabase, async () =>
+      supabase.from("sales").select("*").eq("invoice_id", requestedId).maybeSingle(),
+    );
 
-    const { data, error } = await supabase
-      .from("sales")
-      .select("*")
-      .eq("invoice_id", invoiceId)
-      .maybeSingle();
-
-    if (mySeq !== fetchSeqRef.current) return;
+    if (latestIdRef.current !== requestedId) return;
 
     if (error) {
       setSale(null);
@@ -222,7 +214,8 @@ export const useSaleByInvoice = (invoiceId: string | null) => {
   }, [invoiceId]);
 
   useEffect(() => {
-    void refetch();
+    setLoading(true);
+    refetch();
   }, [refetch]);
 
   return { sale, loading, refetch };

@@ -3,7 +3,6 @@
 import { Suspense, useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { deferNavigation } from "@/lib/navigation/defer-navigation";
 import {
   useInvoices,
   useDeleteInvoice,
@@ -309,9 +308,7 @@ const InvoicesContent = () => {
                   <TableRow
                     key={inv.id}
                     className="hover:bg-muted/50 cursor-pointer"
-                    onClick={() =>
-                      deferNavigation(() => router.push(`/dashboard/invoices/${inv.id}`))
-                    }
+                    onClick={() => router.push(`/dashboard/invoices/${inv.id}`)}
                   >
                     <TableCell>
                       <span className="font-medium">{inv.invoice_number}</span>
