@@ -1,10 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { TbBrandFacebook, TbBrandInstagram, TbBrandLinkedin } from "react-icons/tb";
 import Logo from "./logo";
 import { useTranslation } from "@/hooks/use-translation";
-import { BsTwitterX } from "react-icons/bs";
+import { SocialConnectButtons } from "@/components/shared/social-connect-buttons";
 
 export const Footer = () => {
   const { t } = useTranslation();
@@ -71,52 +69,7 @@ export const Footer = () => {
             <h3 className="text-foreground font-semibold">{t("footer.connect")}</h3>
 
             <div className="space-y-2">
-              <div className="mt-2 flex gap-2">
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="rounded-full"
-                  asChild
-                  aria-label="Twitter"
-                >
-                  <a href="#" target="_blank" rel="noopener noreferrer">
-                    <BsTwitterX className="size-4" />
-                  </a>
-                </Button>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="rounded-full"
-                  asChild
-                  aria-label="LinkedIn"
-                >
-                  <a href="#" target="_blank" rel="noopener noreferrer">
-                    <TbBrandLinkedin className="size-5" />
-                  </a>
-                </Button>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="rounded-full"
-                  asChild
-                  aria-label="Facebook"
-                >
-                  <a href="#" target="_blank" rel="noopener noreferrer">
-                    <TbBrandFacebook className="size-5" />
-                  </a>
-                </Button>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="rounded-full"
-                  asChild
-                  aria-label="Instagram"
-                >
-                  <a href="#" target="_blank" rel="noopener noreferrer">
-                    <TbBrandInstagram className="size-5" />
-                  </a>
-                </Button>
-              </div>
+              <SocialConnectButtons className="mt-2" />
             </div>
           </div>
         </div>

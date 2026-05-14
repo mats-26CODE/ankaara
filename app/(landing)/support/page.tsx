@@ -5,8 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { TbBrandFacebook, TbBrandInstagram, TbBrandLinkedin } from "react-icons/tb";
-import { BsTwitterX } from "react-icons/bs";
 import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 import { SUPPORT_EMAIL, CONTACT_US_PHONE } from "@/constants/values";
@@ -17,6 +15,7 @@ import {
   landingViewport,
   ScrollReveal,
 } from "@/components/shared/scroll-reveal";
+import { SocialConnectButtons } from "@/components/shared/social-connect-buttons";
 
 interface FAQItem {
   questionKey: string;
@@ -172,52 +171,7 @@ export const SupportPage = () => {
 
         <motion.div variants={landingFadeUpTight} className="mt-6">
           <p className="text-foreground mb-2 text-sm font-medium">{t("footer.connect")}</p>
-          <div className="flex gap-2">
-            <Button
-              size="icon"
-              variant="outline"
-              className="rounded-full"
-              asChild
-              aria-label="Twitter"
-            >
-              <a href="#" target="_blank" rel="noopener noreferrer">
-                <BsTwitterX className="size-4" />
-              </a>
-            </Button>
-            <Button
-              size="icon"
-              variant="outline"
-              className="rounded-full"
-              asChild
-              aria-label="LinkedIn"
-            >
-              <a href="#" target="_blank" rel="noopener noreferrer">
-                <TbBrandLinkedin className="size-5" />
-              </a>
-            </Button>
-            <Button
-              size="icon"
-              variant="outline"
-              className="rounded-full"
-              asChild
-              aria-label="Facebook"
-            >
-              <a href="#" target="_blank" rel="noopener noreferrer">
-                <TbBrandFacebook className="size-5" />
-              </a>
-            </Button>
-            <Button
-              size="icon"
-              variant="outline"
-              className="rounded-full"
-              asChild
-              aria-label="Instagram"
-            >
-              <a href="#" target="_blank" rel="noopener noreferrer">
-                <TbBrandInstagram className="size-5" />
-              </a>
-            </Button>
-          </div>
+          <SocialConnectButtons />
         </motion.div>
       </motion.div>
     </div>
