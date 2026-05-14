@@ -190,7 +190,7 @@ const DashboardPage = () => {
       {/* ────── Profile Card ────── */}
       <Card>
         <CardHeader>
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
             <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
               <ProfileAvatar
                 name={profile?.full_name || undefined}
@@ -202,7 +202,7 @@ const DashboardPage = () => {
                 <CardTitle className="text-xl wrap-break-word sm:text-2xl">
                   {profile?.full_name || profile?.email || "Your Account"}
                 </CardTitle>
-                <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                <div className="text-muted-foreground flex items-center gap-x-2 gap-y-1 text-sm">
                   {profile?.email && <span>{profile.email}</span>}
                   {profile?.phone && (
                     <>
@@ -210,7 +210,7 @@ const DashboardPage = () => {
                       <span>{profile.phone}</span>
                     </>
                   )}
-                  {profile?.created_at && (
+                  {/* {profile?.created_at && (
                     <>
                       <span>•</span>
                       <span>
@@ -221,19 +221,19 @@ const DashboardPage = () => {
                         })}
                       </span>
                     </>
-                  )}
+                  )} */}
                 </div>
               </div>
             </div>
 
-            <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center lg:w-auto lg:justify-end">
+            <div className="flex w-full min-w-0 flex-col gap-2 lg:flex-row lg:items-center lg:justify-end lg:gap-2">
               {!businessesLoading && businesses.length > 0 && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full justify-between sm:min-w-40 lg:w-auto"
+                      className="w-full min-w-0 justify-between lg:w-auto lg:max-w-xs lg:min-w-44"
                     >
                       <span className="flex min-w-0 items-center gap-2 truncate">
                         <Building2 className="size-4 shrink-0" />
@@ -261,7 +261,7 @@ const DashboardPage = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
-              <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
+              <Button asChild variant="outline" size="sm" className="w-full shrink-0 lg:w-auto">
                 <Link href="/dashboard/settings">
                   <Settings className="mr-2 size-4" />
                   Settings
@@ -271,10 +271,10 @@ const DashboardPage = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
-            <div className="space-y-1">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6">
+            <div className="min-w-0 space-y-1">
               <p className="text-muted-foreground text-sm">Total Sales</p>
-              <p className="text-lg font-bold">
+              <p className="text-lg font-bold wrap-break-word tabular-nums">
                 {statsLoading
                   ? "—"
                   : formatAmount(salesStats.totalSales, {
@@ -282,34 +282,38 @@ const DashboardPage = () => {
                     })}
               </p>
             </div>
-            <div className="space-y-1">
+            <div className="min-w-0 space-y-1">
               <p className="text-muted-foreground text-sm">Total Profit</p>
-              <p className="text-lg font-bold">
+              <p className="text-lg font-bold wrap-break-word tabular-nums">
                 {statsLoading ? "—" : formatAmount(salesStats.totalProfit, { decimalDigits: 0 })}
               </p>
             </div>
-            <div className="space-y-1">
+            <div className="min-w-0 space-y-1">
               <p className="text-muted-foreground text-sm">Total Products</p>
-              <p className="text-lg font-bold">{statsLoading ? "—" : productCount}</p>
+              <p className="text-lg font-bold tabular-nums">{statsLoading ? "—" : productCount}</p>
             </div>
-            <div className="space-y-1">
+            <div className="min-w-0 space-y-1">
               <p className="text-muted-foreground text-sm">Total Clients</p>
-              <p className="text-lg font-bold">{statsLoading ? "—" : clientCount}</p>
+              <p className="text-lg font-bold tabular-nums">{statsLoading ? "—" : clientCount}</p>
             </div>
-            <div className="space-y-1">
+            <div className="min-w-0 space-y-1">
               <p className="text-muted-foreground text-sm">Total Invoices</p>
-              <p className="text-lg font-bold">{statsLoading ? "—" : invoiceStats.total}</p>
+              <p className="text-lg font-bold tabular-nums">
+                {statsLoading ? "—" : invoiceStats.total}
+              </p>
             </div>
-            <div className="space-y-1">
+            <div className="min-w-0 space-y-1">
               <p className="text-muted-foreground text-sm">Total Quotations</p>
-              <p className="text-lg font-bold">{statsLoading ? "—" : quotationCount}</p>
+              <p className="text-lg font-bold tabular-nums">
+                {statsLoading ? "—" : quotationCount}
+              </p>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* ────── Core POS Stats ────── */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-medium">Today's Sales</CardTitle>
@@ -373,7 +377,7 @@ const DashboardPage = () => {
           <CardDescription>Invoice status overview for the active business.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
             <Link href="/dashboard/invoices?status=paid" className="rounded-lg border p-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium">Paid</p>
