@@ -24,6 +24,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
 import { Search, Plus, Package } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 20;
 
@@ -44,6 +45,13 @@ const parsePriceInput = (raw: string): string => {
     .slice(0, 2);
   return dec ? `${int}.${dec}` : int || ".";
 };
+
+/** Products with no stock cannot be added; services are not stock-limited (DB stock is 0). */
+const isProductPickerLineDisabled = (product: Product) =>
+  product.item_type === "product" && Number(product.stock_quantity) <= 0;
+
+const formatPickerStockQtyLabel = (product: Product) =>
+  product.item_type === "service" ? "—" : Number(product.stock_quantity).toLocaleString();
 
 export type ProductLinePayload = {
   id: string;
@@ -266,31 +274,46 @@ const ProductPickerDialog = ({
               </div>
             ) : (
               <div className="divide-y">
-                {visible.map((product) => (
-                  <button
-                    key={product.id}
-                    type="button"
-                    onClick={() => handleSelect(product)}
-                    className="hover:bg-muted/50 flex w-full items-center gap-3 rounded-md px-1 py-3 text-left transition-colors"
-                  >
-                    <div className="bg-muted flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-medium uppercase">
-                      {product.name.charAt(0)}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{product.name}</p>
-                      {(product.description || product.unit) && (
+                {visible.map((product) => {
+                  const disabled = isProductPickerLineDisabled(product);
+                  return (
+                    <button
+                      key={product.id}
+                      type="button"
+                      disabled={disabled}
+                      title={
+                        disabled ? "This product is out of stock (quantity is 0)." : undefined
+                      }
+                      onClick={() => handleSelect(product)}
+                      className={cn(
+                        "flex w-full items-center gap-3 rounded-md px-1 py-3 text-left transition-colors",
+                        disabled
+                          ? "cursor-not-allowed opacity-50"
+                          : "hover:bg-muted/50",
+                      )}
+                    >
+                      <div className="bg-muted flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-medium uppercase">
+                        {product.name.charAt(0)}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{product.name}</p>
                         <p className="text-muted-foreground truncate text-xs">
-                          {[product.item_type, product.description, product.unit]
+                          {[
+                            product.item_type === "service" ? "Service" : "Product",
+                            `Qty: ${formatPickerStockQtyLabel(product)}`,
+                            product.description,
+                            product.unit,
+                          ]
                             .filter(Boolean)
                             .join(" · ")}
                         </p>
-                      )}
-                    </div>
-                    <span className="shrink-0 font-medium tabular-nums">
-                      {Number(product.selling_price).toLocaleString()}
-                    </span>
-                  </button>
-                ))}
+                      </div>
+                      <span className="shrink-0 font-medium tabular-nums">
+                        {Number(product.selling_price).toLocaleString()}
+                      </span>
+                    </button>
+                  );
+                })}
                 {hasMore && (
                   <div className="flex justify-center py-3">
                     <Spinner className="size-4" />
