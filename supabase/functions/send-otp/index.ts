@@ -86,6 +86,29 @@ Deno.serve(async (req) => {
       { status: 400, headers: corsHeaders }
     );
   }
+
+  const { data: existingByPhone, error: lookupErr } = await supabase.rpc("get_user_by_phone", {
+    phone_number: phone,
+  });
+  if (lookupErr) {
+    console.error("[send-otp] get_user_by_phone:", lookupErr);
+    return Response.json(
+      { message: "Unable to verify phone availability" },
+      { status: 500, headers: corsHeaders }
+    );
+  }
+  const rows = (existingByPhone ?? []) as { id: string }[];
+  if (rows.length > 0 && rows[0].id !== user.id) {
+    return Response.json(
+      {
+        success: false,
+        message:
+          "This phone number is already registered to another account. Please use a different number.",
+      },
+      { status: 409, headers: corsHeaders }
+    );
+  }
+
   const code = generateOtp();
   const expiresAt = new Date(
     Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000

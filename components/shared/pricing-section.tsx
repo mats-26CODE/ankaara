@@ -16,6 +16,7 @@ import {
   groupPlansByTier,
   type SubscriptionPlanSlug,
 } from "@/hooks/use-subscription-plans";
+import { formatPlanCurrency } from "@/lib/format-plan-currency";
 
 const PLAN_TIER_ICONS: Record<ReturnType<typeof getPlanTier>, typeof Users> = {
   free: Users,
@@ -53,13 +54,6 @@ const PricingSection = () => {
     if (grouped.business[0])
       setSelectedBusinessSlug((prev) => prev ?? (grouped.business[0].slug as SubscriptionPlanSlug));
   }, [plans]);
-
-  const formatPrice = (amount: number | null, currency: string | null) => {
-    if (amount === null || amount === undefined) return null;
-    if (amount === 0) return "$0";
-    const symbol = currency === "USD" ? "$" : (currency ?? "$");
-    return `${symbol}${Number(amount).toFixed(2)}`;
-  };
 
   if (plansLoading || !plans?.length) {
     return (
@@ -131,7 +125,7 @@ const PricingSection = () => {
                     </p>
                     <div className="flex items-baseline gap-1 pt-2">
                       <span className="text-foreground text-3xl font-bold md:text-4xl">
-                        {formatPrice(plan.price_amount, plan.price_currency) ??
+                        {formatPlanCurrency(plan.price_amount, plan.price_currency) ??
                           t(`landing.pricing.${tier}.price`)}
                       </span>
                     </div>
@@ -236,7 +230,7 @@ const PricingSection = () => {
                           ) : (
                             <div className="flex items-baseline gap-1">
                               <span className="text-foreground text-2xl font-bold md:text-3xl">
-                                {formatPrice(p.price_amount, p.price_currency) ??
+                                {formatPlanCurrency(p.price_amount, p.price_currency) ??
                                   t(`landing.pricing.${tier}.price`)}
                               </span>
                               <span className="text-muted-foreground">

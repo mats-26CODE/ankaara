@@ -1256,6 +1256,10 @@ export type Database = {
         Args: { p_context?: Json; p_feature_key: string; p_user_id: string };
         Returns: undefined;
       };
+      check_phone_available_for_account_linking: {
+        Args: { phone_number: string };
+        Returns: Json;
+      };
       check_subscription_expiry: {
         Args: { p_user_id: string };
         Returns: boolean;

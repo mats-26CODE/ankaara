@@ -25,6 +25,7 @@ import { useCompleteOnboarding } from "@/hooks/use-onboarding";
 import { isGoogleUser, isPhoneUser } from "@/helpers/auth-provider";
 import { setOnboardingPendingCookie } from "@/helpers/onboarding-pending-cookie";
 import type { Profile } from "@/hooks/use-profile";
+import { createClient } from "@/lib/supabase/client";
 
 const ONBOARDING_PENDING_KEY = "onboarding_pending";
 
@@ -116,13 +117,29 @@ const OnboardingPage = () => {
       setSubmitting(true);
       setError(null);
       try {
+        const phoneE164 = addCountryCode(phoneTrimmed);
+        const supabase = createClient();
+        const { data: phoneCheck, error: phoneCheckError } = await supabase.rpc(
+          "check_phone_available_for_account_linking",
+          { phone_number: phoneE164 },
+        );
+        if (phoneCheckError) {
+          throw new Error(
+            phoneCheckError.message || "Could not verify this phone number. Please try again.",
+          );
+        }
+        const availability = phoneCheck as { available?: boolean } | null;
+        if (availability?.available === false) {
+          throw new Error(
+            "This phone number is already registered to another account. Please use a different number.",
+          );
+        }
+
         sessionStorage.setItem(ONBOARDING_PENDING_KEY, JSON.stringify(form));
         await sendOtpMutation.mutateAsync({
-          phone: addCountryCode(phoneTrimmed),
+          phone: phoneE164,
         });
-        router.push(
-          `/verify-otp?phone=${encodeURIComponent(addCountryCode(phoneTrimmed))}&intent=onboarding`,
-        );
+        router.push(`/verify-otp?phone=${encodeURIComponent(phoneE164)}&intent=onboarding`);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to send OTP");
         setSubmitting(false);

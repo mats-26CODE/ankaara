@@ -19,6 +19,7 @@ import {
 } from "@/hooks/use-subscription-plans";
 import { useSetSubscription } from "@/hooks/use-set-subscription";
 import { getNextPlanSlug } from "@/lib/subscription-limits";
+import { formatPlanCurrency } from "@/lib/format-plan-currency";
 import { useTranslation } from "@/hooks/use-translation";
 import { Check, Loader2, ArrowRight, ArrowLeft, Mail, Users, Cloud, Zap } from "lucide-react";
 import { SUPPORT_EMAIL } from "@/constants/values";
@@ -28,13 +29,6 @@ const PLAN_TIER_ICONS: Record<ReturnType<typeof getPlanTier>, typeof Users> = {
   free: Users,
   pro: Zap,
   business: Cloud,
-};
-
-const formatPriceDisplay = (amount: number | null, currency: string | null) => {
-  if (amount === null || amount === undefined) return null;
-  if (amount === 0) return "$0";
-  const symbol = currency === "USD" ? "$" : (currency ?? "$");
-  return `${symbol}${Number(amount).toFixed(2)}`;
 };
 
 const getIntervalLabel = (interval: string | null) => {
@@ -217,7 +211,7 @@ const SubscribeContent = () => {
                 const Icon = PLAN_TIER_ICONS[tier];
                 const popular = tier === "pro";
                 const contact = plan.is_contact_sales;
-                const priceStr = formatPriceDisplay(plan.price_amount, plan.price_currency);
+                const priceStr = formatPlanCurrency(plan.price_amount, plan.price_currency);
                 const period = getPeriodSuffix(plan.billing_interval);
                 return (
                   <Card
@@ -362,7 +356,7 @@ const SubscribeContent = () => {
                             ) : (
                               <div className="flex items-baseline gap-1">
                                 <span className="text-foreground text-2xl font-bold md:text-3xl">
-                                  {formatPriceDisplay(p.price_amount, p.price_currency) ??
+                                  {formatPlanCurrency(p.price_amount, p.price_currency) ??
                                     t(`landing.pricing.${tier}.price`)}
                                 </span>
                                 <span className="text-muted-foreground">
