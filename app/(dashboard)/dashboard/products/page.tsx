@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { deferNavigation } from "@/lib/navigation/defer-navigation";
 import {
   useProducts,
   useCreateProduct,
@@ -347,7 +348,11 @@ const ProductsPage = () => {
                   <TableRow
                     key={product.id}
                     className="hover:bg-muted/50 cursor-pointer"
-                    onClick={() => router.push(`/dashboard/products/${product.id}/stock-history`)}
+                    onClick={() =>
+                      deferNavigation(() =>
+                        router.push(`/dashboard/products/${product.id}/stock-history`),
+                      )
+                    }
                   >
                     <TableCell>
                       <div className="space-y-1">

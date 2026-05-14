@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { awaitClientSession } from "@/lib/supabase/await-client-session";
+import { retryNoRowSingle } from "@/lib/supabase/retry-no-row-single";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
@@ -109,14 +110,16 @@ export const useProduct = (productId: string | null) => {
     const supabase = createClient();
     await awaitClientSession(supabase);
 
-    const { data, error } = await supabase.from("products").select("*").eq("id", productId).single();
+    const { data, error } = await retryNoRowSingle(supabase, () =>
+      supabase.from("products").select("*").eq("id", productId).single(),
+    );
 
     if (mySeq !== fetchSeqRef.current) return;
 
     if (error) {
       setProduct(null);
     } else {
-      setProduct((data as Product) ?? null);
+      setProduct(data ? (data as Product) : null);
     }
     setLoading(false);
   }, [productId]);

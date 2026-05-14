@@ -3,6 +3,7 @@
 import { Suspense, useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { deferNavigation } from "@/lib/navigation/defer-navigation";
 import {
   useQuotations,
   useDeleteQuotation,
@@ -306,7 +307,9 @@ const QuotationsContent = () => {
                   <TableRow
                     key={quo.id}
                     className="hover:bg-muted/50 cursor-pointer"
-                    onClick={() => router.push(`/dashboard/quotations/${quo.id}`)}
+                    onClick={() =>
+                      deferNavigation(() => router.push(`/dashboard/quotations/${quo.id}`))
+                    }
                   >
                     <TableCell>
                       <span className="font-medium">{quo.quotation_number}</span>

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { awaitClientSession } from "@/lib/supabase/await-client-session";
+import { retryNoRowSingle } from "@/lib/supabase/retry-no-row-single";
 import { ensureRowId, type SupabaseRowId } from "@/lib/ensure-supabase-row-id";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
@@ -152,13 +153,15 @@ export const useQuotation = (quotationId: string | null) => {
     const supabase = createClient();
     await awaitClientSession(supabase);
 
-    const { data, error } = await supabase
-      .from("quotations")
-      .select(
-        "*, client:clients(id, name, email, phone, address), business:businesses!quotations_business_id_fkey(id, name, address, logo_url, logo_text, tax_number, brand_color, currency)",
-      )
-      .eq("id", quotationId)
-      .single();
+    const { data, error } = await retryNoRowSingle(supabase, () =>
+      supabase
+        .from("quotations")
+        .select(
+          "*, client:clients(id, name, email, phone, address), business:businesses!quotations_business_id_fkey(id, name, address, logo_url, logo_text, tax_number, brand_color, currency)",
+        )
+        .eq("id", quotationId)
+        .single(),
+    );
 
     if (mySeq !== fetchSeqRef.current) return;
 
