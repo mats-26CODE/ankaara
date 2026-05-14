@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
+import { awaitClientSession } from "@/lib/supabase/await-client-session";
 import { ensureRowId, type SupabaseRowId } from "@/lib/ensure-supabase-row-id";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
@@ -134,9 +135,8 @@ export const useQuotations = (
 
 export const useQuotation = (quotationId: string | null) => {
   const [quotation, setQuotation] = useState<Quotation | null>(null);
-  const [loading, setLoading] = useState(true);
-  const latestIdRef = useRef(quotationId);
-  latestIdRef.current = quotationId;
+  const [loading, setLoading] = useState(!!quotationId);
+  const fetchSeqRef = useRef(0);
 
   const refetch = useCallback(async () => {
     if (!quotationId) {
@@ -145,17 +145,22 @@ export const useQuotation = (quotationId: string | null) => {
       return;
     }
 
-    const requestedId = quotationId;
+    const mySeq = ++fetchSeqRef.current;
+    setLoading(true);
+    setQuotation(null);
+
     const supabase = createClient();
+    await awaitClientSession(supabase);
+
     const { data, error } = await supabase
       .from("quotations")
       .select(
         "*, client:clients(id, name, email, phone, address), business:businesses!quotations_business_id_fkey(id, name, address, logo_url, logo_text, tax_number, brand_color, currency)",
       )
-      .eq("id", requestedId)
+      .eq("id", quotationId)
       .single();
 
-    if (latestIdRef.current !== requestedId) return;
+    if (mySeq !== fetchSeqRef.current) return;
 
     if (error) {
       setQuotation(null);
@@ -166,10 +171,10 @@ export const useQuotation = (quotationId: string | null) => {
     const { data: items } = await supabase
       .from("quotation_items")
       .select("*")
-      .eq("quotation_id", requestedId)
+      .eq("quotation_id", quotationId)
       .order("id", { ascending: true });
 
-    if (latestIdRef.current !== requestedId) return;
+    if (mySeq !== fetchSeqRef.current) return;
 
     setQuotation({
       ...(data as unknown as Quotation),
@@ -179,8 +184,7 @@ export const useQuotation = (quotationId: string | null) => {
   }, [quotationId]);
 
   useEffect(() => {
-    setLoading(true);
-    refetch();
+    void refetch();
   }, [refetch]);
 
   return { quotation, loading, refetch };

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
+import { awaitClientSession } from "@/lib/supabase/await-client-session";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
@@ -91,7 +92,8 @@ export const useProducts = (
 
 export const useProduct = (productId: string | null) => {
   const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!!productId);
+  const fetchSeqRef = useRef(0);
 
   const refetch = useCallback(async () => {
     if (!productId) {
@@ -100,8 +102,16 @@ export const useProduct = (productId: string | null) => {
       return;
     }
 
+    const mySeq = ++fetchSeqRef.current;
+    setLoading(true);
+    setProduct(null);
+
     const supabase = createClient();
+    await awaitClientSession(supabase);
+
     const { data, error } = await supabase.from("products").select("*").eq("id", productId).single();
+
+    if (mySeq !== fetchSeqRef.current) return;
 
     if (error) {
       setProduct(null);
@@ -112,8 +122,7 @@ export const useProduct = (productId: string | null) => {
   }, [productId]);
 
   useEffect(() => {
-    setLoading(true);
-    refetch();
+    void refetch();
   }, [refetch]);
 
   return { product, loading, refetch };
@@ -204,7 +213,8 @@ export const useUpdateProduct = () => {
 
 export const useInventoryMovements = (productId: string | null) => {
   const [movements, setMovements] = useState<InventoryMovement[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!!productId);
+  const fetchSeqRef = useRef(0);
 
   const refetch = useCallback(async () => {
     if (!productId) {
@@ -213,13 +223,21 @@ export const useInventoryMovements = (productId: string | null) => {
       return;
     }
 
+    const mySeq = ++fetchSeqRef.current;
+    setLoading(true);
+    setMovements([]);
+
     const supabase = createClient();
+    await awaitClientSession(supabase);
+
     const { data, error } = await supabase
       .from("inventory_movements")
       .select("*")
       .eq("product_id", productId)
       .order("created_at", { ascending: false })
       .limit(50);
+
+    if (mySeq !== fetchSeqRef.current) return;
 
     if (error) {
       setMovements([]);
@@ -230,8 +248,7 @@ export const useInventoryMovements = (productId: string | null) => {
   }, [productId]);
 
   useEffect(() => {
-    setLoading(true);
-    refetch();
+    void refetch();
   }, [refetch]);
 
   return { movements, loading, refetch };
