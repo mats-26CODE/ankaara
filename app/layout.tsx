@@ -12,9 +12,8 @@ const figtree = Figtree({
 });
 
 export const metadata: Metadata = {
-  title: `${APP_NAME} – Professional Invoicing, Made Simple`,
-  description:
-    "Create professional invoices, send via link, track views, and get paid with mobile money. Built for Africa.",
+  title: `${APP_NAME} – Simple Point of Sale System`,
+  description: "Simple Point of Sale System for Africa. Built for Africa.",
 };
 
 export default function RootLayout({
