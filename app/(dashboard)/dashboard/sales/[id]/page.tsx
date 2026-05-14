@@ -97,7 +97,7 @@ const SaleDetailPage = () => {
           <CardDescription>Amounts and customer for this sale.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
             <div className="rounded-lg border p-4">
               <div className="flex items-center justify-between gap-2">
                 <p className="text-sm font-medium">Total</p>
@@ -116,7 +116,7 @@ const SaleDetailPage = () => {
                 {formatAmount(Number(sale.total_cost), { decimalDigits: 0 })}
               </p>
             </div>
-            <div className="rounded-lg border p-4">
+            <div className="rounded-lg border bg-green-100 p-4">
               <div className="flex items-center justify-between gap-2">
                 <p className="text-sm font-medium">Profit</p>
                 <TrendingUp className="size-4 shrink-0 text-green-600" />
