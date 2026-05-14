@@ -29,7 +29,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Plus, Trash2, ArrowLeft, Eye } from "lucide-react";
 import dayjs from "dayjs";
 import { QuotationTemplate } from "@/lib/quotation-templates/registry";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { TemplateFullscreenPreviewDialog } from "@/components/shared/template-fullscreen-preview-dialog";
 import { Badge } from "@/components/ui/badge";
 
 const CreateQuotationPage = () => {
@@ -644,18 +644,13 @@ const CreateQuotationPage = () => {
         </div>
       </div>
 
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="flex max-h-[90vh] w-[min(80vw,800px)] max-w-[min(80vw,800px)] flex-col overflow-hidden rounded-2xl sm:max-w-[min(98vw,1400px)]">
-          <DialogHeader>
-            <DialogTitle>Quotation preview</DialogTitle>
-          </DialogHeader>
-          <div className="bg-muted/30 flex-1 overflow-auto rounded-lg border p-4">
-            <div className="w-full min-w-0 rounded-lg bg-white shadow-sm">
-              <QuotationTemplate {...previewProps} />
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <TemplateFullscreenPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        title="Quotation preview"
+      >
+        <QuotationTemplate {...previewProps} />
+      </TemplateFullscreenPreviewDialog>
     </div>
   );
 };

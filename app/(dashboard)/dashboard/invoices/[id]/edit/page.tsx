@@ -28,7 +28,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Plus, Trash2, ArrowLeft, Eye } from "lucide-react";
 import Link from "next/link";
 import { InvoiceTemplate } from "@/lib/invoice-templates/registry";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { TemplateFullscreenPreviewDialog } from "@/components/shared/template-fullscreen-preview-dialog";
 import dayjs from "dayjs";
 import { segmentParam } from "@/lib/route-params";
 
@@ -625,19 +625,13 @@ const EditInvoicePage = () => {
         </div>
       </div>
 
-      {/* Full preview dialog */}
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="flex max-h-[95vh] w-[90vw] max-w-[90vw] flex-col overflow-hidden rounded-2xl sm:w-[min(80vw,800px)] sm:max-w-[min(98vw,1400px)]">
-          <DialogHeader>
-            <DialogTitle>Invoice preview</DialogTitle>
-          </DialogHeader>
-          <div className="bg-muted/30 min-h-0 flex-1 overflow-x-auto overflow-y-auto rounded-lg border p-3 sm:p-4">
-            <div className="mx-auto w-max rounded-lg bg-white shadow-sm">
-              <InvoiceTemplate {...previewProps} />
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <TemplateFullscreenPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        title="Invoice preview"
+      >
+        <InvoiceTemplate {...previewProps} />
+      </TemplateFullscreenPreviewDialog>
     </div>
   );
 };
