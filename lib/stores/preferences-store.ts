@@ -25,7 +25,7 @@ const createPreferencesStore = () => {
     persist(
       (set, get) => ({
         theme: "light",
-        language: defaultLanguage as Language,
+        language: defaultLanguage as Language, // aligns with profiles.preferred_language default
         setTheme: (theme: Theme) => {
           set({ theme });
           if (typeof window !== "undefined") {

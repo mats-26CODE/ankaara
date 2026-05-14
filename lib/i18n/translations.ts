@@ -932,7 +932,7 @@ export const translations = {
   },
 };
 
-export const defaultLanguage = "en";
+export const defaultLanguage = "sw";
 
 // Helper function to replace variables in translation strings
 const replaceVariables = (value: string, vars: Record<string, string> = {}) => {

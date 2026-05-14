@@ -617,6 +617,7 @@ export type Database = {
           onboarding_completed: boolean;
           phone: string | null;
           preferred_currency: string | null;
+          preferred_language: string;
           updated_at: string | null;
         };
         Insert: {
@@ -633,6 +634,7 @@ export type Database = {
           onboarding_completed?: boolean;
           phone?: string | null;
           preferred_currency?: string | null;
+          preferred_language?: string;
           updated_at?: string | null;
         };
         Update: {
@@ -649,6 +651,7 @@ export type Database = {
           onboarding_completed?: boolean;
           phone?: string | null;
           preferred_currency?: string | null;
+          preferred_language?: string;
           updated_at?: string | null;
         };
         Relationships: [

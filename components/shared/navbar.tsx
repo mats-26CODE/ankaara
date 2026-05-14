@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useUser, useLogout } from "@/hooks/use-user";
+import { useProfile } from "@/hooks/use-profile";
+import { createClient } from "@/lib/supabase/client";
 import { useLanguage, translations } from "@/lib/stores/preferences-store";
 import { useTranslation } from "@/hooks/use-translation";
 import { useState } from "react";
@@ -208,6 +210,7 @@ const NavBar = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user } = useUser();
+  const { refetch: refetchProfile } = useProfile();
   const logout = useLogout();
   const { language, setLanguage } = useLanguage();
   const { t } = useTranslation();
@@ -236,6 +239,23 @@ const NavBar = () => {
 
   const getThemeTitle = () =>
     theme === "light" ? "Dark theme (click to switch)" : "Light theme (click to switch)";
+
+  const persistPreferredLanguage = async (lang: "en" | "sw") => {
+    if (!user?.id) return;
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("profiles")
+      .update({ preferred_language: lang })
+      .eq("id", user.id);
+    if (error) console.error("[navbar] preferred_language sync failed", error);
+    await refetchProfile();
+  };
+
+  const handleLanguageChange = (langKey: string) => {
+    const lang = langKey === "en" ? "en" : "sw";
+    setLanguage(lang);
+    void persistPreferredLanguage(lang);
+  };
 
   const renderDashboardMobileNav = () => (
     <div className="space-y-5 border-b pb-5">
@@ -400,7 +420,7 @@ const NavBar = () => {
                 <button
                   key={lang}
                   type="button"
-                  onClick={() => setLanguage(lang as keyof typeof translations)}
+                  onClick={() => handleLanguageChange(lang)}
                   className={`hover:bg-accent/5 w-full rounded-sm px-2 py-1.5 text-left text-sm outline-none ${
                     language === lang ? "bg-accent/10 font-medium" : ""
                   }`}
@@ -510,7 +530,7 @@ const NavBar = () => {
                           key={lang}
                           variant={language === lang ? "secondary" : "outline"}
                           size="sm"
-                          onClick={() => setLanguage(lang as keyof typeof translations)}
+                          onClick={() => handleLanguageChange(lang)}
                           className="rounded-full"
                         >
                           {translations[lang as keyof typeof translations].languageLabel}

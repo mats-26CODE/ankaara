@@ -6,6 +6,7 @@ import { Toaster } from "react-hot-toast";
 import { ToastAlert } from "@/config/toast";
 import { ThemeProvider } from "@/contexts/theme-context";
 import { getQueryClient } from "@/config/query-client";
+import { ProfileLanguageSync } from "@/components/shared/profile-language-sync";
 
 const Providers: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Get the query client instance
@@ -21,6 +22,7 @@ const Providers: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
+        <ProfileLanguageSync />
         {children}
         <Toaster position="top-right" />
       </QueryClientProvider>

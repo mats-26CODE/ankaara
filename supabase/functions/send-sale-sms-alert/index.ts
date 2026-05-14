@@ -9,6 +9,7 @@
  *    https://<project-ref>.supabase.co/functions/v1/send-sale-sms-alert
  * 4. Webhook HTTP header: Authorization: Bearer <same value as SALE_SMS_WEBHOOK_SECRET>
  * 5. Apply migration `sale_short_links` (table + resolve_sale_short_link RPC) so SMS can use /l/{slug}.
+ * 6. `profiles.preferred_language` (migration `profiles_preferred_language`) for Sw/En SMS copy.
  */
 // @ts-nocheck
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
@@ -37,6 +38,37 @@ const formatAmount = (currency: string, total: number): string => {
   if (!Number.isFinite(n)) return `${currency} 0`;
   if (Number.isInteger(n)) return `${currency} ${n}`;
   return `${currency} ${n.toFixed(2)}`;
+};
+
+/** Webhook `record` fields may be strings; DB returns numeric types. */
+const parseMoney = (v: unknown): number => {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string") {
+    const t = v.trim().replace(/,/g, "");
+    const n = parseFloat(t);
+    return Number.isFinite(n) ? n : 0;
+  }
+  return 0;
+};
+
+const buildLocalizedSaleSms = (opts: {
+  lang: "en" | "sw";
+  saleNumber: string;
+  currency: string;
+  total: number;
+  cost: number;
+  profit: number;
+  link: string;
+}): string => {
+  const cur = opts.currency.trim() || "TZS";
+  const saleAmt = formatAmount(cur, opts.total);
+  const costAmt = formatAmount(cur, opts.cost);
+  const profitAmt = formatAmount(cur, opts.profit);
+  const id = opts.saleNumber.trim() || "—";
+  if (opts.lang === "en") {
+    return `New sale recorded by Tayos Labs: ${id}. Sale amount: ${saleAmt}, cost: ${costAmt}, profit: ${profitAmt}. View sale details: ${opts.link}`;
+  }
+  return `Mauzo mapya yamekodiwa na Tayos Labs: ${id}. Kiasi cha mauzo: ${saleAmt}, gharama: ${costAmt}, faida: ${profitAmt}. Tazama maelezo: ${opts.link}`;
 };
 
 const SHORT_SLUG_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -160,6 +192,8 @@ Deno.serve(async (req: Request) => {
     sale_number: string;
     currency: string;
     total: number | string;
+    total_cost?: number | string;
+    profit?: number | string;
   };
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -178,7 +212,7 @@ Deno.serve(async (req: Request) => {
   const supabase = createClient(supabaseUrl, serviceKey);
   const { data: business, error: bizErr } = await supabase
     .from("businesses")
-    .select("id, name, phone, second_phone, send_sale_alert")
+    .select("id, name, phone, second_phone, send_sale_alert, owner_id")
     .eq("id", record.business_id)
     .maybeSingle();
 
@@ -211,18 +245,53 @@ Deno.serve(async (req: Request) => {
     return Response.json({ skipped: true, reason: "beem_not_configured" }, { status: 200 });
   }
 
-  const amount = formatAmount(String(record.currency ?? "TZS"), Number(record.total));
+  const { data: saleRow, error: saleErr } = await supabase
+    .from("sales")
+    .select("total, total_cost, profit, currency, sale_number")
+    .eq("id", record.id)
+    .maybeSingle();
+
+  if (saleErr) {
+    console.error("[send-sale-sms-alert] sale re-fetch error", saleErr);
+  }
+  if (!saleRow) {
+    console.error("[send-sale-sms-alert] sale not found after insert", record.id);
+    return Response.json({ message: "Sale not found" }, { status: 404 });
+  }
+
+  const currency = String(saleRow.currency ?? record.currency ?? "TZS");
+  const totalNum = parseMoney(saleRow.total ?? record.total);
+  const costNum = parseMoney(saleRow.total_cost ?? record.total_cost ?? 0);
+  const profitNum = parseMoney(saleRow.profit ?? record.profit ?? 0);
+  const saleNumber = String(saleRow.sale_number ?? record.sale_number ?? "");
+
+  const ownerId = typeof business.owner_id === "string" ? business.owner_id : "";
+  let smsLang: "en" | "sw" = "sw";
+  if (ownerId) {
+    const { data: ownerProfile, error: profErr } = await supabase
+      .from("profiles")
+      .select("preferred_language")
+      .eq("id", ownerId)
+      .maybeSingle();
+    if (profErr) console.error("[send-sale-sms-alert] profile preferred_language", profErr);
+    if (ownerProfile?.preferred_language === "en") smsLang = "en";
+  }
+
   const shortSlug = await ensureSaleShortLinkSlug(supabase, record.id);
   if (!shortSlug) {
     console.error("[send-sale-sms-alert] Could not create short link for sale", record.id);
     return Response.json({ message: "Short link unavailable" }, { status: 500 });
   }
   const link = `${appBase}/l/${shortSlug}`;
-  const businessName =
-    typeof business.name === "string" && business.name.trim().length > 0
-      ? business.name.trim()
-      : "Your business";
-  const message = `${businessName} has recorded a sale ${record.sale_number} of ${amount}. Please visit the link to view it ${link}`;
+  const message = buildLocalizedSaleSms({
+    lang: smsLang,
+    saleNumber,
+    currency,
+    total: totalNum,
+    cost: costNum,
+    profit: profitNum,
+    link,
+  });
 
   const recipients = phones
     .map((addr, i) => ({

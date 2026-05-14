@@ -16,6 +16,7 @@ export type Profile = {
   phone: string | null;
   avatar_url: string | null;
   preferred_currency: string;
+  preferred_language: "en" | "sw";
   onboarding_completed: boolean;
   created_at: string;
   updated_at: string | null;
@@ -41,6 +42,7 @@ const normalizeRow = (row: ProfileRow): Profile => ({
   phone: row.phone ?? null,
   avatar_url: normalizeAvatarUrl(row.avatar_url ?? null, row.image_url),
   preferred_currency: row.preferred_currency ?? "TZS",
+  preferred_language: row.preferred_language === "en" ? "en" : "sw",
   onboarding_completed: row.onboarding_completed ?? false,
   created_at: row.created_at,
   updated_at: row.updated_at ?? null,
@@ -90,6 +92,7 @@ export const useProfile = () => {
         avatar_url: user.user_metadata?.avatar_url ?? null,
         is_active: true,
         is_deleted: false,
+        preferred_language: "sw",
       })
       .select()
       .single();
@@ -115,6 +118,7 @@ export type UpdateProfilePayload = {
   phone?: string | null;
   avatar_url?: string | null;
   preferred_currency?: string;
+  preferred_language?: "en" | "sw";
 };
 
 export const useUpdateProfile = () => {
