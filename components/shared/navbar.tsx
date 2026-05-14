@@ -305,7 +305,7 @@ const NavBar = () => {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`text-sm transition-colors ${
+                  className={`text-sm transition-colors lg:text-base ${
                     isActive
                       ? "text-primary font-medium"
                       : "text-muted-foreground hover:text-foreground"
@@ -354,7 +354,7 @@ const NavBar = () => {
                       asChild
                     >
                       <Link href="/dashboard" className="w-full">
-                        Go to {t("nav.dashboard")}
+                        {t("nav.goToDashboard")}
                       </Link>
                     </Button>
                     <Button
@@ -409,8 +409,8 @@ const NavBar = () => {
                 variant="outline"
                 size="icon"
                 className="dark:border-primary/10 h-9 w-9 rounded-full border border-gray-200 shadow-none"
-                title={t("nav.language") || "Language"}
-                aria-label={t("nav.language") || "Language"}
+                title={t("nav.language")}
+                aria-label={t("nav.language")}
               >
                 <Languages className="h-4 w-4" />
               </Button>
@@ -594,7 +594,7 @@ const NavBar = () => {
           </Sheet>
         </div>
       </div>
-      <hr className="from-background to-background via-primary/20 h-0.5 bg-linear-to-r" />
+      {/* <hr className="from-background to-background via-primary/20 h-0.5 bg-linear-to-r" /> */}
     </nav>
   );
 };

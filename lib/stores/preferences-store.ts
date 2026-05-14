@@ -8,7 +8,7 @@ import { translations, defaultLanguage, t as translate } from "@/lib/i18n/transl
 type Theme = "light" | "dark";
 type Language = "en" | "sw";
 
-const defaultTranslator = (key: string, vars?: Record<string, string>) =>
+const defaultTranslator = (key: string, vars?: Record<string, string | number>) =>
   translate(defaultLanguage, key, vars);
 
 interface PreferencesState {
@@ -16,7 +16,7 @@ interface PreferencesState {
   setTheme: (theme: Theme) => void;
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string, vars?: Record<string, string>) => string;
+  t: (key: string, vars?: Record<string, string | number>) => string;
 }
 
 // Create the store with persistence
@@ -38,7 +38,7 @@ const createPreferencesStore = () => {
             document.documentElement.lang = lang;
           }
         },
-        t: (key: string, vars?: Record<string, string>) => {
+        t: (key: string, vars?: Record<string, string | number>) => {
           const { language } = get();
           return translate(language, key, vars);
         },

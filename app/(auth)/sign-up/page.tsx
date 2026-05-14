@@ -92,7 +92,7 @@ const SignUpPage = () => {
               <Button variant="outline" size="sm" asChild className="mb-4 rounded-full">
                 <Link href="/">
                   <Home className="mr-1 size-4" />
-                  Back to home
+                  {t("auth.common.backToHome")}
                 </Link>
               </Button>
               <h1 className="text-foreground text-3xl font-bold">{t("auth.signup.title")}</h1>
@@ -174,13 +174,11 @@ const SignUpPage = () => {
                     onChange={handleChange}
                     disabled={sendOtpMutation.isPending}
                     required
-                    placeholder="Enter your phone number (e.g. 07XXXXXXXX)"
+                    placeholder={t("auth.common.phonePlaceholder")}
                     maxLength={10}
                   />
                 </InputGroup>
-                <p className="text-muted-foreground text-xs">
-                  Phone number must start with 0 and contain only numbers
-                </p>
+                <p className="text-muted-foreground text-xs">{t("auth.common.phoneHint")}</p>
               </div>
 
               <Button
@@ -197,9 +195,9 @@ const SignUpPage = () => {
               variants={landingFadeUpTight}
               className="text-muted-foreground text-center text-sm"
             >
-              Already have an account?{" "}
+              {t("auth.signup.haveAccount")}{" "}
               <Link href="/login" className="text-primary font-medium hover:underline">
-                Sign in
+                {t("auth.signup.signIn")}
               </Link>
             </motion.p>
 
@@ -207,15 +205,15 @@ const SignUpPage = () => {
               variants={landingFadeUpTight}
               className="text-muted-foreground text-center text-xs"
             >
-              By continuing, you agree to {APP_NAME}&apos;s{" "}
-              <Link href="/terms" className="hover:underline">
-                Terms of Service
-              </Link>{" "}
-              and{" "}
-              <Link href="/privacy" className="hover:underline">
-                Privacy Policy
+              {t("auth.common.legalPartBeforeTerms", { appName: APP_NAME })}
+              <Link href="/terms" className="text-primary hover:underline">
+                {t("footer.termsOfService")}
               </Link>
-              , and to receive periodic emails with updates if subscribed.
+              {t("auth.common.legalBetweenPolicies")}
+              <Link href="/privacy" className="text-primary hover:underline">
+                {t("footer.privacyPolicy")}
+              </Link>
+              {t("auth.common.legalAfterPolicies", { appName: APP_NAME })}
             </motion.p>
           </motion.div>
         </div>

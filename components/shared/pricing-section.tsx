@@ -166,7 +166,7 @@ const PricingSection = () => {
                           ))}
                     </ul>
                     <p className="text-muted-foreground mt-6 text-center text-sm">
-                      {t("landing.pricing.free.name")} — default for new accounts
+                      {t("landing.pricing.freeDefaultNote")}
                     </p>
                   </CardContent>
                   </Card>

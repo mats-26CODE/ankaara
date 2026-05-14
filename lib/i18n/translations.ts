@@ -14,20 +14,22 @@ export const translations = {
       signup: "Jisajili",
       dashboard: "Dashibodi",
       logout: "Toka",
+      language: "Lugha",
+      goToDashboard: "Nenda kwenye Dashibodi",
     },
     dashboard: {
       home: {
         greetingSubtitle: "Tayari kurekodi mauzo, kufuatilia stock na kuona faida.",
         completeProfileTitle: "Kamilisha wasifu wako",
         completeProfileDescription:
-          "Malizia kuongeza maelezo ili kuanza kurekodi mauzo na kudhibiti biashara yako.",
+          "Maliza kuongeza maelezo yako ili uanze kurekodi mauzo na kusimamia biashara yako.",
         completeProfileCta: "Kamilisha wasifu",
       },
     },
     footer: {
       tagline: `${APP_NAME} · POS, Mauzo na Ankara kwa Urahisi`,
       description:
-        "Jukwaa la biashara kwa mauzo, inventory, ankara na quotation - rekodi kila muamala, fuatilia stoku, na ona faida yako kwa uwazi.",
+        "Jukwaa la biashara kwa mauzo, hifadhi ya bidhaa, ankara na quotation — rekodi kila muamala, fuatilia stoku, na uelewe faida yako kwa uwazi.",
       company: "Kampuni",
       aboutUs: "Kuhusu Sisi",
       resources: "Rasilimali",
@@ -62,31 +64,31 @@ export const translations = {
       teamDescription:
         "Tunaongozwa na watu wenye uzoefu wa biashara na teknolojia. Tunafanya kazi karibu na wafanyabiashara ili kujenga zana zinazojibu kazi zao za kila siku.",
       contactTitle: "Wasiliana nasi",
-      contactDescription: "Tuna maswali au maoni? Tuma barua pepe kwa timu yetu.",
+      contactDescription: "Una maswali au maoni? Tuma barua pepe kwa timu yetu.",
     },
     support: {
       title: "Msaada",
       description:
-        "Unahitaji msaada kuhusu mauzo, inventory, ankara au akaunti yako? Tupo hapa. Kwa sasa, tafadhali wasiliana nasi kwa barua pepe.",
+        "Unahitaji msaada kuhusu mauzo, hifadhi ya bidhaa, ankara au akaunti yako? Tupo hapa. Kwa sasa, tafadhali wasiliana nasi kwa barua pepe.",
       faqTitle: "Maswali Yanayoulizwa Mara kwa Mara",
       faq1Question: "Ninawezaje kurekodi sale yangu ya kwanza?",
       faq1Answer:
-        "Ingia kwenye dashibodi, nenda Sales, kisha bonyeza Record Sale. Chagua bidhaa au huduma, hakiki quantity na bei, kisha hifadhi sale.",
+        "Ingia kwenye dashibodi, fungua Mauzo, kisha gusa Rekodi Mauzo. Chagua bidhaa au huduma, thibitisha idadi na bei, kisha hifadhi muamala.",
       faq2Question: "Ninawezaje kuongeza bidhaa au huduma?",
       faq2Answer:
-        "Nenda Inventory, bonyeza Add Item, chagua kama ni Product au Service, weka base price, selling price na stock kama ni bidhaa.",
+        "Nenda Hifadhi ya bidhaa, gusa Ongeza kipengee, chagua Bidhaa au Huduma, kisha weka bei ya msingi, bei ya kuuza na idadi ya stock ikiwa ni bidhaa.",
       faq3Question: "Naweza kubadili invoice kuwa sale?",
       faq3Answer:
-        "Ndiyo, kwa invoice zilizotumwa, zilizotazamwa, au tayari zimelipwa (sio rasimu, zilizofutwa, au zilizochelewa). Tumia Convert to sale kwenye invoice au menyu ya safu. Zilizotumwa au zilizotazamwa zitaonyeshwa kama zimelipwa unapobadili. Sale inaundwa mara moja kwa kila invoice.",
+        "Ndiyo, kwa ankara zilizotumwa, zilizotazamwa, au tayari zimelipwa (sio rasimu, zilizofutwa, au zilizochelewa). Tumia Geuza kuwa mauzo kwenye ankara au menyu ya safu. Zilizotumwa au zilizotazamwa zitaonyeshwa kama zimelipwa unapogeuzwa. Mauzo huundwa mara moja kwa kila ankara.",
       faq4Question: "Stock inapungua vipi baada ya sale?",
       faq4Answer:
-        "Kwa bidhaa, stock hupunguzwa unapohifadhi sale. Huduma hazipunguzi stock, lakini bado zinaweza kuuzwa na kuonekana kwenye historia ya mauzo.",
+        "Kwa bidhaa, idadi ya stock hupunguzwa unapohifadhi mauzo. Huduma hazipunguzi stock, lakini bado zinaonekana katika historia ya mauzo.",
       faq5Question: "Mipaka ya mpango wa bure ni ipi?",
       faq5Answer:
-        "Mpango wa bure una vikomo vya matumizi kama idadi ya ankara, wateja, bidhaa/huduma na biashara. Endelea kwa Pro ukihitaji uwezo zaidi.",
+        "Mpango wa bure una vikomo vya matumizi kama idadi ya ankara, wateja, bidhaa/huduma na biashara. Pata mpango wa Pro unapohitaji uwezo zaidi.",
       faq6Question: "Ninawezaje kuona mapato na faida?",
       faq6Answer:
-        "Dashibodi inaonyesha mauzo, faida, thamani ya inventory na takwimu za leo. Historia ya sales pia hukusaidia kuchuja kwa tarehe.",
+        "Dashibodi inaonyesha jumla ya mauzo, faida, thamani ya stock, mauzo ya leo na faida ya leo. Historia ya mauzo pia hukuruhusu kuchuja kwa tarehe.",
       stillNeedHelp: "Bado unahitaji msaada?",
       stillNeedHelpDescription: "Ikiwa hukupata jibu hapa, timu yetu iko tayari kukusaidia.",
       contactSupport: "Wasiliana na Msaada",
@@ -120,7 +122,7 @@ export const translations = {
         "Maudhui unayounda (mauzo, bidhaa, wateja, ankara, quotations na maelezo ya biashara) ni yako. Unatupatia leseni ya kutumia na kuonyesha data hiyo ili kutoa huduma. Tutaheshimu faragha yako kama ilivyoelezwa kwenye Sera ya Faragha.",
       section5Title: "Mabadiliko ya vigezo",
       section5Content:
-        "Tunaweza kusasisha vigezo hivi wakati wowote. Tutawajaribu kutaarifa watumiaji kuhusu mabadiliko muhimu. Kuendelea kutumia jukwaa baada ya mabadiliko kunamaanisha unakubali vigezo vipya.",
+        "Tunaweza kusasisha vigezo hivi wakati wowote. Tutawataarifu watumiaji endapo kutakuwa na mabadiliko makubwa. Kuendelea kutumia jukwaa baada ya mabadiliko kunamaanisha unakubali vigezo vipya.",
       section6Title: "Wasiliana",
       section6Content:
         "Kama una maswali kuhusu vigezo hivi vya huduma, tafadhali wasiliana nasi kwa barua pepe ya msaada.",
@@ -144,7 +146,7 @@ export const translations = {
         "Hatushiriki taarifa zako za kibinafsi na watu wa nje kwa madhumuni ya matangazo. Taarifa za ankara au quotation zinaweza kuonekana kwa mteja pale unapotuma au kushiriki hati hiyo - ni sehemu ya huduma.",
       section4Title: "Usalama",
       section4Content:
-        "Tunachukua hatua za kiusalama kulinda data yako (encryption, upatikanaji mdogo). Unapaswa kuweka nenosiri lako lisilotumika na kutuomba mara moja ikiwa una shaka juu ya akaunti.",
+        "Tunachukua hatua za kiusalama kulinda data yako (mfumo wa usimbaji fiche, idadi ndogo ya watumiaji wenye ruhusa). Unapaswa kuweka nenosiri lako kwa usalama na kutuarifu mara moja ikiwa una mashaka kuhusu akaunti yako.",
       section5Title: "Haki zako",
       section5Content:
         "Unaweza kufikia na kusahihisha taarifa zako za wasifu kutoka kwenye Mipangilio. Unaweza kutuomba kufuta akaunti na data yako kwa kushughulikia msaada.",
@@ -163,15 +165,16 @@ export const translations = {
       supportingText: `${APP_NAME} inakusaidia kusimamia mauzo, inventory, wateja, ankara na quotations bila mfumo mzito wa accounting.`,
       cta: "Anza Bure",
       ctaDashboard: "Nenda kwenye Dashibodi",
-      heroLabel: "Mali bila daftari?",
-      noCreditCard: "Hakuna kadi ya kredi inayohitajika",
-      socialProof: "Imepimwa 5.0 na wafanyabiashara wanaofuatilia mauzo kila siku",
+      heroLabel: "POS ya kisasa kwa biashara yako",
+      noCreditCard: "Hakuna kadi ya malipo inayohitajika",
+      socialProof:
+        "Wamiliki wa biashara wanaotumia mfumo huu wanapongeza urahisi wa kurekodi mauzo kila siku",
       trustedBy: "Inaaminika na maduka, watoa huduma na biashara zinazokua",
       trustMetrics: {
         salesValue: "POS",
         salesLabel: "Mauzo",
         inventoryValue: "Stock",
-        inventoryLabel: "Inventory",
+        inventoryLabel: "Hifadhi ya bidhaa",
         reportsValue: "Faida",
         reportsLabel: "Ripoti",
       },
@@ -184,8 +187,8 @@ export const translations = {
           affiliation: "Mmiliki wa duka",
         },
         two: {
-          quoteStart: "Inventory na mauzo ",
-          quoteHighlight: "viko sehemu moja",
+          quoteStart: "Hifadhi ya bidhaa na mauzo ",
+          quoteHighlight: "yako katika mfumo mmoja",
           quoteEnd: ", hivyo ni rahisi kujua bidhaa zinazoenda haraka.",
           name: "Jonathan S.",
           affiliation: "Mtoa huduma",
@@ -214,8 +217,8 @@ export const translations = {
           description: "Rekodi mauzo yako haraka na urahisi. Huru na rahisi kutumia.",
         },
         trackExpenses: {
-          title: "Sikiza Gharama",
-          description: "Tunza gharama zako kwa kategoria na usimamie uwekezaji wako.",
+          title: "Fuatilia matumizi",
+          description: "Hifadhi matumizi kwa makundi na usimamie matumizi yako kwa urahisi.",
         },
         monthlyReports: {
           title: "Ripoti za Kila Mwezi",
@@ -264,8 +267,8 @@ export const translations = {
             "Andaa rekodi zako kwa TRA kwa urahisi. Sisi hatutoi malipo, lakini tunakusaidia kuandaa.",
         },
         transparent: {
-          title: "Wazi na Wazi",
-          description: "Angalia muhtasari wako wakati wowote. Kila kitu ni wazi na rahisi kuelewa.",
+          title: "Uwazi na uelewevu",
+          description: "Angalia muhtasari wakati wowote. Taarifa zote ni wazi na rahisi kuzielewa.",
         },
       },
       problem: {
@@ -288,7 +291,7 @@ export const translations = {
           viewTotals: "Muhtasari wa mapato na faida",
           generateReports: "Ripoti rahisi kushirikisha au kuchapisha",
         },
-        closing: "Hakuna kubahatisha. Hakuna presha.",
+        closing: "Hakuna kubahatisha. Hakuna msongo wa mawazo.",
       },
       confidence: {
         title: "Zungumza kwa Uhakika Unapoulizwa Maswali ya Biashara",
@@ -313,7 +316,7 @@ export const translations = {
         title: `${APP_NAME} HAIFANYI Nini`,
         items: {
           noSubmit: "Haitoi malipo kwa TRA",
-          noReplaceAccountant: "Haiwakilishi karani wako",
+          noReplaceAccountant: "Si mbadala wa mhasibu wako",
           noBankAccess: "Haipati kufikia akaunti za benki au pesa za simu",
           noMoneyHandling: "Haihamishi, haikusanyi, au haihifadhi pesa",
         },
@@ -323,7 +326,8 @@ export const translations = {
         title: "Bei rahisi kwa biashara yako",
         noHiddenFees: "Hakuna ada zisizojulikana.",
         poweredBy: "Malipo yenye usalama kwa",
-        mostPopular: "Inayopendwa zaidi",
+        mostPopular: "Maarufu zaidi",
+        freeDefaultNote: "Bure — chaguo-msingi kwa akaunti mpya",
         contactUs: "Wasiliana nasi",
         free: {
           name: "Bure",
@@ -334,7 +338,7 @@ export const translations = {
           features: [
             "Rekodi mauzo ya moja kwa moja",
             "Inventory ya bidhaa na huduma",
-            "Wateja na walk-in customer",
+            "Wateja wa kudumu na wageni wa moja kwa moja",
             "Ankara na quotations za msingi",
           ],
         },
@@ -384,14 +388,25 @@ export const translations = {
       },
       finalCta: {
         title: "Anza kusimamia mauzo yako leo",
-        subtitle: "Unda akaunti ya bure, ongeza bidhaa au huduma, na rekodi sale yako ya kwanza.",
+        subtitle:
+          "Fungua akaunti ya bure, ongeza bidhaa au huduma zako, na rekodi muamala wako wa kwanza wa mauzo.",
         cta: "Anza Bure Leo",
       },
     },
     auth: {
+      common: {
+        backToHome: "Rudi mwanzo",
+        phonePlaceholder: "Ingiza nambari ya simu (mf. 07XXXXXXXX)",
+        phoneHint: "Nambari ya simu lazima ianze na 0 na tarakimu pekee.",
+        completingSignIn: "Inakamilisha kuingia...",
+        legalPartBeforeTerms: "Kwa kuendelea, unakubali ",
+        legalBetweenPolicies: " na ",
+        legalAfterPolicies:
+          " ya {appName}, na unaweza kupokea barua pepe zenye taarifa ikiwa umejiandikisha.",
+      },
       onboarding: {
         title: "Karibu! Ongeza Maelezo Yako",
-        subtitle: "Jaza maelezo yako na uanze kutumia ankara",
+        subtitle: "Ongeza maelezo machache ya biashara yako ili uanze",
         businessName: "Jina la Biashara",
         businessNamePlaceholder: "Jina la biashara yako",
         yourName: "Jina lako",
@@ -422,7 +437,7 @@ export const translations = {
         noAccount: "Huna akaunti?",
         signUp: "Jisajili",
         terms: `Kwa kuendelea, unakubali Vigezo vya Huduma na Sera ya Faragha ya ${APP_NAME}.`,
-        error: "Barua pepe/simu au nenosiri si sahihi",
+        error: "Hitilafu imetokea. Hakikisha nambari ya simu kisha jaribu tena.",
       },
       signup: {
         title: `Unda akaunti yako ya ${APP_NAME}`,
@@ -477,6 +492,8 @@ export const translations = {
       signup: "Sign Up",
       dashboard: "Dashboard",
       logout: "Logout",
+      language: "Language",
+      goToDashboard: "Go to dashboard",
     },
     dashboard: {
       home: {
@@ -788,6 +805,7 @@ export const translations = {
         noHiddenFees: "No hidden fees.",
         poweredBy: "Secure payments by",
         mostPopular: "Most popular",
+        freeDefaultNote: "Free — default for new accounts",
         contactUs: "Contact us",
         free: {
           name: "Free",
@@ -855,6 +873,15 @@ export const translations = {
       },
     },
     auth: {
+      common: {
+        backToHome: "Back to home",
+        phonePlaceholder: "Enter your phone number (e.g. 07XXXXXXXX)",
+        phoneHint: "Phone number must start with 0 and contain only digits.",
+        completingSignIn: "Completing sign in...",
+        legalPartBeforeTerms: "By continuing, you agree to {appName}'s ",
+        legalBetweenPolicies: " and ",
+        legalAfterPolicies: ", and to receive occasional emails with updates if you subscribe.",
+      },
       onboarding: {
         title: "Welcome! Set up your account",
         subtitle: "Add a few details to get started",
@@ -888,7 +915,7 @@ export const translations = {
         noAccount: "Don't have an account?",
         signUp: "Sign up",
         terms: `By continuing, you agree to ${APP_NAME}'s Terms of Service and Privacy Policy.`,
-        error: "Incorrect email/phone or password",
+        error: "Something went wrong. Check your phone number and try again.",
       },
       signup: {
         title: `Create your ${APP_NAME} account`,
@@ -935,9 +962,12 @@ export const translations = {
 export const defaultLanguage = "sw";
 
 // Helper function to replace variables in translation strings
-const replaceVariables = (value: string, vars: Record<string, string> = {}) => {
+const replaceVariables = (value: string, vars: Record<string, string | number> = {}) => {
   if (typeof value !== "string") return value;
-  return value.replace(/\{(\w+)}/g, (_, name) => vars?.[name] ?? `{${name}}`);
+  return value.replace(/\{(\w+)}/g, (_, name) => {
+    const v = vars[name];
+    return v !== undefined && v !== null ? String(v) : `{${name}}`;
+  });
 };
 
 // Helper function to resolve nested keys (e.g., "nav.findJobs")
@@ -963,9 +993,11 @@ const resolveKey = (lang: keyof typeof translations, key: string): string | unde
 export const t = (
   lang: keyof typeof translations,
   key: string,
-  vars: Record<string, string> = {},
+  vars: Record<string, string | number> = {},
 ): string => {
-  const resolved = resolveKey(lang, key);
+  const primary = resolveKey(lang, key);
+  const resolved =
+    primary !== undefined ? primary : lang !== "en" ? resolveKey("en", key) : undefined;
   const value = resolved !== undefined ? resolved : key;
   return replaceVariables(typeof value === "string" ? value : String(value), vars);
 };

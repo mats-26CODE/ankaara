@@ -102,7 +102,7 @@ const LoginContent = () => {
           transition={{ duration: 0.4, ease: landingEase, delay: 0.08 }}
         >
           <Logo size="sm" />
-          <p className="text-muted-foreground text-sm">Completing sign in...</p>
+          <p className="text-muted-foreground text-sm">{t("auth.common.completingSignIn")}</p>
           <Spinner className="size-6" />
         </motion.div>
       </motion.div>
@@ -132,7 +132,7 @@ const LoginContent = () => {
               <Button variant="outline" size="sm" asChild className="mb-4 rounded-full">
                 <Link href="/">
                   <Home className="mr-1 size-4" />
-                  Back to home
+                  {t("auth.common.backToHome")}
                 </Link>
               </Button>
               <h1 className="text-foreground text-3xl font-bold">{t("auth.login.welcome")}</h1>
@@ -213,15 +213,13 @@ const LoginContent = () => {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    placeholder="Enter your phone number (e.g. 07XXXXXXXX)"
+                    placeholder={t("auth.common.phonePlaceholder")}
                     required
                     disabled={sendOtpMutation.isPending}
                     maxLength={10}
                   />
                 </InputGroup>
-                <p className="text-muted-foreground text-xs">
-                  Phone number must start with 0 and contain only numbers
-                </p>
+                <p className="text-muted-foreground text-xs">{t("auth.common.phoneHint")}</p>
               </div>
 
               <Button
@@ -238,9 +236,9 @@ const LoginContent = () => {
               variants={landingFadeUpTight}
               className="text-muted-foreground text-center text-sm"
             >
-              Don&apos;t have an account?{" "}
+              {t("auth.login.noAccount")}{" "}
               <Link href="/sign-up" className="text-primary font-medium hover:underline">
-                Sign up
+                {t("auth.login.signUp")}
               </Link>
             </motion.p>
 
@@ -248,15 +246,15 @@ const LoginContent = () => {
               variants={landingFadeUpTight}
               className="text-muted-foreground text-center text-xs"
             >
-              By continuing, you agree to {APP_NAME}&apos;s{" "}
+              {t("auth.common.legalPartBeforeTerms", { appName: APP_NAME })}
               <Link href="/terms" className="text-primary hover:underline">
-                Terms of Service
-              </Link>{" "}
-              and{" "}
-              <Link href="/privacy" className="text-primary hover:underline">
-                Privacy Policy
+                {t("footer.termsOfService")}
               </Link>
-              , and to receive periodic emails with updates if subscribed.
+              {t("auth.common.legalBetweenPolicies")}
+              <Link href="/privacy" className="text-primary hover:underline">
+                {t("footer.privacyPolicy")}
+              </Link>
+              {t("auth.common.legalAfterPolicies", { appName: APP_NAME })}
             </motion.p>
           </motion.div>
         </div>
