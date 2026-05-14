@@ -10,6 +10,13 @@ import { BsTwitterX } from "react-icons/bs";
 import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 import { SUPPORT_EMAIL, CONTACT_US_PHONE } from "@/constants/values";
+import {
+  landingFadeUp,
+  landingFadeUpTight,
+  landingStaggerParent,
+  landingViewport,
+  ScrollReveal,
+} from "@/components/shared/scroll-reveal";
 
 interface FAQItem {
   questionKey: string;
@@ -35,81 +42,117 @@ export const SupportPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 md:max-w-6xl md:py-12">
-      <div className="mb-8">
-        <h1 className="text-primary mb-4 text-center text-3xl font-bold md:text-4xl">
+      <motion.div
+        className="mb-8"
+        variants={landingStaggerParent}
+        initial="hidden"
+        whileInView="visible"
+        viewport={landingViewport}
+      >
+        <motion.h1
+          variants={landingFadeUp}
+          className="text-primary mb-4 text-center text-3xl font-bold md:text-4xl"
+        >
           {t("support.title")}
-        </h1>
-        <div className="mx-auto flex w-full flex-col items-center gap-3 md:w-3xl">
+        </motion.h1>
+        <motion.div
+          variants={landingFadeUp}
+          className="mx-auto flex w-full flex-col items-center gap-3 md:w-3xl"
+        >
           <p className="text-foreground text-center text-sm">{t("support.description")}</p>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       <div className="space-y-4">
-        <h2 className="text-foreground mb-6 text-center text-2xl font-semibold">
+        <ScrollReveal as="h2" className="text-foreground mb-6 text-center text-2xl font-semibold">
           {t("support.faqTitle")}
-        </h2>
+        </ScrollReveal>
         <div className="mx-auto w-full md:w-3xl">
           {faqKeys.map((faq, index) => (
-            <Card
-              key={index}
-              className={cn(
-                "border-border hover:border-primary/50 cursor-pointer overflow-hidden rounded-none p-1 transition-colors",
-                openIndex === index && "border-primary/50",
-                index === 0 && "rounded-t-2xl",
-                index === faqKeys.length - 1 && "rounded-b-2xl",
-              )}
-              onClick={() => toggleFAQ(index)}
-            >
-              <CardContent className="p-0">
-                <div className="flex items-center justify-between p-6">
-                  <h3 className="text-foreground pr-8 text-lg font-semibold">
-                    {t(faq.questionKey)}
-                  </h3>
-                  <motion.div
-                    animate={{
-                      rotate: openIndex === index ? 180 : 0,
-                    }}
-                    transition={{ duration: 0.2 }}
-                    className="shrink-0"
-                  >
-                    <ChevronDown className="text-muted-foreground h-5 w-5" />
-                  </motion.div>
-                </div>
-                <AnimatePresence>
-                  {openIndex === index && (
+            <ScrollReveal key={faq.questionKey} delay={index * 0.06} className="block">
+              <Card
+                className={cn(
+                  "border-border hover:border-primary/50 motion-safe:animate-none cursor-pointer overflow-hidden rounded-none p-1 transition-colors",
+                  openIndex === index && "border-primary/50",
+                  index === 0 && "rounded-t-2xl",
+                  index === faqKeys.length - 1 && "rounded-b-2xl",
+                )}
+                onClick={() => toggleFAQ(index)}
+              >
+                <CardContent className="p-0">
+                  <div className="flex items-center justify-between p-6">
+                    <h3 className="text-foreground pr-8 text-lg font-semibold">
+                      {t(faq.questionKey)}
+                    </h3>
                     <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3, ease: "easeInOut" }}
-                      className="overflow-hidden"
+                      animate={{
+                        rotate: openIndex === index ? 180 : 0,
+                      }}
+                      transition={{ duration: 0.2 }}
+                      className="shrink-0"
                     >
-                      <div className="px-6 pt-0 pb-6">
-                        <p className="text-muted-foreground leading-relaxed">{t(faq.answerKey)}</p>
-                      </div>
+                      <ChevronDown className="text-muted-foreground h-5 w-5" />
                     </motion.div>
-                  )}
-                </AnimatePresence>
-              </CardContent>
-            </Card>
+                  </div>
+                  <AnimatePresence>
+                    {openIndex === index && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-6 pt-0 pb-6">
+                          <p className="text-muted-foreground leading-relaxed">
+                            {t(faq.answerKey)}
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </CardContent>
+              </Card>
+            </ScrollReveal>
           ))}
         </div>
       </div>
 
-      <div className="border-border bg-muted/50 mx-auto mt-12 w-full rounded-xl border p-6 md:w-3xl">
-        <h3 className="text-foreground mb-2 text-xl font-semibold">{t("support.stillNeedHelp")}</h3>
-        <p className="text-foreground mb-4">{t("support.stillNeedHelpDescription")}</p>
-        <a
-          href={`mailto:${SUPPORT_EMAIL}`}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 inline-block rounded-full px-6 py-2 transition-colors"
+      <motion.div
+        className="border-border bg-muted/50 mx-auto mt-12 w-full rounded-xl border p-6 md:w-3xl"
+        variants={landingStaggerParent}
+        initial="hidden"
+        whileInView="visible"
+        viewport={landingViewport}
+      >
+        <motion.h3
+          variants={landingFadeUpTight}
+          className="text-foreground mb-2 text-xl font-semibold"
         >
-          {t("support.contactSupport")}
-        </a>
+          {t("support.stillNeedHelp")}
+        </motion.h3>
+        <motion.p variants={landingFadeUpTight} className="text-foreground mb-4">
+          {t("support.stillNeedHelpDescription")}
+        </motion.p>
+        <motion.div variants={landingFadeUpTight}>
+          <a
+            href={`mailto:${SUPPORT_EMAIL}`}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 inline-block rounded-full px-6 py-2 transition-colors"
+          >
+            {t("support.contactSupport")}
+          </a>
+        </motion.div>
 
-        <h4 className="text-foreground mt-8 mb-3 text-lg font-semibold">
+        <motion.h4
+          variants={landingFadeUpTight}
+          className="text-foreground mt-8 mb-3 text-lg font-semibold"
+        >
           {t("support.contactsTitle")}
-        </h4>
-        <div className="text-foreground flex flex-col gap-2 text-sm">
+        </motion.h4>
+        <motion.div
+          variants={landingFadeUpTight}
+          className="text-foreground flex flex-col gap-2 text-sm"
+        >
           <p>
             <span className="text-muted-foreground">{t("support.emailLabel")}: </span>
             <a href={`mailto:${SUPPORT_EMAIL}`} className="text-primary hover:underline">
@@ -125,9 +168,9 @@ export const SupportPage = () => {
               {CONTACT_US_PHONE}
             </a>
           </p>
-        </div>
+        </motion.div>
 
-        <div className="mt-6">
+        <motion.div variants={landingFadeUpTight} className="mt-6">
           <p className="text-foreground mb-2 text-sm font-medium">{t("footer.connect")}</p>
           <div className="flex gap-2">
             <Button
@@ -175,8 +218,8 @@ export const SupportPage = () => {
               </a>
             </Button>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };

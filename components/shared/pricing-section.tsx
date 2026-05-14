@@ -17,6 +17,13 @@ import {
   type SubscriptionPlanSlug,
 } from "@/hooks/use-subscription-plans";
 import { formatPlanCurrency } from "@/lib/format-plan-currency";
+import { motion } from "motion/react";
+import {
+  landingFadeUpTight,
+  landingStaggerParent,
+  landingViewport,
+  ScrollReveal,
+} from "@/components/shared/scroll-reveal";
 
 const PLAN_TIER_ICONS: Record<ReturnType<typeof getPlanTier>, typeof Users> = {
   free: Users,
@@ -59,15 +66,19 @@ const PricingSection = () => {
     return (
       <section id="pricing" className="border-border/60 bg-muted/20 border-t px-4 py-12 md:py-16">
         <div className="container mx-auto w-full md:max-w-6xl">
-          <h2 className="text-foreground mb-12 text-center text-2xl font-semibold capitalize md:mb-16 md:text-3xl xl:text-4xl">
+          <ScrollReveal as="h2" className="text-foreground mb-12 text-center text-2xl font-semibold capitalize md:mb-16 md:text-3xl xl:text-4xl">
             {t("landing.pricing.title")}
-          </h2>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
+          </ScrollReveal>
+          <motion.div
+            className="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8"
+            variants={landingStaggerParent}
+            initial="hidden"
+            whileInView="visible"
+            viewport={landingViewport}
+          >
             {[1, 2, 3].map((i) => (
-              <Card
-                key={i}
-                className="border-muted flex flex-col overflow-hidden rounded-2xl border-2"
-              >
+              <motion.div key={i} variants={landingFadeUpTight} className="min-h-0">
+                <Card className="border-muted motion-safe:animate-none flex min-h-0 flex-col overflow-hidden rounded-2xl border-2">
                 <CardHeader className="pb-4">
                   <div className="bg-muted mb-2 flex h-10 w-10 items-center justify-center rounded-lg">
                     <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
@@ -84,9 +95,10 @@ const PricingSection = () => {
                   </ul>
                   <div className="bg-muted mt-6 h-12 w-full rounded-lg" />
                 </CardContent>
-              </Card>
+                </Card>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
     );
@@ -95,9 +107,9 @@ const PricingSection = () => {
   return (
     <section id="pricing" className="border-border/60 bg-muted/20 border-t px-4 py-12 md:py-16">
       <div className="container mx-auto w-full md:max-w-6xl">
-        <h2 className="text-foreground mb-12 text-center text-2xl font-semibold capitalize md:mb-16 md:text-3xl xl:text-4xl">
+        <ScrollReveal as="h2" className="text-foreground mb-12 text-center text-2xl font-semibold capitalize md:mb-16 md:text-3xl xl:text-4xl">
           {t("landing.pricing.title")}
-        </h2>
+        </ScrollReveal>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
           {(() => {
@@ -107,10 +119,11 @@ const PricingSection = () => {
               const tier = "free";
               const Icon = PLAN_TIER_ICONS.free;
               return (
-                <Card
-                  key="free"
-                  className="border-muted bg-card relative flex flex-col overflow-hidden rounded-2xl border-2 shadow-xs"
-                >
+                <ScrollReveal className="h-full min-h-0" delay={0}>
+                  <Card
+                    key="free"
+                    className="border-muted bg-card motion-safe:animate-none relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border-2 shadow-xs"
+                  >
                   <CardHeader className="pb-4">
                     <div className="mb-2 flex items-center gap-2">
                       <span className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-lg">
@@ -156,7 +169,8 @@ const PricingSection = () => {
                       {t("landing.pricing.free.name")} — default for new accounts
                     </p>
                   </CardContent>
-                </Card>
+                  </Card>
+                </ScrollReveal>
               );
             };
 
@@ -166,6 +180,7 @@ const PricingSection = () => {
               tierLabel: string,
               selectedSlug: SubscriptionPlanSlug | null,
               setSelectedSlug: (s: SubscriptionPlanSlug) => void,
+              revealDelay: number,
             ) => {
               if (tierPlans.length === 0) return null;
               const activeSlug =
@@ -180,14 +195,15 @@ const PricingSection = () => {
               const loginHref = `/login?redirect=${encodeURIComponent(subscribeHref)}`;
               const cta = contact ? t("landing.pricing.contactUs") : t("landing.pricing.free.cta");
               return (
-                <Card
-                  key={tier}
-                  className={`relative flex flex-col overflow-hidden rounded-2xl border-2 transition-all ${
-                    popular
-                      ? "border-primary bg-primary/5 shadow-primary/10 shadow-lg md:scale-[1.02]"
-                      : "bg-card hover:border-primary/30 border shadow-xs"
-                  }`}
-                >
+                <ScrollReveal className="h-full min-h-0" delay={revealDelay}>
+                  <Card
+                    key={tier}
+                    className={`motion-safe:animate-none relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border-2 transition-all ${
+                      popular
+                        ? "border-primary bg-primary/5 shadow-primary/10 shadow-lg md:scale-[1.02]"
+                        : "bg-card hover:border-primary/30 border shadow-xs"
+                    }`}
+                  >
                   {popular && (
                     <div className="bg-primary text-primary-foreground absolute top-0 right-0 rounded-bl-lg px-3 py-1.5 text-xs font-medium">
                       {t("landing.pricing.mostPopular")}
@@ -306,7 +322,8 @@ const PricingSection = () => {
                       </Button>
                     )}
                   </CardContent>
-                </Card>
+                  </Card>
+                </ScrollReveal>
               );
             };
 
@@ -320,6 +337,7 @@ const PricingSection = () => {
                     t("landing.pricing.pro.name") ?? "Pro Plan",
                     selectedProSlug,
                     setSelectedProSlug,
+                    0.12,
                   )}
                 {grouped.business.length > 0 &&
                   renderTierCardWithTabs(
@@ -328,6 +346,7 @@ const PricingSection = () => {
                     t("landing.pricing.business.name") ?? "Business Plan",
                     selectedBusinessSlug,
                     setSelectedBusinessSlug,
+                    0.24,
                   )}
               </>
             );
