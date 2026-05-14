@@ -325,7 +325,7 @@ const NavBar = () => {
               <PopoverTrigger asChild>
                 <button
                   type="button"
-                  className="border-primary/10 hover:bg-muted focus:ring-primary ml-2 inline-flex items-center gap-2 rounded-full border px-2 py-1.5 text-sm font-medium focus:ring-2 focus:ring-offset-2 focus:outline-none"
+                  className="border-primary/10 hover:bg-muted focus:ring-primary ml-2 inline-flex items-center gap-2 rounded-full border py-1.5 pr-4 pl-2 text-sm font-medium focus:ring-2 focus:ring-offset-2 focus:outline-none"
                   aria-label={t("nav.dashboard")}
                 >
                   <ProfileAvatar
