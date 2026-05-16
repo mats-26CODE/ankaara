@@ -10,6 +10,9 @@ const corsHeaders = {
 
 const OTP_EXPIRY_MINUTES = 10;
 
+/** Same test numbers as authenticate-user; use TEST_ACCOUNT_CODE env instead of SMS. */
+const TEST_ACCOUNTS = ["255767645559"];
+
 type SendOtpPayload = { phone: string };
 type VerifyAndUpdatePayload = {
   phone: string;
@@ -28,6 +31,22 @@ const json = (body: Record<string, unknown>, status: number) =>
   Response.json(body, { status, headers: corsHeaders });
 
 const generateOtp = (): string => Math.floor(100000 + Math.random() * 900000).toString();
+
+const isTestAccount = (phone: string): boolean => {
+  const digits = phone.replace(/\D/g, "");
+  return TEST_ACCOUNTS.includes(digits) || TEST_ACCOUNTS.includes(phone.trim());
+};
+
+const resolveOtpCode = (phone: string): { code: string; skipSms: boolean } => {
+  if (isTestAccount(phone)) {
+    const testCode = Deno.env.get("TEST_ACCOUNT_CODE");
+    if (!testCode) {
+      throw new Error("TEST_ACCOUNT_CODE is not configured");
+    }
+    return { code: testCode, skipSms: true };
+  }
+  return { code: generateOtp(), skipSms: false };
+};
 
 const sendSms = async (phone: string, code: string): Promise<void> => {
   const apiKey = Deno.env.get("BEEM_SMS_API_KEY");
@@ -97,10 +116,12 @@ const sendOtp = async (userId: string, { phone }: SendOtpPayload) => {
     );
   }
 
-  const code = generateOtp();
+  const { code, skipSms } = resolveOtpCode(phoneTrimmed);
   const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000).toISOString();
 
-  await sendSms(phoneTrimmed, code);
+  if (!skipSms) {
+    await sendSms(phoneTrimmed, code);
+  }
 
   const { error: insertError } = await supabase.from("otp_verification").insert({
     user_id: userId,
