@@ -398,3 +398,10 @@ verify_jwt = false
 # Login/sign-up OTP: called before the user has a session (anon key only).
 [functions.authenticate-user]
 verify_jwt = false
+
+# Paid plan activation: payment webhook only (SUBSCRIPTION_ACTIVATE_WEBHOOK_SECRET).
+[functions.activate-pro-subscription]
+verify_jwt = false
+
+[functions.activate-business-subscription]
+verify_jwt = false
