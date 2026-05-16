@@ -441,6 +441,11 @@ export const translations = {
         signUp: "Jisajili",
         terms: `Kwa kuendelea, unakubali Vigezo vya Huduma na Sera ya Faragha ya ${APP_NAME}.`,
         error: "Hitilafu imetokea. Hakikisha nambari ya simu kisha jaribu tena.",
+        noAccountDialogTitle: "Hakuna akaunti",
+        noAccountDialogDescription:
+          "Hakuna akaunti iliyounganishwa na nambari hii ya simu. Jisajili ili kuunda akaunti, kisha uthibitishwe kwa OTP.",
+        goToRegister: "Nenda kusajili",
+        cancel: "Ghairi",
       },
       signup: {
         title: `Unda akaunti yako ya ${APP_NAME}`,
@@ -462,6 +467,11 @@ export const translations = {
         fillAllFields: "Tafadhali jaza sehemu zote",
         emailRequired: "Barua pepe inahitajika",
         phoneRequired: "Nambari ya simu inahitajika",
+        accountExistsDialogTitle: "Akaunti tayari ipo",
+        accountExistsDialogDescription:
+          "Nambari hii ya simu tayari ina akaunti. Ingia badala yake ili kuendelea.",
+        goToLogin: "Nenda kuingia",
+        cancel: "Ghairi",
       },
       verifyOtp: {
         title: "Thibitisha nambari yako ya simu",
@@ -922,6 +932,11 @@ export const translations = {
         signUp: "Sign up",
         terms: `By continuing, you agree to ${APP_NAME}'s Terms of Service and Privacy Policy.`,
         error: "Something went wrong. Check your phone number and try again.",
+        noAccountDialogTitle: "No account found",
+        noAccountDialogDescription:
+          "There is no account linked to this phone number. Sign up to create one, then verify with OTP.",
+        goToRegister: "Go to Register",
+        cancel: "Cancel",
       },
       signup: {
         title: `Create your ${APP_NAME} account`,
@@ -943,6 +958,11 @@ export const translations = {
         fillAllFields: "Please complete all fields",
         emailRequired: "Email is required",
         phoneRequired: "Phone number is required",
+        accountExistsDialogTitle: "Account already exists",
+        accountExistsDialogDescription:
+          "This phone number already has an account. Sign in instead to continue.",
+        goToLogin: "Go to Login",
+        cancel: "Cancel",
       },
       verifyOtp: {
         title: "Verify your phone number",

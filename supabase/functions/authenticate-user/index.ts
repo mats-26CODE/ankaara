@@ -1,4 +1,6 @@
 // @ts-nocheck
+// Deploy with verify_jwt disabled (see supabase/config.toml). Invoked from login/sign-up
+// before the user has a session; uses service role inside for auth admin operations.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -15,11 +17,15 @@ const headers = {
 
 const TEST_ACCOUNTS = ["255767645559"];
 
-type LoginPayload = { phone_number: string };
-type ResendPayload = { phone_number: string };
+type PhonePayload = { phone_number: string };
 type SendOtpCodesPayload = { phone_number: string };
-type AuthFunctionOperation = "login" | "resend" | "sendOtpCodes";
-type AuthFunctionPayload = LoginPayload | ResendPayload | SendOtpCodesPayload;
+type AuthFunctionOperation = "login" | "signup" | "resend" | "sendOtpCodes";
+type AuthFunctionPayload = PhonePayload | SendOtpCodesPayload;
+
+const ERROR_CODES = {
+  ACCOUNT_NOT_FOUND: "ACCOUNT_NOT_FOUND",
+  ACCOUNT_EXISTS: "ACCOUNT_EXISTS",
+} as const;
 
 const serviceClient = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -75,30 +81,17 @@ const sendCodeSms = async (phone_number: string, code: string, _userId: string) 
   return responseData;
 };
 
-const login = async ({ phone_number }: LoginPayload) => {
-  validatePhone(phone_number);
-
-  let userId = "";
-
+const getUserIdByPhone = async (phone_number: string): Promise<string | null> => {
   const { data: existingUser, error: existingUserError } = await serviceClient.rpc(
     "get_user_by_phone",
     { phone_number },
   );
-
   if (existingUserError) throw existingUserError;
+  const rows = existingUser ?? [];
+  return rows.length > 0 ? rows[0].id : null;
+};
 
-  if (existingUser.length === 0) {
-    const { data: newUser, error: userCreateError } = await serviceClient.auth.admin.createUser({
-      phone: phone_number,
-      user_metadata: { user_type: "user", phone: phone_number },
-    });
-
-    if (userCreateError) throw userCreateError;
-    userId = newUser.user.id;
-  } else {
-    userId = existingUser[0].id;
-  }
-
+const sendOtpForUser = async (phone_number: string, userId: string) => {
   let code = "";
 
   if (TEST_ACCOUNTS.includes(phone_number)) {
@@ -106,7 +99,6 @@ const login = async ({ phone_number }: LoginPayload) => {
   } else {
     code = Math.floor(100000 + Math.random() * 900000).toString();
     const smsResponse = await sendCodeSms(phone_number, code, userId);
-    // Beem returns { successful: true } at top level - NOT smsResponse.data.successful
     if (smsResponse.successful === false) {
       throw new Error(smsResponse?.message || "Failed to send OTP SMS");
     }
@@ -116,11 +108,46 @@ const login = async ({ phone_number }: LoginPayload) => {
     phone_number,
     code,
   });
-
   if (otpError) throw otpError;
 };
 
-const resend = async ({ phone_number }: ResendPayload) => {
+const login = async ({ phone_number }: PhonePayload) => {
+  validatePhone(phone_number);
+
+  const userId = await getUserIdByPhone(phone_number);
+  if (!userId) {
+    const err = new Error(
+      "No account found for this phone number. Please sign up to create an account.",
+    );
+    (err as Error & { code: string }).code = ERROR_CODES.ACCOUNT_NOT_FOUND;
+    throw err;
+  }
+
+  await sendOtpForUser(phone_number, userId);
+};
+
+const signup = async ({ phone_number }: PhonePayload) => {
+  validatePhone(phone_number);
+
+  const existingUserId = await getUserIdByPhone(phone_number);
+  if (existingUserId) {
+    const err = new Error(
+      "An account already exists for this phone number. Please sign in instead.",
+    );
+    (err as Error & { code: string }).code = ERROR_CODES.ACCOUNT_EXISTS;
+    throw err;
+  }
+
+  const { data: newUser, error: userCreateError } = await serviceClient.auth.admin.createUser({
+    phone: phone_number,
+    user_metadata: { user_type: "user", phone: phone_number },
+  });
+  if (userCreateError) throw userCreateError;
+
+  await sendOtpForUser(phone_number, newUser.user.id);
+};
+
+const resend = async ({ phone_number }: PhonePayload) => {
   validatePhone(phone_number);
 
   let userId = "";
@@ -137,25 +164,7 @@ const resend = async ({ phone_number }: ResendPayload) => {
   }
   userId = existingUser[0].id;
 
-  let code = "";
-
-  if (TEST_ACCOUNTS.includes(phone_number)) {
-    code = Deno.env.get("TEST_ACCOUNT_CODE") as string;
-  } else {
-    code = Math.floor(100000 + Math.random() * 900000).toString();
-    const smsResponse = await sendCodeSms(phone_number, code, userId);
-    // Beem returns { successful: true } at top level - NOT smsResponse.data.successful
-    if (smsResponse.successful === false) {
-      throw new Error(smsResponse?.message || "Failed to send OTP SMS");
-    }
-  }
-
-  const { error: otpError } = await serviceClient.rpc("set_confirmation", {
-    phone_number,
-    code,
-  });
-
-  if (otpError) throw otpError;
+  await sendOtpForUser(phone_number, userId);
 };
 
 const sendOTPCodes = async ({ phone_number }: SendOtpCodesPayload) => {
@@ -209,11 +218,15 @@ Deno.serve(async (req) => {
     }: { operation: AuthFunctionOperation; payload: AuthFunctionPayload } = await req.json();
 
     if (operation === "login") {
-      await login(payload);
+      await login(payload as PhonePayload);
+    }
+
+    if (operation === "signup") {
+      await signup(payload as PhonePayload);
     }
 
     if (operation === "resend") {
-      await resend(payload);
+      await resend(payload as PhonePayload);
     }
 
     if (operation === "sendOtpCodes") {
@@ -234,12 +247,24 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error(error);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    const code =
+      error instanceof Error && "code" in error
+        ? (error as Error & { code?: string }).code
+        : undefined;
+    const status =
+      code === ERROR_CODES.ACCOUNT_NOT_FOUND
+        ? 404
+        : code === ERROR_CODES.ACCOUNT_EXISTS
+          ? 409
+          : 500;
     return new Response(
       JSON.stringify({
         error: true,
-        message: error instanceof Error ? error.message : "Unknown error",
+        message,
+        ...(code ? { code } : {}),
       }),
-      { status: 500, headers },
+      { status, headers },
     );
   }
 });

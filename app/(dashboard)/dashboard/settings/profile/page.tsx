@@ -6,12 +6,9 @@ import { useProfile, useUpdateProfile } from "@/hooks/use-profile";
 import { useUser } from "@/hooks/use-user";
 import { useCurrencies } from "@/hooks/use-currencies";
 import { useTheme, useLanguage } from "@/lib/stores/preferences-store";
-import {
-  useSendOtpForOnboarding,
-  useVerifyOtpForOnboarding,
-} from "@/hooks/use-auth";
+import { useSendOtpForPhoneChange, useVerifyPhoneChange } from "@/hooks/use-auth";
 import { useOtpCountdown } from "@/hooks/use-otp-countdown";
-import { addCountryCode } from "@/helpers/helpers";
+import { addCountryCode, clampPhoneDigitInput, formatPhoneForDisplay } from "@/helpers/helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,13 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -55,8 +46,8 @@ const ProfileSettingsPage = () => {
   const { theme, setTheme } = useTheme();
   const { language, setLanguage } = useLanguage();
 
-  const sendOtp = useSendOtpForOnboarding();
-  const verifyOtp = useVerifyOtpForOnboarding();
+  const sendOtp = useSendOtpForPhoneChange();
+  const verifyPhoneChange = useVerifyPhoneChange();
   const { countdown, canResend, startCountdown } = useOtpCountdown(60);
 
   const [form, setForm] = useState({
@@ -68,7 +59,7 @@ const ProfileSettingsPage = () => {
 
   const [prefilled, setPrefilled] = useState(false);
 
-  // OTP dialog state
+  const [phoneConfirmDialogOpen, setPhoneConfirmDialogOpen] = useState(false);
   const [otpDialogOpen, setOtpDialogOpen] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [otpError, setOtpError] = useState<string | null>(null);
@@ -76,14 +67,15 @@ const ProfileSettingsPage = () => {
 
   useEffect(() => {
     if (prefilled || !profile) return;
+    const rawPhone = profile.phone || user?.phone || "";
     setForm({
       full_name: profile.full_name || "",
-      phone: profile.phone || "",
+      phone: rawPhone ? clampPhoneDigitInput(formatPhoneForDisplay(rawPhone)) : "",
       avatar_url: profile.avatar_url || "",
       preferred_currency: profile.preferred_currency || "TZS",
     });
     setPrefilled(true);
-  }, [profile, prefilled]);
+  }, [profile, prefilled, user?.phone]);
 
   const phoneChanged = () => {
     const newPhone = addCountryCode(form.phone.trim());
@@ -93,23 +85,27 @@ const ProfileSettingsPage = () => {
 
   const handleSave = () => {
     if (phoneChanged()) {
-      const formatted = addCountryCode(form.phone.trim());
-      setPendingPhone(formatted);
-      setOtpCode("");
-      setOtpError(null);
-      sendOtp.mutate(
-        { phone: formatted },
-        {
-          onSuccess: () => {
-            setOtpDialogOpen(true);
-            startCountdown();
-          },
-        }
-      );
+      setPendingPhone(addCountryCode(form.phone.trim()));
+      setPhoneConfirmDialogOpen(true);
       return;
     }
 
     saveProfile();
+  };
+
+  const handleConfirmPhoneChange = () => {
+    setOtpCode("");
+    setOtpError(null);
+    sendOtp.mutate(
+      { phone: pendingPhone },
+      {
+        onSuccess: () => {
+          setPhoneConfirmDialogOpen(false);
+          setOtpDialogOpen(true);
+          startCountdown();
+        },
+      },
+    );
   };
 
   const saveProfile = (verifiedPhone?: string) => {
@@ -122,34 +118,35 @@ const ProfileSettingsPage = () => {
       },
       {
         onSuccess: () => refetch(),
-      }
+      },
     );
   };
 
   const handleVerifyOtp = () => {
     if (otpCode.length < 6) return;
     setOtpError(null);
-    verifyOtp.mutate(
-      { phone: pendingPhone, code: otpCode },
+    verifyPhoneChange.mutate(
       {
-        onSuccess: () => {
-          setOtpDialogOpen(false);
-          saveProfile(pendingPhone);
+        phone: pendingPhone,
+        code: otpCode,
+        profile: {
+          full_name: form.full_name.trim() || undefined,
+          avatar_url: form.avatar_url.trim() || null,
+          preferred_currency: form.preferred_currency,
         },
+      },
+      {
         onError: (err) => {
           setOtpError(err.message || "Verification failed");
         },
-      }
+      },
     );
   };
 
   const handleResendOtp = () => {
     if (!canResend) return;
     setOtpError(null);
-    sendOtp.mutate(
-      { phone: pendingPhone },
-      { onSuccess: () => startCountdown() }
-    );
+    sendOtp.mutate({ phone: pendingPhone }, { onSuccess: () => startCountdown() });
   };
 
   if (profileLoading || currenciesLoading) {
@@ -167,7 +164,7 @@ const ProfileSettingsPage = () => {
     .slice(0, 2)
     .toUpperCase();
 
-  const isSaving = updateProfile.isPending || sendOtp.isPending;
+  const isSaving = updateProfile.isPending || sendOtp.isPending || verifyPhoneChange.isPending;
 
   return (
     <div className="space-y-6">
@@ -188,9 +185,7 @@ const ProfileSettingsPage = () => {
               <Input
                 id="avatar_url"
                 value={form.avatar_url}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, avatar_url: e.target.value }))
-                }
+                onChange={(e) => setForm((p) => ({ ...p, avatar_url: e.target.value }))}
                 placeholder="https://example.com/avatar.png"
               />
             </div>
@@ -202,20 +197,13 @@ const ProfileSettingsPage = () => {
               <Input
                 id="full_name"
                 value={form.full_name}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, full_name: e.target.value }))
-                }
+                onChange={(e) => setForm((p) => ({ ...p, full_name: e.target.value }))}
                 placeholder="Your name"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                value={user?.email || ""}
-                disabled
-                className="bg-muted"
-              />
+              <Input id="email" value={user?.email || ""} disabled className="bg-muted" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Phone</Label>
@@ -224,13 +212,16 @@ const ProfileSettingsPage = () => {
                 type="tel"
                 value={form.phone}
                 onChange={(e) =>
-                  setForm((p) => ({ ...p, phone: e.target.value }))
+                  setForm((p) => ({
+                    ...p,
+                    phone: clampPhoneDigitInput(e.target.value),
+                  }))
                 }
                 placeholder="07XXXXXXXX"
               />
               {phoneChanged() && (
                 <p className="text-xs text-amber-600 dark:text-amber-400">
-                  Changing your phone will require OTP verification.
+                  Changing your phone will require confirmation and verification when you save.
                 </p>
               )}
             </div>
@@ -238,9 +229,7 @@ const ProfileSettingsPage = () => {
               <Label>Preferred Currency</Label>
               <Select
                 value={form.preferred_currency}
-                onValueChange={(v) =>
-                  setForm((p) => ({ ...p, preferred_currency: v }))
-                }
+                onValueChange={(v) => setForm((p) => ({ ...p, preferred_currency: v }))}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue />
@@ -300,20 +289,47 @@ const ProfileSettingsPage = () => {
 
           <Separator />
 
-          <div className="text-xs text-muted-foreground">
+          <div className="text-muted-foreground text-xs">
             Theme and language are saved to your browser automatically.
           </div>
         </CardContent>
       </Card>
 
-      {/* OTP Verification Dialog */}
+      {/* Phone change confirmation */}
+      <Dialog open={phoneConfirmDialogOpen} onOpenChange={setPhoneConfirmDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Change phone number?</DialogTitle>
+            <DialogDescription>
+              You are about to change your login phone number to{" "}
+              <strong>{formatPhoneForDisplay(pendingPhone)}</strong>. We will send a verification
+              code to that number. After you verify it, you will be signed out and must sign in
+              again with your new number.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPhoneConfirmDialogOpen(false)}
+              disabled={sendOtp.isPending}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmPhoneChange} isLoading={sendOtp.isPending}>
+              Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* OTP verification */}
       <Dialog open={otpDialogOpen} onOpenChange={setOtpDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Verify Phone Number</DialogTitle>
             <DialogDescription>
-              We sent a verification code to <strong>{pendingPhone}</strong>.
-              Enter it below to confirm your new phone number.
+              Enter the 6-digit code we sent to{" "}
+              <strong>{formatPhoneForDisplay(pendingPhone)}</strong>.
             </DialogDescription>
           </DialogHeader>
 
@@ -323,7 +339,7 @@ const ProfileSettingsPage = () => {
               pattern={REGEXP_ONLY_DIGITS}
               value={otpCode}
               onChange={setOtpCode}
-              disabled={verifyOtp.isPending}
+              disabled={verifyPhoneChange.isPending}
             >
               <InputOTPGroup>
                 <InputOTPSlot index={0} />
@@ -338,17 +354,15 @@ const ProfileSettingsPage = () => {
               </InputOTPGroup>
             </InputOTP>
 
-            {otpError && (
-              <p className="text-sm text-destructive">{otpError}</p>
-            )}
+            {otpError && <p className="text-destructive text-sm">{otpError}</p>}
 
-            <p className="text-xs text-muted-foreground text-center">
+            <p className="text-muted-foreground text-center text-xs">
               {canResend ? (
                 <button
                   type="button"
                   onClick={handleResendOtp}
                   disabled={sendOtp.isPending}
-                  className="text-primary hover:underline font-medium disabled:opacity-50"
+                  className="text-primary font-medium hover:underline disabled:opacity-50"
                 >
                   {sendOtp.isPending ? "Sending..." : "Resend code"}
                 </button>
@@ -362,14 +376,14 @@ const ProfileSettingsPage = () => {
             <Button
               variant="outline"
               onClick={() => setOtpDialogOpen(false)}
-              disabled={verifyOtp.isPending}
+              disabled={verifyPhoneChange.isPending}
             >
               Cancel
             </Button>
             <Button
               onClick={handleVerifyOtp}
               disabled={otpCode.length < 6}
-              isLoading={verifyOtp.isPending}
+              isLoading={verifyPhoneChange.isPending}
             >
               Verify
             </Button>

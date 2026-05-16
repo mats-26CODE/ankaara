@@ -6,14 +6,27 @@ import Logo from "@/components/shared/logo";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Home, Phone } from "lucide-react";
-import { useGoogleOAuth, useSendOtp } from "@/hooks/use-auth";
+import {
+  AUTH_PHONE_ERROR_CODES,
+  AuthPhoneError,
+  useGoogleOAuth,
+  useSendOtp,
+} from "@/hooks/use-auth";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { APP_NAME } from "@/constants/values";
 import { useTranslation } from "@/hooks/use-translation";
-import { validatePhoneNumber } from "@/helpers/helpers";
+import { clampPhoneDigitInput, formatPhoneForDisplay, validatePhoneNumber } from "@/helpers/helpers";
 import { Spinner } from "@/components/ui/spinner";
 import Link from "next/link";
 import { motion } from "motion/react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   landingEase,
   landingFadeIn,
@@ -29,6 +42,7 @@ const LoginContent = () => {
   const redirect = searchParams.get("redirect");
   const code = searchParams.get("code");
   const next = searchParams.get("next");
+  const phoneFromUrl = searchParams.get("phone");
 
   // Handle OAuth callback when Supabase redirects to /login?code=... (e.g. Site URL misconfigured)
   useEffect(() => {
@@ -42,9 +56,16 @@ const LoginContent = () => {
     phone: "",
   });
   const [error, setError] = useState<string | null>(null);
+  const [noAccountDialogOpen, setNoAccountDialogOpen] = useState(false);
 
   const googleOAuthMutation = useGoogleOAuth();
-  const sendOtpMutation = useSendOtp(false);
+  const sendOtpMutation = useSendOtp(false, "login");
+
+  useEffect(() => {
+    if (!phoneFromUrl) return;
+    const digits = clampPhoneDigitInput(formatPhoneForDisplay(phoneFromUrl));
+    if (digits) setFormData((prev) => ({ ...prev, phone: digits }));
+  }, [phoneFromUrl]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -77,6 +98,17 @@ const LoginContent = () => {
           router.push(verifyUrl.pathname + verifyUrl.search);
         },
         onError: (err) => {
+          const code =
+            err instanceof AuthPhoneError
+              ? err.code
+              : err instanceof Error && err.message.includes("No account found")
+                ? AUTH_PHONE_ERROR_CODES.ACCOUNT_NOT_FOUND
+                : null;
+          if (code === AUTH_PHONE_ERROR_CODES.ACCOUNT_NOT_FOUND) {
+            setNoAccountDialogOpen(true);
+            sendOtpMutation.reset();
+            return;
+          }
           setError(err instanceof Error ? err.message : t("auth.login.error"));
         },
       },
@@ -85,6 +117,20 @@ const LoginContent = () => {
 
   const handleGoogleSignIn = () => {
     googleOAuthMutation.mutate();
+  };
+
+  const handleGoToRegister = () => {
+    setNoAccountDialogOpen(false);
+    sendOtpMutation.reset();
+    const signUpUrl = formData.phone.trim()
+      ? `/sign-up?phone=${encodeURIComponent(formData.phone.trim())}`
+      : "/sign-up";
+    router.push(signUpUrl);
+  };
+
+  const handleNoAccountDialogChange = (open: boolean) => {
+    setNoAccountDialogOpen(open);
+    if (!open) sendOtpMutation.reset();
   };
 
   if (code) {
@@ -182,7 +228,7 @@ const LoginContent = () => {
               </div>
             </motion.div>
 
-            {(error || sendOtpMutation.isError) && (
+            {(error || (sendOtpMutation.isError && !noAccountDialogOpen)) && (
               <motion.div
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -301,6 +347,27 @@ const LoginContent = () => {
           </motion.div>
         </motion.div>
       </motion.div>
+
+      <Dialog open={noAccountDialogOpen} onOpenChange={handleNoAccountDialogChange}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t("auth.login.noAccountDialogTitle")}</DialogTitle>
+            <DialogDescription>{t("auth.login.noAccountDialogDescription")}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleNoAccountDialogChange(false)}
+            >
+              {t("auth.login.cancel")}
+            </Button>
+            <Button type="button" onClick={handleGoToRegister}>
+              {t("auth.login.goToRegister")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

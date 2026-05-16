@@ -394,3 +394,7 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 # Invoked by Database Webhook (no end-user JWT); auth via SALE_SMS_WEBHOOK_SECRET in handler.
 [functions.send-sale-sms-alert]
 verify_jwt = false
+
+# Login/sign-up OTP: called before the user has a session (anon key only).
+[functions.authenticate-user]
+verify_jwt = false

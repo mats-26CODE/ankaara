@@ -1,18 +1,35 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/shared/logo";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Home, Phone } from "lucide-react";
-import { useGoogleOAuth, useSendOtp } from "@/hooks/use-auth";
+import {
+  AUTH_PHONE_ERROR_CODES,
+  AuthPhoneError,
+  useGoogleOAuth,
+  useSendOtp,
+} from "@/hooks/use-auth";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { APP_NAME } from "@/constants/values";
 import { useTranslation } from "@/hooks/use-translation";
-import { validatePhoneNumber } from "@/helpers/helpers";
+import {
+  clampPhoneDigitInput,
+  formatPhoneForDisplay,
+  validatePhoneNumber,
+} from "@/helpers/helpers";
 import { motion } from "motion/react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   landingEase,
   landingFadeIn,
@@ -21,15 +38,24 @@ import {
   landingStaggerParent,
 } from "@/components/shared/scroll-reveal";
 
-const SignUpPage = () => {
+const SignUpContent = () => {
   const { t } = useTranslation();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const phoneFromUrl = searchParams.get("phone");
   const [formData, setFormData] = useState({
     phone: "",
   });
   const [error, setError] = useState<string | null>(null);
+  const [accountExistsDialogOpen, setAccountExistsDialogOpen] = useState(false);
   const googleOAuthMutation = useGoogleOAuth();
-  const sendOtpMutation = useSendOtp(false);
+  const sendOtpMutation = useSendOtp(false, "signup");
+
+  useEffect(() => {
+    if (!phoneFromUrl) return;
+    const digits = clampPhoneDigitInput(formatPhoneForDisplay(phoneFromUrl));
+    if (digits) setFormData((prev) => ({ ...prev, phone: digits }));
+  }, [phoneFromUrl]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
@@ -56,9 +82,20 @@ const SignUpPage = () => {
       { phone: formData.phone },
       {
         onSuccess: () => {
-          router.push(`/verify-otp?phone=${encodeURIComponent(formData.phone)}`);
+          router.push(`/verify-otp?phone=${encodeURIComponent(formData.phone)}&intent=signup`);
         },
         onError: (err) => {
+          const code =
+            err instanceof AuthPhoneError
+              ? err.code
+              : err instanceof Error && err.message.includes("already exists")
+                ? AUTH_PHONE_ERROR_CODES.ACCOUNT_EXISTS
+                : null;
+          if (code === AUTH_PHONE_ERROR_CODES.ACCOUNT_EXISTS) {
+            setAccountExistsDialogOpen(true);
+            sendOtpMutation.reset();
+            return;
+          }
           setError(err instanceof Error ? err.message : t("auth.signup.error"));
         },
       },
@@ -67,6 +104,20 @@ const SignUpPage = () => {
 
   const handleGoogleSignIn = () => {
     googleOAuthMutation.mutate();
+  };
+
+  const handleGoToLogin = () => {
+    setAccountExistsDialogOpen(false);
+    sendOtpMutation.reset();
+    const loginUrl = formData.phone.trim()
+      ? `/login?phone=${encodeURIComponent(formData.phone.trim())}`
+      : "/login";
+    router.push(loginUrl);
+  };
+
+  const handleAccountExistsDialogChange = (open: boolean) => {
+    setAccountExistsDialogOpen(open);
+    if (!open) sendOtpMutation.reset();
   };
 
   const testimonial = {
@@ -142,7 +193,7 @@ const SignUpPage = () => {
               </div>
             </motion.div>
 
-            {(error || sendOtpMutation.isError) && (
+            {(error || (sendOtpMutation.isError && !accountExistsDialogOpen)) && (
               <motion.div
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -260,8 +311,35 @@ const SignUpPage = () => {
           </motion.div>
         </motion.div>
       </motion.div>
+
+      <Dialog open={accountExistsDialogOpen} onOpenChange={handleAccountExistsDialogChange}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t("auth.signup.accountExistsDialogTitle")}</DialogTitle>
+            <DialogDescription>{t("auth.signup.accountExistsDialogDescription")}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleAccountExistsDialogChange(false)}
+            >
+              {t("auth.signup.cancel")}
+            </Button>
+            <Button type="button" onClick={handleGoToLogin}>
+              {t("auth.signup.goToLogin")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
+
+const SignUpPage = () => (
+  <Suspense fallback={null}>
+    <SignUpContent />
+  </Suspense>
+);
 
 export default SignUpPage;

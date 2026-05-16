@@ -10,41 +10,97 @@ import {
 } from "@supabase/supabase-js";
 import { addCountryCode } from "@/helpers/helpers";
 
+export const AUTH_PHONE_ERROR_CODES = {
+  ACCOUNT_NOT_FOUND: "ACCOUNT_NOT_FOUND",
+  ACCOUNT_EXISTS: "ACCOUNT_EXISTS",
+} as const;
+
+export type AuthPhoneErrorCode =
+  (typeof AUTH_PHONE_ERROR_CODES)[keyof typeof AUTH_PHONE_ERROR_CODES];
+
+export class AuthPhoneError extends Error {
+  code: AuthPhoneErrorCode | string;
+
+  constructor(message: string, code: AuthPhoneErrorCode | string) {
+    super(message);
+    this.name = "AuthPhoneError";
+    this.code = code;
+  }
+}
+
+type AuthenticateUserResponse = {
+  error?: boolean;
+  message?: string;
+  code?: string;
+};
+
+const throwFromAuthenticateUserBody = (body: AuthenticateUserResponse): never => {
+  const message = body.message || "Request failed";
+  if (body.code) {
+    throw new AuthPhoneError(message, body.code);
+  }
+  throw new Error(message);
+};
+
+const parseAuthenticateUserError = async (error: unknown): Promise<never> => {
+  if (error instanceof FunctionsHttpError) {
+    let errorData: AuthenticateUserResponse = {};
+    try {
+      errorData = (await error.context.json()) as AuthenticateUserResponse;
+    } catch {
+      throw new Error(error.message);
+    }
+    throwFromAuthenticateUserBody({
+      error: true,
+      message: errorData.message || error.message,
+      code: errorData.code,
+    });
+  }
+  if (error instanceof FunctionsRelayError) {
+    throw new Error("Relay error: " + error.message);
+  }
+  if (error instanceof FunctionsFetchError) {
+    throw new Error("Fetch error: " + error.message);
+  }
+  if (error instanceof Error) throw error;
+  throw new Error("Failed to send OTP. Please try again.");
+};
+
 /**
- * Hook to send OTP to phone number for login,
- * we have created a supabase edge function to send OTP to phone number
+ * Hook to send OTP to phone number for login or sign-up.
+ * Login requires an existing account; sign-up creates the account then sends OTP.
  */
-export const useSendOtp = (resendOtp: boolean) => {
+export const useSendOtp = (
+  resendOtp: boolean,
+  intent: "login" | "signup" = "login",
+) => {
   return useMutation({
     mutationFn: async (payload: { phone: string }) => {
       const supabase = createClient();
+      const operation = resendOtp ? "resend" : intent === "signup" ? "signup" : "login";
       const { data, error } = await supabase.functions.invoke("authenticate-user", {
         body: {
-          operation: !resendOtp ? "login" : "resend",
+          operation,
           payload: {
             phone_number: addCountryCode(payload.phone),
           },
         },
       });
 
-      let errorMessage = "";
+      if (error) await parseAuthenticateUserError(error);
 
-      if (error instanceof FunctionsHttpError) {
-        const errorData = await error.context.json();
-        errorMessage = errorData.message;
-      } else if (error instanceof FunctionsRelayError) {
-        errorMessage = "Relay error:" + error.message;
-      } else if (error instanceof FunctionsFetchError) {
-        errorMessage = "Fetch error:" + error.message;
+      const body = data as AuthenticateUserResponse | null;
+      if (body?.error === true) {
+        throwFromAuthenticateUserBody(body);
       }
 
-      if (errorMessage) throw new Error(errorMessage);
       return data;
     },
     onSuccess: () => {
       ToastAlert.success("OTP sent to your phone!");
     },
-    onError: (error: AuthError) => {
+    onError: (error: Error) => {
+      if (error instanceof AuthPhoneError) return;
       const message = error.message || "Failed to send OTP. Please try again.";
       ToastAlert.error(message);
     },
@@ -153,6 +209,106 @@ export const useVerifyOtpForOnboarding = () => {
       return data;
     },
     onError: (error: AuthError) => {
+      ToastAlert.error(error.message || "Invalid OTP. Please try again.");
+    },
+  });
+};
+
+export type PhoneChangeProfilePayload = {
+  full_name?: string;
+  avatar_url?: string | null;
+  preferred_currency?: string;
+  preferred_language?: "en" | "sw";
+};
+
+const parseEdgeFunctionError = async (error: unknown): Promise<string> => {
+  if (!error) return "";
+  if (error instanceof FunctionsHttpError) {
+    try {
+      const errData = await error.context.json();
+      return (errData as { message?: string })?.message ?? error.message;
+    } catch {
+      return error.message;
+    }
+  }
+  if (error instanceof FunctionsRelayError) {
+    return "Relay error: " + error.message;
+  }
+  if (error instanceof FunctionsFetchError) {
+    return "Fetch error: " + error.message;
+  }
+  if (error instanceof Error) return error.message;
+  return "Request failed";
+};
+
+/**
+ * Send OTP when changing the login phone number (profile settings).
+ * Uses update-user-phone edge function.
+ */
+export const useSendOtpForPhoneChange = () => {
+  return useMutation({
+    mutationFn: async (payload: { phone: string }) => {
+      const supabase = createClient();
+      const { data, error } = await supabase.functions.invoke("update-user-phone", {
+        body: {
+          operation: "sendOtp",
+          payload: { phone: payload.phone },
+        },
+      });
+      const errMessage = await parseEdgeFunctionError(error);
+      if (errMessage) throw new Error(errMessage);
+      const errMsg = (data as { message?: string })?.message;
+      if (errMsg && (data as { success?: boolean })?.success !== true) {
+        throw new Error(errMsg);
+      }
+      return data;
+    },
+    onSuccess: () => {
+      ToastAlert.success("OTP sent to your phone!");
+    },
+    onError: (error: Error) => {
+      ToastAlert.error(error.message || "Failed to send OTP. Please try again.");
+    },
+  });
+};
+
+/**
+ * Verify OTP, update auth + profile phone, and end all sessions (user must log in again).
+ */
+export const useVerifyPhoneChange = () => {
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: async (payload: {
+      phone: string;
+      code: string;
+      profile?: PhoneChangeProfilePayload;
+    }) => {
+      const supabase = createClient();
+      const { data, error } = await supabase.functions.invoke("update-user-phone", {
+        body: {
+          operation: "verifyAndUpdate",
+          payload: {
+            phone: payload.phone,
+            code: payload.code,
+            ...(payload.profile ? { profile: payload.profile } : {}),
+          },
+        },
+      });
+      const errMessage = await parseEdgeFunctionError(error);
+      if (errMessage) throw new Error(errMessage);
+      const errMsg = (data as { message?: string })?.message;
+      if (errMsg && (data as { success?: boolean })?.success !== true) {
+        throw new Error(errMsg);
+      }
+      await supabase.auth.signOut();
+      return data;
+    },
+    onSuccess: () => {
+      ToastAlert.success("Phone updated. Please sign in with your new number.");
+      router.push("/login");
+    },
+    onError: (error: Error) => {
       ToastAlert.error(error.message || "Invalid OTP. Please try again.");
     },
   });

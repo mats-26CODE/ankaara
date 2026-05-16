@@ -259,7 +259,7 @@ const OnboardingPage = () => {
               </div>
 
               <div className="items-center justify-between gap-3 md:flex md:gap-5">
-                <div className="basis-3/4 space-y-2">
+                <div className="basis-3/4 space-y-2 max-md:mb-3">
                   <Label htmlFor="businessName">
                     {t("auth.onboarding.businessName")}
                     <span className="text-muted-foreground ml-1 font-normal">(optional)</span>
@@ -293,7 +293,7 @@ const OnboardingPage = () => {
               </div>
 
               <div className="items-center justify-between gap-3 md:flex md:gap-5">
-                <div className="basis-3/5 space-y-2">
+                <div className="basis-3/5 space-y-2 max-md:mb-3">
                   <Label htmlFor="location">
                     {t("auth.onboarding.location")}
                     <span className="text-muted-foreground ml-1 font-normal">(optional)</span>
