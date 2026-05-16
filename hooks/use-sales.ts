@@ -7,6 +7,7 @@ import { ensureRowId, type SupabaseRowId } from "@/lib/ensure-supabase-row-id";
 import { runSupabaseDetailQueryWithRetry } from "@/lib/supabase/detail-fetch-retry";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
+import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
 import type { Json, Tables } from "@/database.types";
 
 export const SALES_QUERY_KEY = ["sales"] as const;
@@ -249,6 +250,12 @@ export const useCreateDirectSale = () => {
       ToastAlert.success("Sale recorded");
     },
     onError: (error: Error) => {
+      if (isPlanLimitError(error)) {
+        ToastAlert.error("Plan limit reached. Upgrade to record more sales this month.");
+        if (typeof window !== "undefined")
+          window.location.assign(getSubscribeUrlForPlanLimit(error));
+        return;
+      }
       ToastAlert.error(getSalesErrorMessage(error.message) || "Failed to record sale");
     },
   });
@@ -278,6 +285,12 @@ export const useConvertInvoiceToSale = () => {
       ToastAlert.success("Invoice converted to sale");
     },
     onError: (error: Error) => {
+      if (isPlanLimitError(error)) {
+        ToastAlert.error("Plan limit reached. Upgrade to record more sales this month.");
+        if (typeof window !== "undefined")
+          window.location.assign(getSubscribeUrlForPlanLimit(error));
+        return;
+      }
       ToastAlert.error(getSalesErrorMessage(error.message) || "Failed to convert invoice");
     },
   });

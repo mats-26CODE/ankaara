@@ -83,6 +83,30 @@ export const groupPlansByTier = (
   return { free, pro, business };
 };
 
+/** Consistent feature order on pricing and subscribe pages. */
+export const PLAN_FEATURE_DISPLAY_ORDER = [
+  "businesses_count",
+  "sales_per_month",
+  "invoices_per_month",
+  "products_per_business",
+  "clients_per_business",
+  "quotations_count",
+] as const;
+
+export const sortPlanFeatures = (
+  features: SubscriptionPlanFeature[],
+): SubscriptionPlanFeature[] => {
+  const order = PLAN_FEATURE_DISPLAY_ORDER as readonly string[];
+  return [...features].sort((a, b) => {
+    const ai = order.indexOf(a.feature_key);
+    const bi = order.indexOf(b.feature_key);
+    const aRank = ai === -1 ? order.length : ai;
+    const bRank = bi === -1 ? order.length : bi;
+    if (aRank !== bRank) return aRank - bRank;
+    return a.feature_key.localeCompare(b.feature_key);
+  });
+};
+
 const FEATURE_LABELS: Record<string, { singular: string; plural: string; unlimited: string }> = {
   invoices_per_month: {
     singular: "invoice per month",
@@ -108,6 +132,11 @@ const FEATURE_LABELS: Record<string, { singular: string; plural: string; unlimit
     singular: "quotation per month",
     plural: "quotations per month",
     unlimited: "Unlimited quotations",
+  },
+  sales_per_month: {
+    singular: "sale per month",
+    plural: "sales per month",
+    unlimited: "Unlimited sales",
   },
 };
 
@@ -154,7 +183,7 @@ const fetchSubscriptionPlansWithFeatures = async (): Promise<SubscriptionPlanWit
 
   return plans.map((plan) => ({
     ...plan,
-    features: featuresByPlanId[plan.id] ?? [],
+    features: sortPlanFeatures(featuresByPlanId[plan.id] ?? []),
   }));
 };
 

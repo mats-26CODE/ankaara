@@ -10,18 +10,17 @@ import { useUser } from "@/hooks/use-user";
 import { useCurrentSubscription } from "@/hooks/use-current-subscription";
 import {
   useSubscriptionPlans,
-  formatPlanFeature,
   getPlanTier,
   groupPlansByTier,
   type SubscriptionPlanSlug,
   type SubscriptionPlanWithFeatures,
-  type SubscriptionPlanFeature,
 } from "@/hooks/use-subscription-plans";
 import { useSetSubscription } from "@/hooks/use-set-subscription";
-import { getNextPlanSlug } from "@/lib/subscription-limits";
+import { getNextPlanSlug, getPlanLimitReachedMessage } from "@/lib/subscription-limits";
+import { PlanFeaturesList } from "@/components/shared/plan-features-list";
 import { formatPlanCurrency } from "@/lib/format-plan-currency";
 import { useTranslation } from "@/hooks/use-translation";
-import { Check, Loader2, ArrowRight, ArrowLeft, Mail, Users, Cloud, Zap } from "lucide-react";
+import { Loader2, ArrowRight, ArrowLeft, Mail, Users, Cloud, Zap } from "lucide-react";
 import { SUPPORT_EMAIL } from "@/constants/values";
 import { ToastAlert } from "@/config/toast";
 
@@ -190,7 +189,7 @@ const SubscribeContent = () => {
 
           {limitParam && (
             <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
-              You&apos;ve reached your plan limit. Upgrade to a higher plan to continue.
+              {getPlanLimitReachedMessage(limitParam)}
             </div>
           )}
 
@@ -261,32 +260,7 @@ const SubscribeContent = () => {
                       )}
                     </CardHeader>
                     <CardContent className="flex flex-1 flex-col pt-0">
-                      <ul className="flex-1 space-y-3">
-                        {plan.features.length > 0
-                          ? plan.features.map((f: SubscriptionPlanFeature) => (
-                              <li
-                                key={f.id}
-                                className="text-muted-foreground flex items-start gap-2 text-sm"
-                              >
-                                <Check className="text-primary mt-0.5 h-4 w-4 shrink-0" />
-                                <span>{formatPlanFeature(f)}</span>
-                              </li>
-                            ))
-                          : [
-                              t(`landing.pricing.${tier}.features.0`),
-                              t(`landing.pricing.${tier}.features.1`),
-                              t(`landing.pricing.${tier}.features.2`),
-                              t(`landing.pricing.${tier}.features.3`),
-                            ].map((feature, i) => (
-                              <li
-                                key={i}
-                                className="text-muted-foreground flex items-start gap-2 text-sm"
-                              >
-                                <Check className="text-primary mt-0.5 h-4 w-4 shrink-0" />
-                                <span>{feature}</span>
-                              </li>
-                            ))}
-                      </ul>
+                      <PlanFeaturesList features={plan.features} tier={tier} />
                     </CardContent>
                   </Card>
                 );
@@ -369,32 +343,7 @@ const SubscribeContent = () => {
                       </Tabs>
                     </CardHeader>
                     <CardContent className="flex flex-1 flex-col pt-0">
-                      <ul className="flex-1 space-y-3">
-                        {activePlan.features.length > 0
-                          ? activePlan.features.map((f: SubscriptionPlanFeature) => (
-                              <li
-                                key={f.id}
-                                className="text-muted-foreground flex items-start gap-2 text-sm"
-                              >
-                                <Check className="text-primary mt-0.5 h-4 w-4 shrink-0" />
-                                <span>{formatPlanFeature(f)}</span>
-                              </li>
-                            ))
-                          : [
-                              t(`landing.pricing.${tier}.features.0`),
-                              t(`landing.pricing.${tier}.features.1`),
-                              t(`landing.pricing.${tier}.features.2`),
-                              t(`landing.pricing.${tier}.features.3`),
-                            ].map((feature, i) => (
-                              <li
-                                key={i}
-                                className="text-muted-foreground flex items-start gap-2 text-sm"
-                              >
-                                <Check className="text-primary mt-0.5 h-4 w-4 shrink-0" />
-                                <span>{feature}</span>
-                              </li>
-                            ))}
-                      </ul>
+                      <PlanFeaturesList features={activePlan.features} tier={tier} />
                     </CardContent>
                   </Card>
                 );

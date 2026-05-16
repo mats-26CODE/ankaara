@@ -7,15 +7,15 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useTranslation } from "@/hooks/use-translation";
 import Link from "next/link";
 import { useUser } from "@/hooks/use-user";
-import { Check, Users, Cloud, Zap, Mail, Loader2 } from "lucide-react";
+import { Users, Cloud, Zap, Mail, Loader2 } from "lucide-react";
 import { PAYMENT_GATEWAY_NAME, PAYMENT_GATEWAY_URL, SUPPORT_EMAIL } from "@/constants/values";
 import {
   useSubscriptionPlans,
-  formatPlanFeature,
   getPlanTier,
   groupPlansByTier,
   type SubscriptionPlanSlug,
 } from "@/hooks/use-subscription-plans";
+import { PlanFeaturesList } from "@/components/shared/plan-features-list";
 import { formatPlanCurrency } from "@/lib/format-plan-currency";
 import { motion } from "motion/react";
 import {
@@ -144,27 +144,7 @@ const PricingSection = () => {
                     </div>
                   </CardHeader>
                   <CardContent className="flex flex-1 flex-col pt-0">
-                    <ul className="flex-1 space-y-3">
-                      {plan.features.length > 0
-                        ? plan.features.map((f) => (
-                            <li
-                              key={f.id}
-                              className="text-muted-foreground flex items-start gap-2 text-sm"
-                            >
-                              <Check className="text-primary mt-0.5 h-4 w-4 shrink-0" />
-                              <span>{formatPlanFeature(f)}</span>
-                            </li>
-                          ))
-                        : [0, 1, 2, 3].map((i) => (
-                            <li
-                              key={i}
-                              className="text-muted-foreground flex items-start gap-2 text-sm"
-                            >
-                              <Check className="text-primary mt-0.5 h-4 w-4 shrink-0" />
-                              <span>{t(`landing.pricing.${tier}.features.${i}`)}</span>
-                            </li>
-                          ))}
-                    </ul>
+                    <PlanFeaturesList features={plan.features} tier={tier} />
                     <p className="text-muted-foreground mt-6 text-center text-sm">
                       {t("landing.pricing.freeDefaultNote")}
                     </p>
@@ -259,27 +239,7 @@ const PricingSection = () => {
                     </Tabs>
                   </CardHeader>
                   <CardContent className="flex flex-1 flex-col pt-0">
-                    <ul className="flex-1 space-y-3">
-                      {activePlan.features.length > 0
-                        ? activePlan.features.map((f) => (
-                            <li
-                              key={f.id}
-                              className="text-muted-foreground flex items-start gap-2 text-sm"
-                            >
-                              <Check className="text-primary mt-0.5 h-4 w-4 shrink-0" />
-                              <span>{formatPlanFeature(f)}</span>
-                            </li>
-                          ))
-                        : [0, 1, 2, 3].map((i) => (
-                            <li
-                              key={i}
-                              className="text-muted-foreground flex items-start gap-2 text-sm"
-                            >
-                              <Check className="text-primary mt-0.5 h-4 w-4 shrink-0" />
-                              <span>{t(`landing.pricing.${tier}.features.${i}`)}</span>
-                            </li>
-                          ))}
-                    </ul>
+                    <PlanFeaturesList features={activePlan.features} tier={tier} />
                     {contact ? (
                       <Button
                         asChild
