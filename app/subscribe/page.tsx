@@ -44,6 +44,12 @@ const getPeriodSuffix = (interval: string | null) => {
   return "";
 };
 
+const getDefaultPlanSlugForTier = (
+  tierPlans: SubscriptionPlanWithFeatures[],
+): SubscriptionPlanSlug =>
+  (tierPlans.find((p) => p.billing_interval === "monthly") ?? tierPlans[0])!
+    .slug as SubscriptionPlanSlug;
+
 const SubscribeContent = () => {
   const { t } = useTranslation();
   const router = useRouter();
@@ -279,14 +285,26 @@ const SubscribeContent = () => {
                 const activePlan = tierPlans.find((p) => p.slug === activeSlug) ?? tierPlans[0]!;
                 const Icon = PLAN_TIER_ICONS[tier];
                 const popular = tier === "pro";
+                const isTierSelected = selectedSlug != null && getPlanTier(selectedSlug) === tier;
+                const selectTierMonthly = () =>
+                  setSelectedSlug(getDefaultPlanSlugForTier(tierPlans));
                 return (
                   <Card
                     key={tier}
-                    className={`relative flex flex-col overflow-hidden rounded-2xl border-2 transition-all ${
-                      selectedSlug && getPlanTier(selectedSlug) === tier
+                    role="button"
+                    tabIndex={0}
+                    className={`relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border-2 transition-all ${
+                      isTierSelected
                         ? "border-primary ring-primary/20 ring-2"
                         : "bg-card hover:border-primary/30 shadow-xs"
                     }`}
+                    onClick={selectTierMonthly}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        selectTierMonthly();
+                      }
+                    }}
                   >
                     {popular && (
                       <div className="bg-primary text-primary-foreground absolute top-0 right-0 rounded-bl-lg px-3 py-1.5 text-xs font-medium">
@@ -309,6 +327,8 @@ const SubscribeContent = () => {
                         value={activeSlug}
                         onValueChange={(v) => setSelectedSlug(v as SubscriptionPlanSlug)}
                         className="mt-3 w-full"
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
                       >
                         <TabsList className="grid w-full grid-cols-3">
                           {tierPlans.map((p) => (
