@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useQuotation, useUpdateQuotation, type QuotationItemInput } from "@/hooks/use-quotations";
 import { useClients } from "@/hooks/use-clients";
 import { useProducts } from "@/hooks/use-products";
@@ -29,11 +29,10 @@ import Link from "next/link";
 import { QuotationTemplate } from "@/lib/quotation-templates/registry";
 import { TemplateFullscreenPreviewDialog } from "@/components/shared/template-fullscreen-preview-dialog";
 import dayjs from "dayjs";
-import { segmentUuidParam } from "@/lib/route-params";
+import { useRouteUuidParam } from "@/hooks/use-route-uuid-param";
 
 const EditQuotationPage = () => {
-  const params = useParams();
-  const id = segmentUuidParam(params.id);
+  const id = useRouteUuidParam("id");
   const router = useRouter();
   const { quotation, loading } = useQuotation(id);
   const { currencies, loading: currenciesLoading } = useCurrencies();

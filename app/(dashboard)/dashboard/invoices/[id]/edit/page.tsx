@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useInvoice, useUpdateInvoice, type InvoiceItemInput } from "@/hooks/use-invoices";
 import { useQuotations } from "@/hooks/use-quotations";
 import { useClients } from "@/hooks/use-clients";
@@ -30,11 +30,10 @@ import Link from "next/link";
 import { InvoiceTemplate } from "@/lib/invoice-templates/registry";
 import { TemplateFullscreenPreviewDialog } from "@/components/shared/template-fullscreen-preview-dialog";
 import dayjs from "dayjs";
-import { segmentUuidParam } from "@/lib/route-params";
+import { useRouteUuidParam } from "@/hooks/use-route-uuid-param";
 
 const EditInvoicePage = () => {
-  const params = useParams();
-  const id = segmentUuidParam(params.id);
+  const id = useRouteUuidParam("id");
   const router = useRouter();
   const { invoice, loading } = useInvoice(id);
   const { currencies, loading: currenciesLoading } = useCurrencies();

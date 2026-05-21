@@ -43,3 +43,28 @@ export const segmentUuidParam = (value: string | string[] | undefined): string |
   if (!raw || !isUuidSegment(raw)) return null;
   return raw;
 };
+
+/**
+ * Reads a UUID from the URL path when `useParams()` is still a PPR placeholder but the
+ * address bar already shows the real id (common on production client navigations).
+ */
+export const uuidFromPathname = (pathname: string): string | null => {
+  const segments = pathname.split("/").filter(Boolean);
+  for (let i = segments.length - 1; i >= 0; i--) {
+    const segment = segments[i];
+    if (isUuidSegment(segment)) return segment;
+  }
+  return null;
+};
+
+/**
+ * Prefer `useParams()`, fall back to {@link uuidFromPathname} so fetches are not blocked forever.
+ */
+export const resolveRouteUuidParam = (
+  paramValue: string | string[] | undefined,
+  pathname: string,
+): string | null => {
+  const fromParams = segmentUuidParam(paramValue);
+  if (fromParams) return fromParams;
+  return uuidFromPathname(pathname);
+};

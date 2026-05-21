@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useBusinesses, useUpdateBusiness } from "@/hooks/use-businesses";
 import { useCurrencies } from "@/hooks/use-currencies";
 import {
@@ -12,7 +12,7 @@ import {
 } from "@/lib/storage/business-logo";
 import { addCountryCode, formatPhoneForDisplay, clampPhoneDigitInput } from "@/helpers/helpers";
 import { ToastAlert } from "@/config/toast";
-import { segmentUuidParam } from "@/lib/route-params";
+import { useRouteUuidParam } from "@/hooks/use-route-uuid-param";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -106,9 +106,8 @@ const normalizePhonesForSave = (
 };
 
 const EditBusinessPage = () => {
-  const params = useParams();
   const router = useRouter();
-  const id = segmentUuidParam(params.id);
+  const id = useRouteUuidParam("id");
 
   const { businesses, loading, refetch } = useBusinesses();
   const { currencies, loading: currenciesLoading } = useCurrencies();

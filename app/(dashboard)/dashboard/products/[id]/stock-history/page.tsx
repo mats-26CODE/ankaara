@@ -3,9 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import dayjs from "dayjs";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useProduct, useInventoryMovements, useAdjustProductStock } from "@/hooks/use-products";
-import { segmentUuidParam } from "@/lib/route-params";
+import { useRouteUuidParam } from "@/hooks/use-route-uuid-param";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,8 +35,7 @@ const emptyStockForm: StockFormState = {
 };
 
 const ProductStockHistoryPage = () => {
-  const params = useParams();
-  const id = segmentUuidParam(params.id);
+  const id = useRouteUuidParam("id");
   const router = useRouter();
   const { product, loading: productLoading, refetch: refetchProduct } = useProduct(id);
   const {

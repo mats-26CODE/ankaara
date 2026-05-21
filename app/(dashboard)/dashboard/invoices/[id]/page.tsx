@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   useInvoice,
@@ -30,7 +30,7 @@ import {
 } from "@/components/shared/invoice-export-buttons";
 import { ArrowLeft, Pencil, Trash2, Share2, Quote, ShoppingCart } from "lucide-react";
 import dayjs from "dayjs";
-import { segmentUuidParam } from "@/lib/route-params";
+import { useRouteUuidParam } from "@/hooks/use-route-uuid-param";
 import { canConvertInvoiceToSale } from "@/lib/invoice-sale-conversion";
 
 const STATUS_CONFIG: Record<
@@ -66,8 +66,7 @@ const StatusBadge = ({ status }: { status: InvoiceStatus }) => {
 };
 
 const InvoiceDetailPage = () => {
-  const params = useParams();
-  const id = segmentUuidParam(params.id);
+  const id = useRouteUuidParam("id");
   const router = useRouter();
   const searchParams = useSearchParams();
   const { invoice, loading, refetch } = useInvoice(id);

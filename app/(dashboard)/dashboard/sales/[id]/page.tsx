@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import { useSale } from "@/hooks/use-sales";
 import { useFormatAmount } from "@/hooks/use-format-amount";
@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { segmentUuidParam } from "@/lib/route-params";
+import { useRouteUuidParam } from "@/hooks/use-route-uuid-param";
 import {
   ArrowLeft,
   CircleDollarSign,
@@ -28,8 +28,7 @@ import {
 } from "lucide-react";
 
 const SaleDetailPage = () => {
-  const params = useParams();
-  const id = segmentUuidParam(params.id);
+  const id = useRouteUuidParam("id");
   const router = useRouter();
   const { sale, loading } = useSale(id);
   const { format: formatAmount } = useFormatAmount();

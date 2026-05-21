@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   useQuotation,
@@ -27,7 +27,7 @@ import { QUOTATION_ELEMENT_ID } from "@/components/shared/quotation-export-butto
 import { QuotationExportButtons } from "@/components/shared/quotation-export-buttons";
 import { ArrowLeft, Pencil, Trash2, Share2, FileText, XCircle } from "lucide-react";
 import dayjs from "dayjs";
-import { segmentUuidParam } from "@/lib/route-params";
+import { useRouteUuidParam } from "@/hooks/use-route-uuid-param";
 
 const STATUS_CONFIG: Record<
   QuotationStatus,
@@ -60,8 +60,7 @@ const StatusBadge = ({ status }: { status: QuotationStatus }) => {
 };
 
 const QuotationDetailPage = () => {
-  const params = useParams();
-  const id = segmentUuidParam(params.id);
+  const id = useRouteUuidParam("id");
   const router = useRouter();
   const { quotation, loading, refetch } = useQuotation(id);
   const deleteQuotation = useDeleteQuotation();
