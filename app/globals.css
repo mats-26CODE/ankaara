@@ -44,6 +44,45 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   --animate-card-enter: card-enter 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.06s both;
+  --animate-plan-star-a: plan-star-float-a 3.2s ease-in-out infinite;
+  --animate-plan-star-b: plan-star-float-b 2.6s ease-in-out infinite;
+  --animate-plan-star-c: plan-star-float-c 3.8s ease-in-out infinite;
+
+  @keyframes plan-star-float-a {
+    0%,
+    100% {
+      transform: translate(0, 0) rotate(0deg) scale(1);
+      opacity: 0.45;
+    }
+    50% {
+      transform: translate(2px, -3px) rotate(12deg) scale(1.15);
+      opacity: 0.9;
+    }
+  }
+
+  @keyframes plan-star-float-b {
+    0%,
+    100% {
+      transform: translate(0, 0) rotate(0deg);
+      opacity: 0.5;
+    }
+    50% {
+      transform: translate(-2px, 2px) rotate(-10deg);
+      opacity: 0.85;
+    }
+  }
+
+  @keyframes plan-star-float-c {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(0.9);
+      opacity: 0.4;
+    }
+    50% {
+      transform: translate(1px, 2px) scale(1.1);
+      opacity: 0.75;
+    }
+  }
 
   @keyframes card-enter {
     from {

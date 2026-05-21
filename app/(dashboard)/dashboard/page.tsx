@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { SubscriptionPlanBadge } from "@/components/shared/subscription-plan-badge";
 import { ProfileAvatar } from "@/components/shared/profile-avatar";
 import { useProfile } from "@/hooks/use-profile";
 import { useUser } from "@/hooks/use-user";
@@ -139,12 +140,7 @@ const DashboardPage = () => {
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           {!subscriptionLoading && (
             <>
-              <Badge
-                variant={isFreePlan ? "secondary" : "default"}
-                className="border-primary/50 border px-4 py-2 font-medium capitalize"
-              >
-                {currentPlan?.name ?? currentPlanSlug}
-              </Badge>
+              <SubscriptionPlanBadge planSlug={currentPlanSlug} planName={currentPlan?.name} />
               {isFreePlan && (
                 <Button asChild size="sm" variant="default" className="gap-1.5">
                   <Link href={upgradeHref}>
