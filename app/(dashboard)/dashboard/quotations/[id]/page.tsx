@@ -27,7 +27,7 @@ import { QUOTATION_ELEMENT_ID } from "@/components/shared/quotation-export-butto
 import { QuotationExportButtons } from "@/components/shared/quotation-export-buttons";
 import { ArrowLeft, Pencil, Trash2, Share2, FileText, XCircle } from "lucide-react";
 import dayjs from "dayjs";
-import { segmentParam } from "@/lib/route-params";
+import { segmentUuidParam } from "@/lib/route-params";
 
 const STATUS_CONFIG: Record<
   QuotationStatus,
@@ -61,7 +61,7 @@ const StatusBadge = ({ status }: { status: QuotationStatus }) => {
 
 const QuotationDetailPage = () => {
   const params = useParams();
-  const id = segmentParam(params.id);
+  const id = segmentUuidParam(params.id);
   const router = useRouter();
   const { quotation, loading, refetch } = useQuotation(id);
   const deleteQuotation = useDeleteQuotation();

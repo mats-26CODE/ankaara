@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { segmentParam } from "@/lib/route-params";
+import { segmentUuidParam } from "@/lib/route-params";
 import {
   ArrowLeft,
   CircleDollarSign,
@@ -29,7 +29,7 @@ import {
 
 const SaleDetailPage = () => {
   const params = useParams();
-  const id = segmentParam(params.id);
+  const id = segmentUuidParam(params.id);
   const router = useRouter();
   const { sale, loading } = useSale(id);
   const { format: formatAmount } = useFormatAmount();

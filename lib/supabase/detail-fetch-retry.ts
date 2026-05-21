@@ -15,6 +15,8 @@ const detailBackoffMs = (attemptIndex: number) => Math.min(750, 100 * 2 ** attem
  */
 export const isTransientDetailFetchError = (error: PostgrestError | null): boolean => {
   if (!error) return false;
+  /** Bad route id (e.g. PPR `%%drp:id:…%%`) — retrying will not help */
+  if (error.code === "22P02") return false;
   if (error.code === "PGRST116") return true;
   const msg = (error.message ?? "").toLowerCase();
   if (msg.includes("jwt")) return true;

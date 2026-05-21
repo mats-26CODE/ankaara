@@ -30,11 +30,11 @@ import Link from "next/link";
 import { InvoiceTemplate } from "@/lib/invoice-templates/registry";
 import { TemplateFullscreenPreviewDialog } from "@/components/shared/template-fullscreen-preview-dialog";
 import dayjs from "dayjs";
-import { segmentParam } from "@/lib/route-params";
+import { segmentUuidParam } from "@/lib/route-params";
 
 const EditInvoicePage = () => {
   const params = useParams();
-  const id = segmentParam(params.id);
+  const id = segmentUuidParam(params.id);
   const router = useRouter();
   const { invoice, loading } = useInvoice(id);
   const { currencies, loading: currenciesLoading } = useCurrencies();

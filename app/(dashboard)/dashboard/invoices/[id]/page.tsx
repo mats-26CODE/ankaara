@@ -30,7 +30,7 @@ import {
 } from "@/components/shared/invoice-export-buttons";
 import { ArrowLeft, Pencil, Trash2, Share2, Quote, ShoppingCart } from "lucide-react";
 import dayjs from "dayjs";
-import { segmentParam } from "@/lib/route-params";
+import { segmentUuidParam } from "@/lib/route-params";
 import { canConvertInvoiceToSale } from "@/lib/invoice-sale-conversion";
 
 const STATUS_CONFIG: Record<
@@ -67,7 +67,7 @@ const StatusBadge = ({ status }: { status: InvoiceStatus }) => {
 
 const InvoiceDetailPage = () => {
   const params = useParams();
-  const id = segmentParam(params.id);
+  const id = segmentUuidParam(params.id);
   const router = useRouter();
   const searchParams = useSearchParams();
   const { invoice, loading, refetch } = useInvoice(id);

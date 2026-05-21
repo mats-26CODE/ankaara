@@ -29,11 +29,11 @@ import Link from "next/link";
 import { QuotationTemplate } from "@/lib/quotation-templates/registry";
 import { TemplateFullscreenPreviewDialog } from "@/components/shared/template-fullscreen-preview-dialog";
 import dayjs from "dayjs";
-import { segmentParam } from "@/lib/route-params";
+import { segmentUuidParam } from "@/lib/route-params";
 
 const EditQuotationPage = () => {
   const params = useParams();
-  const id = segmentParam(params.id);
+  const id = segmentUuidParam(params.id);
   const router = useRouter();
   const { quotation, loading } = useQuotation(id);
   const { currencies, loading: currenciesLoading } = useCurrencies();

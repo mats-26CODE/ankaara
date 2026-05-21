@@ -12,6 +12,7 @@ import {
 } from "@/lib/storage/business-logo";
 import { addCountryCode, formatPhoneForDisplay, clampPhoneDigitInput } from "@/helpers/helpers";
 import { ToastAlert } from "@/config/toast";
+import { segmentUuidParam } from "@/lib/route-params";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -107,7 +108,7 @@ const normalizePhonesForSave = (
 const EditBusinessPage = () => {
   const params = useParams();
   const router = useRouter();
-  const id = typeof params.id === "string" ? params.id : null;
+  const id = segmentUuidParam(params.id);
 
   const { businesses, loading, refetch } = useBusinesses();
   const { currencies, loading: currenciesLoading } = useCurrencies();

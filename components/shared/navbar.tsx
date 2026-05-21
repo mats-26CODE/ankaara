@@ -39,6 +39,7 @@ import Logo from "./logo";
 import { useTheme } from "@/lib/stores/preferences-store";
 import { ProfileAvatar } from "./profile-avatar";
 import { cn } from "@/lib/utils";
+import { resolveProfileDisplayName, resolveProfileFirstName } from "@/lib/profile-display-name";
 
 type DashboardNavMatcher = (pathname: string, status: string | null) => boolean;
 
@@ -210,7 +211,9 @@ const NavBar = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user } = useUser();
-  const { refetch: refetchProfile } = useProfile();
+  const { profile, refetch: refetchProfile } = useProfile();
+  const profileDisplayName = resolveProfileDisplayName(profile, user);
+  const profileFirstName = resolveProfileFirstName(profile, user);
   const logout = useLogout();
   const { language, setLanguage } = useLanguage();
   const { t } = useTranslation();
@@ -329,8 +332,8 @@ const NavBar = () => {
                   aria-label={t("nav.dashboard")}
                 >
                   <ProfileAvatar
-                    name={user.user_metadata?.name || user.email || user.phone || undefined}
-                    image={user.user_metadata?.avatar_url}
+                    name={profileDisplayName}
+                    image={profile?.avatar_url ?? user.user_metadata?.avatar_url}
                     size="xs"
                   />
                   <span>{t("nav.dashboard")}</span>
@@ -339,12 +342,7 @@ const NavBar = () => {
               <PopoverContent className="w-56 rounded-xl" align="end">
                 <div className="space-y-3">
                   <div className="flex flex-col items-center space-y-0.5">
-                    <p className="text-sm font-semibold">
-                      {user.user_metadata?.name || user.email || user.phone || "User"}
-                    </p>
-                    {(user.email || user.phone) && (
-                      <p className="text-muted-foreground text-xs">{user.email || user.phone}</p>
-                    )}
+                    <p className="text-sm font-semibold">Hello 👋, {profileFirstName}</p>
                   </div>
                   <div className="flex flex-col gap-2 border-t pt-2">
                     <Button
@@ -546,13 +544,13 @@ const NavBar = () => {
                         className="border-primary/10 hover:bg-muted flex w-full items-center gap-3 rounded-full border px-2 py-1.5"
                       >
                         <ProfileAvatar
-                          name={user.user_metadata?.name || user.email || user.phone || undefined}
-                          image={user.user_metadata?.avatar_url}
+                          name={profileDisplayName}
+                          image={profile?.avatar_url ?? user.user_metadata?.avatar_url}
                           size="xs"
                         />
                         <div className="min-w-0 flex-1 text-left">
                           <p className="truncate text-sm font-semibold">
-                            {user.user_metadata?.name || user.email || user.phone || "User"}
+                            Hello 👋, {profileFirstName}
                           </p>
                           <p className="text-muted-foreground text-xs">{t("nav.dashboard")}</p>
                         </div>
