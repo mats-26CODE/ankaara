@@ -19,6 +19,7 @@ type Rgb = [number, number, number];
 
 const DEFAULT_BRAND_HEX = "#2563eb";
 const MARGIN_X = 14;
+const PAGE_TOP_MARGIN_MM = 16;
 const FOOTER_RESERVE_MM = 20;
 const FONT_FAMILY = "Figtree";
 
@@ -396,7 +397,13 @@ export const buildProductCatalogPdfBlob = async (
       1: { cellWidth: "auto" },
       2: { cellWidth: 36, halign: "right", fontStyle: "bold" },
     },
-    margin: { top: 0, left: MARGIN_X, right: MARGIN_X, bottom: FOOTER_RESERVE_MM },
+    margin: {
+      top: PAGE_TOP_MARGIN_MM,
+      left: MARGIN_X,
+      right: MARGIN_X,
+      bottom: FOOTER_RESERVE_MM,
+    },
+    showHead: "everyPage",
   });
 
   const pageCount = doc.getNumberOfPages();
