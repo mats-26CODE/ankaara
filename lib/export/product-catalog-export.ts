@@ -24,7 +24,7 @@ export type ProductCatalogColumnLabels = {
 export const DEFAULT_CATALOG_COLUMN_LABELS: ProductCatalogColumnLabels = {
   productName: "Product Name",
   description: "Description",
-  sellingPricePerItem: "Selling Price Per Item",
+  sellingPricePerItem: "Piece/Dozen/Item Price",
 };
 
 type Rgb = [number, number, number];
@@ -408,7 +408,7 @@ export const buildProductCatalogPdfBlob = async (
     columnStyles: {
       0: { cellWidth: 44, fontStyle: "bold" },
       1: { cellWidth: "auto" },
-      2: { cellWidth: 44, halign: "right", fontStyle: "bold" },
+      2: { cellWidth: 48, halign: "right", fontStyle: "bold" },
     },
     margin: {
       top: PAGE_TOP_MARGIN_MM,
@@ -571,7 +571,7 @@ export const downloadProductCatalogExcel = async (
     { s: { r: footerRow, c: 0 }, e: { r: footerRow, c: 1 } },
   ];
 
-  ws["!cols"] = [{ wch: 34 }, { wch: 50 }, { wch: 26 }];
+  ws["!cols"] = [{ wch: 34 }, { wch: 50 }, { wch: 32 }];
 
   ws["!rows"] = [
     { hpt: 36 },

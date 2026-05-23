@@ -30,7 +30,7 @@ export const translations = {
       columns: {
         productName: "Jina la Bidhaa",
         description: "Maelezo",
-        sellingPricePerItem: "Bei ya Uuzaji kwa Kila Bidhaa",
+        sellingPricePerItem: "Bei kwa Kipande/Dazeni/Bidhaa",
       },
       share: {
         message:
@@ -543,7 +543,7 @@ export const translations = {
       columns: {
         productName: "Product Name",
         description: "Description",
-        sellingPricePerItem: "Selling Price Per Item",
+        sellingPricePerItem: "Piece/Dozen/Item Price",
       },
       share: {
         message:
