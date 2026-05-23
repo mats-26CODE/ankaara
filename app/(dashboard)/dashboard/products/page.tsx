@@ -14,6 +14,9 @@ import {
 } from "@/hooks/use-products";
 import { useBusinesses } from "@/hooks/use-businesses";
 import { useCurrentBusinessId } from "@/lib/stores/business-store";
+import { useCurrencies, findCurrency } from "@/hooks/use-currencies";
+import { formatAmount } from "@/hooks/use-format-amount";
+import { ShareProductCatalogDialog } from "@/components/shared/share-product-catalog-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,6 +63,7 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
+  Share2,
 } from "lucide-react";
 
 type FormState = {
@@ -109,6 +113,7 @@ const parsePriceInput = (raw: string): string => {
 const ProductsPage = () => {
   const router = useRouter();
   const { businesses, loading: bizLoading } = useBusinesses();
+  const { currencies } = useCurrencies();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -127,6 +132,12 @@ const ProductsPage = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [shareCatalogOpen, setShareCatalogOpen] = useState(false);
+
+  const activeBusiness = businesses.find((business) => business.id === currentBusinessId) ?? null;
+
+  const formatBusinessPrice = (amount: number) =>
+    formatAmount(amount, findCurrency(currencies, activeBusiness?.currency ?? "TZS"));
 
   const total = totalCount ?? 0;
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -288,10 +299,16 @@ const ProductsPage = () => {
             .
           </p>
         </div>
-        <Button size="sm" onClick={openCreate}>
-          <Plus className="mr-1 size-4" />
-          Add Item
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" onClick={() => setShareCatalogOpen(true)}>
+            <Share2 className="mr-1 size-4" />
+            Share Catalog
+          </Button>
+          <Button size="sm" onClick={openCreate}>
+            <Plus className="mr-1 size-4" />
+            Add Item
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -627,6 +644,13 @@ const ProductsPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ShareProductCatalogDialog
+        open={shareCatalogOpen}
+        onOpenChange={setShareCatalogOpen}
+        business={activeBusiness}
+        formatPrice={formatBusinessPrice}
+      />
     </div>
   );
 };

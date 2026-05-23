@@ -9,5 +9,6 @@ export const CONTACT_US_INSTAGRAM_URL = "https://www.instagram.com/ankaara.app/"
 export const CONTACT_US_FACEBOOK_URL = "https://www.facebook.com/ankaara.app";
 export const CONTACT_US_ADDRESS = "Dar es Salaam, Tanzania";
 export const APP_NAME = "ankaara";
+export const APP_URL = "https://ankaara.app";
 export const PAYMENT_GATEWAY_URL = "https://snippe.sh";
 export const PAYMENT_GATEWAY_NAME = "Snippe";
