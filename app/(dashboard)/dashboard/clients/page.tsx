@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import Link from "next/link";
 import {
   useClients,
@@ -65,12 +66,18 @@ const ClientsPage = () => {
   const { businesses, loading: bizLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
   const [page, setPage] = useState(1);
-  const { clients, loading, refetch, totalCount } = useClients(currentBusinessId, page, PAGE_SIZE);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search);
+  const { clients, loading, refetch, totalCount } = useClients(
+    currentBusinessId,
+    page,
+    PAGE_SIZE,
+    { search: debouncedSearch },
+  );
   const createClient = useCreateClient();
   const updateClient = useUpdateClient();
   const deleteClient = useDeleteClient();
 
-  const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -92,18 +99,7 @@ const ClientsPage = () => {
   // Reset to first page when business changes
   useEffect(() => {
     setPage(1);
-  }, [currentBusinessId]);
-
-  const filtered = useMemo(() => {
-    if (!search.trim()) return clients;
-    const q = search.toLowerCase();
-    return clients.filter(
-      (c) =>
-        c.name.toLowerCase().includes(q) ||
-        c.email?.toLowerCase().includes(q) ||
-        c.phone?.toLowerCase().includes(q),
-    );
-  }, [clients, search]);
+  }, [currentBusinessId, debouncedSearch]);
 
   const openCreate = () => {
     setEditingClient(null);
@@ -243,12 +239,12 @@ const ClientsPage = () => {
             <div className="flex items-center justify-center py-8">
               <Spinner className="size-6" />
             </div>
-          ) : filtered.length === 0 ? (
+          ) : clients.length === 0 ? (
             <div className="py-8 text-center">
               <p className="text-muted-foreground text-sm">
-                {clients.length === 0
-                  ? "No clients yet. Add your first client to get started."
-                  : "No clients match your search."}
+                {debouncedSearch.trim()
+                  ? "No clients match your search."
+                  : "No clients yet. Add your first client to get started."}
               </p>
             </div>
           ) : (
@@ -263,7 +259,7 @@ const ClientsPage = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((client) => (
+                {clients.map((client) => (
                   <TableRow key={client.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">

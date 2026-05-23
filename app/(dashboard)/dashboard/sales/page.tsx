@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import { useBusinesses } from "@/hooks/use-businesses";
-import { useSales, type Sale } from "@/hooks/use-sales";
+import { useSales } from "@/hooks/use-sales";
 import { useCurrentBusinessId } from "@/lib/stores/business-store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -34,20 +35,13 @@ import {
 
 const PAGE_SIZE = 10;
 
-const saleMatchesItemSearch = (sale: Sale, q: string) =>
-  (sale.items ?? []).some((item) => {
-    const label = (item.product?.name?.trim() || item.description?.trim() || "Item").toLowerCase();
-    const desc = item.description?.toLowerCase() ?? "";
-    const prod = item.product?.name?.toLowerCase() ?? "";
-    return label.includes(q) || desc.includes(q) || prod.includes(q);
-  });
-
 const SalesPage = () => {
   const router = useRouter();
   const { businesses, loading: businessesLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const { sales, loading, totalCount } = useSales(
@@ -56,6 +50,7 @@ const SalesPage = () => {
     PAGE_SIZE,
     fromDate || null,
     toDate || null,
+    debouncedSearch,
   );
 
   const activeBusiness = useMemo(
@@ -71,25 +66,12 @@ const SalesPage = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [currentBusinessId, fromDate, toDate]);
+  }, [currentBusinessId, fromDate, toDate, debouncedSearch]);
 
   const total = totalCount ?? 0;
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const to = Math.min(page * PAGE_SIZE, total);
-
-  const filtered = useMemo(() => {
-    if (!search.trim()) return sales;
-    const q = search.toLowerCase();
-    return sales.filter(
-      (sale) =>
-        sale.sale_number.toLowerCase().includes(q) ||
-        sale.client?.name?.toLowerCase().includes(q) ||
-        sale.invoice?.invoice_number?.toLowerCase().includes(q) ||
-        sale.source.toLowerCase().includes(q) ||
-        saleMatchesItemSearch(sale, q),
-    );
-  }, [sales, search]);
 
   if (businessesLoading) {
     return (
@@ -184,15 +166,15 @@ const SalesPage = () => {
             <div className="flex items-center justify-center py-8">
               <Spinner className="size-6" />
             </div>
-          ) : filtered.length === 0 ? (
+          ) : sales.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-12 text-center">
               <ShoppingCart className="text-muted-foreground size-10" />
               <p className="text-muted-foreground text-sm">
-                {sales.length === 0
-                  ? "No sales recorded yet. Record your first sale."
-                  : "No sales match your search or filters."}
+                {debouncedSearch.trim() || fromDate || toDate
+                  ? "No sales match your search or filters."
+                  : "No sales recorded yet. Record your first sale."}
               </p>
-              {sales.length === 0 && (
+              {!debouncedSearch.trim() && !fromDate && !toDate && (
                 <Button size="sm" variant="outline" asChild>
                   <Link href="/dashboard/sales/create">
                     <Plus className="mr-1 size-4" />
@@ -215,7 +197,7 @@ const SalesPage = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((sale) => (
+                {sales.map((sale) => (
                   <TableRow
                     key={sale.id}
                     className="hover:bg-muted/50 cursor-pointer"

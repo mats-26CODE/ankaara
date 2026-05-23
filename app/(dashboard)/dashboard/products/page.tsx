@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -110,16 +111,17 @@ const ProductsPage = () => {
   const { businesses, loading: bizLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search);
   const { products, loading, refetch, totalCount } = useProducts(
     currentBusinessId,
     page,
     PAGE_SIZE,
+    debouncedSearch,
   );
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
-
-  const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -139,20 +141,7 @@ const ProductsPage = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [currentBusinessId]);
-
-  const filtered = useMemo(() => {
-    if (!search.trim()) return products;
-    const q = search.toLowerCase();
-    return products.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.description?.toLowerCase().includes(q) ||
-        p.unit?.toLowerCase().includes(q) ||
-        p.sku?.toLowerCase().includes(q) ||
-        p.item_type.toLowerCase().includes(q),
-    );
-  }, [products, search]);
+  }, [currentBusinessId, debouncedSearch]);
 
   const openCreate = () => {
     setEditingProduct(null);
@@ -322,12 +311,12 @@ const ProductsPage = () => {
             <div className="flex items-center justify-center py-8">
               <Spinner className="size-6" />
             </div>
-          ) : filtered.length === 0 ? (
+          ) : products.length === 0 ? (
             <div className="py-8 text-center">
               <p className="text-muted-foreground text-sm">
-                {products.length === 0
-                  ? "No products or services yet. Add inventory items to start selling."
-                  : "No items match your search."}
+                {debouncedSearch.trim()
+                  ? "No items match your search."
+                  : "No products or services yet. Add inventory items to start selling."}
               </p>
             </div>
           ) : (
@@ -343,7 +332,7 @@ const ProductsPage = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((product) => (
+                {products.map((product) => (
                   <TableRow
                     key={product.id}
                     className="hover:bg-muted/50 cursor-pointer"

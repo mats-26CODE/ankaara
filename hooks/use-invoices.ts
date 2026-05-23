@@ -8,6 +8,7 @@ import { runSupabaseDetailQueryWithRetry } from "@/lib/supabase/detail-fetch-ret
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
+import { buildOrIlikeClause } from "@/lib/supabase/table-search";
 import type { Tables } from "@/database.types";
 
 export type InvoiceStatus = "draft" | "sent" | "viewed" | "paid" | "overdue" | "cancelled";
@@ -86,6 +87,7 @@ export const useInvoices = (
   statusFilter?: InvoiceStatus | null,
   page: number = 1,
   pageSize: number = DEFAULT_PAGE_SIZE,
+  search?: string,
 ) => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [totalCount, setTotalCount] = useState<number | null>(null);
@@ -113,6 +115,14 @@ export const useInvoices = (
 
     if (statusFilter) {
       query = query.eq("status", statusFilter);
+    }
+
+    const searchClause = buildOrIlikeClause(
+      ["invoice_number", "notes", "clients.name"],
+      search ?? "",
+    );
+    if (searchClause) {
+      query = query.or(searchClause);
     }
 
     const { data, error, count } = await query;
@@ -146,7 +156,7 @@ export const useInvoices = (
       setTotalCount(count ?? null);
     }
     setLoading(false);
-  }, [businessId, statusFilter, page, pageSize]);
+  }, [businessId, statusFilter, page, pageSize, search]);
 
   useEffect(() => {
     setLoading(true);

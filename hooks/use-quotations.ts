@@ -8,6 +8,7 @@ import { runSupabaseDetailQueryWithRetry } from "@/lib/supabase/detail-fetch-ret
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
+import { buildOrIlikeClause } from "@/lib/supabase/table-search";
 import type { Tables } from "@/database.types";
 
 export type QuotationStatus = "draft" | "sent" | "viewed" | "accepted" | "expired" | "cancelled";
@@ -84,6 +85,7 @@ export const useQuotations = (
   statusFilter?: QuotationStatus | null,
   page: number = 1,
   pageSize: number = DEFAULT_PAGE_SIZE,
+  search?: string,
 ) => {
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [totalCount, setTotalCount] = useState<number | null>(null);
@@ -113,6 +115,14 @@ export const useQuotations = (
       query = query.eq("status", statusFilter);
     }
 
+    const searchClause = buildOrIlikeClause(
+      ["quotation_number", "notes", "clients.name"],
+      search ?? "",
+    );
+    if (searchClause) {
+      query = query.or(searchClause);
+    }
+
     const { data, error, count } = await query;
 
     if (error) {
@@ -123,7 +133,7 @@ export const useQuotations = (
       setTotalCount(count ?? null);
     }
     setLoading(false);
-  }, [businessId, statusFilter, page, pageSize]);
+  }, [businessId, statusFilter, page, pageSize, search]);
 
   useEffect(() => {
     setLoading(true);

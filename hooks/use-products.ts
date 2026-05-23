@@ -7,6 +7,7 @@ import { runSupabaseDetailQueryWithRetry } from "@/lib/supabase/detail-fetch-ret
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
+import { buildOrIlikeClause } from "@/lib/supabase/table-search";
 import type { Tables, TablesInsert, TablesUpdate } from "@/database.types";
 
 export type Product = Tables<"products">;
@@ -43,6 +44,7 @@ export const useProducts = (
   businessId: string | null,
   page?: number,
   pageSize: number = DEFAULT_PAGE_SIZE,
+  search?: string,
 ) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [totalCount, setTotalCount] = useState<number | null>(null);
@@ -64,6 +66,14 @@ export const useProducts = (
       .eq("business_id", businessId)
       .order("created_at", { ascending: false });
 
+    const searchClause = buildOrIlikeClause(
+      ["name", "description", "unit", "sku", "item_type"],
+      search ?? "",
+    );
+    if (searchClause) {
+      query = query.or(searchClause);
+    }
+
     if (usePagination) {
       const from = (page! - 1) * pageSize;
       const to = from + pageSize - 1;
@@ -80,7 +90,7 @@ export const useProducts = (
       setTotalCount(usePagination ? (count ?? null) : (data?.length ?? 0));
     }
     setLoading(false);
-  }, [businessId, usePagination, page, pageSize]);
+  }, [businessId, usePagination, page, pageSize, search]);
 
   useEffect(() => {
     setLoading(true);

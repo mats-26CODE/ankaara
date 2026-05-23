@@ -1,6 +1,7 @@
 "use client";
 
-import { Suspense, useState, useMemo, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import Link from "next/link";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
@@ -109,6 +110,8 @@ const InvoicesContent = () => {
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "all">(statusParam || "all");
   const [page, setPage] = useState(1);
   const pageSize = 10;
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search);
 
   useEffect(() => {
     setStatusFilter(statusParam || "all");
@@ -116,13 +119,14 @@ const InvoicesContent = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [currentBusinessId, statusFilter]);
+  }, [currentBusinessId, statusFilter, debouncedSearch]);
 
   const { invoices, loading, refetch, totalCount } = useInvoices(
     currentBusinessId,
     statusFilter === "all" ? null : statusFilter,
     page,
     pageSize,
+    debouncedSearch,
   );
 
   const total = totalCount ?? 0;
@@ -135,7 +139,6 @@ const InvoicesContent = () => {
   const sendInvoice = useSendInvoice();
   const { format } = useFormatAmount();
 
-  const [search, setSearch] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingInvoice, setDeletingInvoice] = useState<Invoice | null>(null);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
@@ -146,17 +149,6 @@ const InvoicesContent = () => {
       setCurrentBusiness((businesses.find((business) => business.is_primary) ?? businesses[0]).id);
     }
   }, [businesses, currentBusinessId, setCurrentBusiness]);
-
-  const filtered = useMemo(() => {
-    if (!search.trim()) return invoices;
-    const q = search.toLowerCase();
-    return invoices.filter(
-      (inv) =>
-        inv.invoice_number.toLowerCase().includes(q) ||
-        inv.client?.name?.toLowerCase().includes(q) ||
-        inv.notes?.toLowerCase().includes(q),
-    );
-  }, [invoices, search]);
 
   const openDelete = (inv: Invoice) => {
     setDeletingInvoice(inv);
@@ -273,15 +265,15 @@ const InvoicesContent = () => {
             <div className="flex items-center justify-center py-8">
               <Spinner className="size-6" />
             </div>
-          ) : filtered.length === 0 ? (
+          ) : invoices.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-12 text-center">
               <FileText className="text-muted-foreground size-10" />
               <p className="text-muted-foreground text-sm">
-                {invoices.length === 0
-                  ? "No invoices yet. Create your first one."
-                  : "No invoices match your search."}
+                {debouncedSearch.trim()
+                  ? "No invoices match your search."
+                  : "No invoices yet. Create your first one."}
               </p>
-              {invoices.length === 0 && (
+              {!debouncedSearch.trim() && (
                 <Button size="sm" variant="outline" asChild>
                   <Link href="/dashboard/invoices/create">
                     <Plus className="mr-1 size-4" />
@@ -304,7 +296,7 @@ const InvoicesContent = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((inv) => (
+                {invoices.map((inv) => (
                   <TableRow
                     key={inv.id}
                     className="hover:bg-muted/50 cursor-pointer"

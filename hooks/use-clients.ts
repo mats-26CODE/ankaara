@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
+import { buildOrIlikeClause } from "@/lib/supabase/table-search";
 import type { Tables, TablesInsert, TablesUpdate } from "@/database.types";
 
 export type Client = Tables<"clients">;
@@ -14,6 +15,7 @@ export type CreateClientPayload = Pick<TablesInsert<"clients">, "business_id" | 
 export type UpdateClientPayload = TablesUpdate<"clients"> & { id: string };
 type UseClientsOptions = {
   includeWalkIn?: boolean;
+  search?: string;
 };
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -49,6 +51,14 @@ export const useClients = (
       query = query.eq("is_walk_in", false);
     }
 
+    const searchClause = buildOrIlikeClause(
+      ["name", "email", "phone", "address"],
+      options.search ?? "",
+    );
+    if (searchClause) {
+      query = query.or(searchClause);
+    }
+
     if (usePagination) {
       const from = (page! - 1) * pageSize;
       const to = from + pageSize - 1;
@@ -65,7 +75,7 @@ export const useClients = (
       setTotalCount(usePagination ? (count ?? null) : (data?.length ?? 0));
     }
     setLoading(false);
-  }, [businessId, usePagination, page, pageSize, includeWalkIn]);
+  }, [businessId, usePagination, page, pageSize, includeWalkIn, options.search]);
 
   useEffect(() => {
     setLoading(true);

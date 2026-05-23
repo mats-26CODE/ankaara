@@ -8,6 +8,7 @@ import { runSupabaseDetailQueryWithRetry } from "@/lib/supabase/detail-fetch-ret
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
+import { buildOrIlikeClause, sanitizeSearchTerm, toIlikePattern } from "@/lib/supabase/table-search";
 import type { Json, Tables } from "@/database.types";
 
 export const SALES_QUERY_KEY = ["sales"] as const;
@@ -63,12 +64,55 @@ const getSalesErrorMessage = (message: string) => {
 
 const DEFAULT_PAGE_SIZE = 10;
 
+const fetchSaleIdsMatchingItemSearch = async (
+  businessId: string,
+  search: string,
+): Promise<string[]> => {
+  const supabase = createClient();
+  const pattern = toIlikePattern(search);
+  if (!pattern) return [];
+
+  const ids = new Set<string>();
+
+  const { data: byDescription } = await supabase
+    .from("sale_items")
+    .select("sale_id, sales!inner(business_id)")
+    .eq("sales.business_id", businessId)
+    .ilike("description", pattern);
+
+  byDescription?.forEach((row) => {
+    if (row.sale_id) ids.add(row.sale_id);
+  });
+
+  const { data: matchingProducts } = await supabase
+    .from("products")
+    .select("id")
+    .eq("business_id", businessId)
+    .ilike("name", pattern);
+
+  const productIds = matchingProducts?.map((p) => p.id) ?? [];
+  if (productIds.length > 0) {
+    const { data: byProduct } = await supabase
+      .from("sale_items")
+      .select("sale_id, sales!inner(business_id)")
+      .eq("sales.business_id", businessId)
+      .in("product_id", productIds);
+
+    byProduct?.forEach((row) => {
+      if (row.sale_id) ids.add(row.sale_id);
+    });
+  }
+
+  return [...ids];
+};
+
 export const useSales = (
   businessId: string | null,
   page: number = 1,
   pageSize: number = DEFAULT_PAGE_SIZE,
   fromDate?: string | null,
   toDate?: string | null,
+  search?: string,
 ) => {
   const [sales, setSales] = useState<Sale[]>([]);
   const [totalCount, setTotalCount] = useState<number | null>(null);
@@ -101,6 +145,22 @@ export const useSales = (
     if (fromDate) query = query.gte("sale_date", fromDate);
     if (toDate) query = query.lte("sale_date", toDate);
 
+    const trimmedSearch = sanitizeSearchTerm(search ?? "");
+    if (trimmedSearch) {
+      const mainClause = buildOrIlikeClause(
+        ["sale_number", "source", "notes", "clients.name", "invoices.invoice_number"],
+        trimmedSearch,
+      );
+      const itemSaleIds = await fetchSaleIdsMatchingItemSearch(businessId, trimmedSearch);
+      if (itemSaleIds.length > 0 && mainClause) {
+        query = query.or(`${mainClause},id.in.(${itemSaleIds.join(",")})`);
+      } else if (mainClause) {
+        query = query.or(mainClause);
+      } else if (itemSaleIds.length > 0) {
+        query = query.in("id", itemSaleIds);
+      }
+    }
+
     const { data, error, count } = await query;
 
     if (error) {
@@ -117,7 +177,7 @@ export const useSales = (
       setTotalCount(count ?? null);
     }
     setLoading(false);
-  }, [businessId, page, pageSize, fromDate, toDate]);
+  }, [businessId, page, pageSize, fromDate, toDate, search]);
 
   useEffect(() => {
     setLoading(true);
