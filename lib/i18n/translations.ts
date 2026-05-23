@@ -26,6 +26,16 @@ export const translations = {
         completeProfileCta: "Kamilisha wasifu",
       },
     },
+    productCatalog: {
+      share: {
+        message:
+          "Habari! Nimeshare nawe list bidhaa na bei husika toka {businessName}. Angalia document niliotuma. Asante",
+        emailSubject: "{businessName} — Orodha ya Bidhaa na Bei",
+        nativeShareTitle: "{businessName} — Orodha ya Bidhaa na Bei",
+        nativeShareText:
+          "Habari! Nimeshare nawe list bidhaa na bei husika toka {businessName}. Angalia document niliotuma. Asante",
+      },
+    },
     footer: {
       tagline: `${APP_NAME} · POS, Mauzo na Ankara kwa Urahisi`,
       description:
@@ -522,6 +532,16 @@ export const translations = {
         completeProfileDescription:
           "Finalize adding your details to start recording sales and managing your business.",
         completeProfileCta: "Complete profile",
+      },
+    },
+    productCatalog: {
+      share: {
+        message:
+          "Hello! Here is the product and price catalog from {businessName}. See the document attached. Thanks",
+        emailSubject: "{businessName} — Product Catalog",
+        nativeShareTitle: "{businessName} — Product Catalog",
+        nativeShareText:
+          "Hello! Here is the product and price catalog from {businessName}. See the document attached. Thanks",
       },
     },
     footer: {

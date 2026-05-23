@@ -152,8 +152,61 @@ const loadPdfModules = async () => {
   return { jsPDF: jspdfModule.jsPDF, autoTable };
 };
 
+const rgbToExcelHex = (rgb: Rgb) =>
+  rgb
+    .map((channel) => channel.toString(16).padStart(2, "0"))
+    .join("")
+    .toUpperCase();
+
+type ExcelBorderStyle = {
+  style: "thin";
+  color: { rgb: string };
+};
+
+type ExcelCellStyle = {
+  font?: {
+    name?: string;
+    sz?: number;
+    bold?: boolean;
+    color?: { rgb: string };
+    underline?: boolean;
+  };
+  fill?: { fgColor?: { rgb: string }; patternType?: "solid" };
+  alignment?: {
+    horizontal?: "left" | "center" | "right";
+    vertical?: "center" | "top";
+    wrapText?: boolean;
+  };
+  border?: {
+    top?: ExcelBorderStyle;
+    bottom?: ExcelBorderStyle;
+    left?: ExcelBorderStyle;
+    right?: ExcelBorderStyle;
+  };
+};
+
+const excelFont = (opts: {
+  bold?: boolean;
+  sz?: number;
+  color?: string;
+  underline?: boolean;
+}): ExcelCellStyle["font"] => ({
+  name: FONT_FAMILY,
+  sz: opts.sz ?? 10,
+  bold: opts.bold ?? false,
+  ...(opts.color ? { color: { rgb: opts.color } } : {}),
+  ...(opts.underline ? { underline: true } : {}),
+});
+
+const excelBorderAll = (color: string): ExcelCellStyle["border"] => ({
+  top: { style: "thin", color: { rgb: color } },
+  bottom: { style: "thin", color: { rgb: color } },
+  left: { style: "thin", color: { rgb: color } },
+  right: { style: "thin", color: { rgb: color } },
+});
+
 const loadXlsxModule = async () => {
-  const xlsxModule = await import("xlsx");
+  const xlsxModule = await import("xlsx-js-style");
   return xlsxModule.default ?? xlsxModule;
 };
 
@@ -369,30 +422,144 @@ export const downloadProductCatalogExcel = async (
   rows: ProductCatalogRow[],
 ) => {
   const XLSX = await loadXlsxModule();
-  const title = getBrandingTitle(branding);
+  const brandRgb = parseHexColor(branding.brandColor);
+  const brandHex = rgbToExcelHex(brandRgb);
+  const headTextHex = rgbToExcelHex(contrastingTextColor(brandRgb));
+  const rowTintHex = rgbToExcelHex(mixWithWhite(brandRgb, 0.93));
+  const borderHex = rgbToExcelHex(mixWithWhite(brandRgb, 0.82));
+  const mutedHex = "6B7280";
   const generatedAt = formatGeneratedTimestamp();
+  const title = getBrandingTitle(branding);
 
-  const sheetRows: (string | number)[][] = [
-    [title],
-    ["Product & Price Catalog"],
-    [`${rows.length} products`],
-    [`Generated ${generatedAt}`],
-    [],
-    ["Product Name", "Description", "Selling Price"],
-    ...rows.map((row) => [
+  const TABLE_HEADER_ROW = 4;
+  const DATA_START_ROW = 5;
+  const footerRow = DATA_START_ROW + rows.length + 1;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ws: Record<string, any> = {};
+
+  const setCell = (
+    row: number,
+    col: number,
+    value: string,
+    style: ExcelCellStyle,
+    link?: string,
+  ) => {
+    const ref = XLSX.utils.encode_cell({ r: row, c: col });
+    ws[ref] = {
+      v: value,
+      t: "s",
+      s: style,
+      ...(link ? { l: { Target: link, Tooltip: APP_URL } } : {}),
+    };
+  };
+
+  const fillRow = (row: number, value: string, style: ExcelCellStyle) => {
+    for (let col = 0; col < 3; col += 1) {
+      setCell(row, col, col === 0 ? value : "", style);
+    }
+  };
+
+  fillRow(0, title, {
+    font: excelFont({ bold: true, sz: 16, color: headTextHex }),
+    fill: { fgColor: { rgb: brandHex }, patternType: "solid" },
+    alignment: { horizontal: "left", vertical: "center" },
+  });
+
+  fillRow(1, "Product & Price Catalog", {
+    font: excelFont({ bold: true, sz: 11, color: brandHex }),
+    alignment: { horizontal: "left", vertical: "center" },
+  });
+
+  fillRow(2, `${rows.length} product${rows.length === 1 ? "" : "s"} · Generated ${generatedAt}`, {
+    font: excelFont({ sz: 9, color: mutedHex }),
+    alignment: { horizontal: "left", vertical: "center" },
+  });
+
+  const tableHeaders = ["Product Name", "Description", "Selling Price"];
+  tableHeaders.forEach((header, col) => {
+    setCell(TABLE_HEADER_ROW, col, header, {
+      font: excelFont({ bold: true, sz: 10, color: headTextHex }),
+      fill: { fgColor: { rgb: brandHex }, patternType: "solid" },
+      alignment: {
+        horizontal: col === 2 ? "right" : "left",
+        vertical: "center",
+      },
+      border: excelBorderAll(borderHex),
+    });
+  });
+
+  rows.forEach((row, index) => {
+    const rowIndex = DATA_START_ROW + index;
+    const isAlt = index % 2 === 1;
+    const values = [
       asCellText(row.name),
       asCellText(row.description),
       asCellText(row.sellingPriceLabel),
-    ]),
-    [],
-    [`${asCellText(branding.businessName)} · Generated ${generatedAt}`, "", appLinkLabel],
+    ];
+
+    values.forEach((value, col) => {
+      setCell(rowIndex, col, value, {
+        font: excelFont({
+          bold: col === 0 || col === 2,
+          sz: 10,
+          color: "262626",
+        }),
+        ...(isAlt ? { fill: { fgColor: { rgb: rowTintHex }, patternType: "solid" } } : {}),
+        alignment: {
+          horizontal: col === 2 ? "right" : "left",
+          vertical: "top",
+          wrapText: true,
+        },
+        border: excelBorderAll(borderHex),
+      });
+    });
+  });
+
+  const footerLeft = `${asCellText(branding.businessName)} · Generated ${generatedAt}`;
+  setCell(footerRow, 0, footerLeft, {
+    font: excelFont({ sz: 8, color: mutedHex }),
+    alignment: { horizontal: "left", vertical: "center" },
+  });
+  setCell(footerRow, 1, "", {});
+  setCell(
+    footerRow,
+    2,
+    appLinkLabel,
+    {
+      font: excelFont({ sz: 8, color: brandHex, underline: true }),
+      alignment: { horizontal: "right", vertical: "center" },
+    },
+    APP_URL,
+  );
+
+  ws["!ref"] = XLSX.utils.encode_range({
+    s: { r: 0, c: 0 },
+    e: { r: footerRow, c: 2 },
+  });
+
+  ws["!merges"] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 2 } },
+    { s: { r: footerRow, c: 0 }, e: { r: footerRow, c: 1 } },
   ];
 
-  const worksheet = XLSX.utils.aoa_to_sheet(sheetRows);
-  worksheet["!cols"] = [{ wch: 30 }, { wch: 50 }, { wch: 18 }];
+  ws["!cols"] = [{ wch: 34 }, { wch: 54 }, { wch: 22 }];
+
+  ws["!rows"] = [
+    { hpt: 36 },
+    { hpt: 24 },
+    { hpt: 20 },
+    { hpt: 8 },
+    { hpt: 26 },
+    ...rows.map(() => ({ hpt: 22 })),
+    { hpt: 8 },
+    { hpt: 20 },
+  ];
 
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
+  XLSX.utils.book_append_sheet(workbook, ws, "Products");
 
   const buffer = XLSX.write(workbook, {
     bookType: "xlsx",

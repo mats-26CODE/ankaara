@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
-  transpilePackages: ["xlsx", "jspdf-autotable"],
+  transpilePackages: ["xlsx-js-style", "jspdf-autotable"],
   images: {
     remotePatterns: [
       {

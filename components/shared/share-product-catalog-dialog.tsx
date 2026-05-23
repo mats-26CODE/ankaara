@@ -22,6 +22,7 @@ import {
   type ProductCatalogRow,
 } from "@/lib/export/product-catalog-export";
 import { FileDown, FileSpreadsheet, Mail, Share2 } from "lucide-react";
+import { useTranslation } from "@/hooks/use-translation";
 
 type ShareProductCatalogDialogProps = {
   open: boolean;
@@ -42,9 +43,15 @@ const ShareProductCatalogDialog = ({
   business,
   formatPrice,
 }: ShareProductCatalogDialogProps) => {
+  const { t } = useTranslation();
   const [exporting, setExporting] = useState<"pdf" | "excel" | "share-pdf" | null>(null);
 
   const businessName = business?.name?.trim() || "Business";
+
+  const shareMessage = t("productCatalog.share.message", { businessName });
+  const emailSubject = t("productCatalog.share.emailSubject", { businessName });
+  const nativeShareTitle = t("productCatalog.share.nativeShareTitle", { businessName });
+  const nativeShareText = t("productCatalog.share.nativeShareText", { businessName });
 
   const buildRows = (products: Product[]): ProductCatalogRow[] =>
     products.map((product) => {
@@ -129,8 +136,8 @@ const ShareProductCatalogDialog = ({
       const file = new File([blob], filename, { type: "application/pdf" });
       const shared = await shareProductCatalogFile(
         file,
-        `${businessName} — Product Catalog`,
-        `Here is the product and price catalog from ${businessName}.`,
+        nativeShareTitle,
+        nativeShareText,
       );
       if (shared) {
         ToastAlert.success("Catalog shared");
@@ -145,11 +152,10 @@ const ShareProductCatalogDialog = ({
   };
 
   const handleShareMessage = (channel: "whatsapp" | "email") => {
-    const message = `Hello! Here is our product and price catalog from ${businessName}. Please find the attached PDF or Excel file with all products and selling prices.`;
     const url =
       channel === "whatsapp"
-        ? `https://wa.me/?text=${encodeURIComponent(message)}`
-        : `mailto:?subject=${encodeURIComponent(`${businessName} — Product Catalog`)}&body=${encodeURIComponent(message)}`;
+        ? `https://wa.me/?text=${encodeURIComponent(shareMessage)}`
+        : `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(shareMessage)}`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
