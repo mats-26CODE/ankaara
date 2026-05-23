@@ -27,6 +27,11 @@ export const translations = {
       },
     },
     productCatalog: {
+      columns: {
+        productName: "Jina la Bidhaa",
+        description: "Maelezo",
+        sellingPricePerItem: "Bei ya Uuzaji kwa Kila Bidhaa",
+      },
       share: {
         message:
           "Habari! Nimeshare nawe list bidhaa na bei husika toka {businessName}. Angalia document niliotuma. Asante",
@@ -535,6 +540,11 @@ export const translations = {
       },
     },
     productCatalog: {
+      columns: {
+        productName: "Product Name",
+        description: "Description",
+        sellingPricePerItem: "Selling Price Per Item",
+      },
       share: {
         message:
           "Hello! Here is the product and price catalog from {businessName}. See the document attached. Thanks",

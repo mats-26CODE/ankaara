@@ -20,6 +20,7 @@ import {
   getProductCatalogFilename,
   shareProductCatalogFile,
   type ProductCatalogRow,
+  type ProductCatalogColumnLabels,
 } from "@/lib/export/product-catalog-export";
 import { FileDown, FileSpreadsheet, Mail, Share2 } from "lucide-react";
 import { useTranslation } from "@/hooks/use-translation";
@@ -53,6 +54,12 @@ const ShareProductCatalogDialog = ({
   const nativeShareTitle = t("productCatalog.share.nativeShareTitle", { businessName });
   const nativeShareText = t("productCatalog.share.nativeShareText", { businessName });
 
+  const columnLabels: ProductCatalogColumnLabels = {
+    productName: t("productCatalog.columns.productName"),
+    description: t("productCatalog.columns.description"),
+    sellingPricePerItem: t("productCatalog.columns.sellingPricePerItem"),
+  };
+
   const buildRows = (products: Product[]): ProductCatalogRow[] =>
     products.map((product) => {
       const price = Number(product.selling_price ?? product.unit_price ?? 0);
@@ -85,7 +92,7 @@ const ShareProductCatalogDialog = ({
       logoText: business.logo_text,
       brandColor: business.brand_color,
     };
-    return { branding, rows: buildRows(products) };
+    return { branding, rows: buildRows(products), columnLabels };
   };
 
   const handleDownloadPdf = async () => {
@@ -93,7 +100,7 @@ const ShareProductCatalogDialog = ({
     try {
       const data = await loadCatalogData();
       if (!data) return;
-      await downloadProductCatalogPdf(data.branding, data.rows);
+      await downloadProductCatalogPdf(data.branding, data.rows, data.columnLabels);
       ToastAlert.success("Product catalog PDF downloaded");
     } catch (err) {
       console.error("Product catalog PDF export failed:", err);
@@ -112,7 +119,7 @@ const ShareProductCatalogDialog = ({
     try {
       const data = await loadCatalogData();
       if (!data) return;
-      await downloadProductCatalogExcel(data.branding, data.rows);
+      await downloadProductCatalogExcel(data.branding, data.rows, data.columnLabels);
       ToastAlert.success("Product catalog Excel file downloaded");
     } catch (err) {
       console.error("Product catalog Excel export failed:", err);
@@ -131,7 +138,11 @@ const ShareProductCatalogDialog = ({
     try {
       const data = await loadCatalogData();
       if (!data) return;
-      const blob = await buildProductCatalogPdfBlob(data.branding, data.rows);
+      const blob = await buildProductCatalogPdfBlob(
+        data.branding,
+        data.rows,
+        data.columnLabels,
+      );
       const filename = `${getProductCatalogFilename(businessName)}.pdf`;
       const file = new File([blob], filename, { type: "application/pdf" });
       const shared = await shareProductCatalogFile(

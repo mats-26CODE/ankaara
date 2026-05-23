@@ -15,6 +15,18 @@ export type ProductCatalogBranding = {
   brandColor?: string | null;
 };
 
+export type ProductCatalogColumnLabels = {
+  productName: string;
+  description: string;
+  sellingPricePerItem: string;
+};
+
+export const DEFAULT_CATALOG_COLUMN_LABELS: ProductCatalogColumnLabels = {
+  productName: "Product Name",
+  description: "Description",
+  sellingPricePerItem: "Selling Price Per Item",
+};
+
 type Rgb = [number, number, number];
 
 const DEFAULT_BRAND_HEX = "#2563eb";
@@ -352,6 +364,7 @@ const drawPdfFooter = (
 export const buildProductCatalogPdfBlob = async (
   branding: ProductCatalogBranding,
   rows: ProductCatalogRow[],
+  columnLabels: ProductCatalogColumnLabels = DEFAULT_CATALOG_COLUMN_LABELS,
 ): Promise<Blob> => {
   const { jsPDF, autoTable } = await loadPdfModules();
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
@@ -367,7 +380,7 @@ export const buildProductCatalogPdfBlob = async (
 
   autoTable(doc, {
     startY,
-    head: [["Product Name", "Description", "Selling Price"]],
+    head: [[columnLabels.productName, columnLabels.description, columnLabels.sellingPricePerItem]],
     body: rows.map((row) => [
       asCellText(row.name),
       asCellText(row.description),
@@ -393,9 +406,9 @@ export const buildProductCatalogPdfBlob = async (
       fillColor: rowTintRgb,
     },
     columnStyles: {
-      0: { cellWidth: 48, fontStyle: "bold" },
+      0: { cellWidth: 44, fontStyle: "bold" },
       1: { cellWidth: "auto" },
-      2: { cellWidth: 36, halign: "right", fontStyle: "bold" },
+      2: { cellWidth: 44, halign: "right", fontStyle: "bold" },
     },
     margin: {
       top: PAGE_TOP_MARGIN_MM,
@@ -419,14 +432,16 @@ export const buildProductCatalogPdfBlob = async (
 export const downloadProductCatalogPdf = async (
   branding: ProductCatalogBranding,
   rows: ProductCatalogRow[],
+  columnLabels: ProductCatalogColumnLabels = DEFAULT_CATALOG_COLUMN_LABELS,
 ) => {
-  const blob = await buildProductCatalogPdfBlob(branding, rows);
+  const blob = await buildProductCatalogPdfBlob(branding, rows, columnLabels);
   triggerBrowserDownload(blob, `${getProductCatalogFilename(branding.businessName)}.pdf`);
 };
 
 export const downloadProductCatalogExcel = async (
   branding: ProductCatalogBranding,
   rows: ProductCatalogRow[],
+  columnLabels: ProductCatalogColumnLabels = DEFAULT_CATALOG_COLUMN_LABELS,
 ) => {
   const XLSX = await loadXlsxModule();
   const brandRgb = parseHexColor(branding.brandColor);
@@ -483,7 +498,11 @@ export const downloadProductCatalogExcel = async (
     alignment: { horizontal: "left", vertical: "center" },
   });
 
-  const tableHeaders = ["Product Name", "Description", "Selling Price"];
+  const tableHeaders = [
+    columnLabels.productName,
+    columnLabels.description,
+    columnLabels.sellingPricePerItem,
+  ];
   tableHeaders.forEach((header, col) => {
     setCell(TABLE_HEADER_ROW, col, header, {
       font: excelFont({ bold: true, sz: 10, color: headTextHex }),
@@ -552,7 +571,7 @@ export const downloadProductCatalogExcel = async (
     { s: { r: footerRow, c: 0 }, e: { r: footerRow, c: 1 } },
   ];
 
-  ws["!cols"] = [{ wch: 34 }, { wch: 54 }, { wch: 22 }];
+  ws["!cols"] = [{ wch: 34 }, { wch: 50 }, { wch: 26 }];
 
   ws["!rows"] = [
     { hpt: 36 },
