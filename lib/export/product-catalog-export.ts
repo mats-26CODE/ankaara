@@ -350,14 +350,27 @@ const drawPdfFooter = (
   doc.setFont(FONT_FAMILY, "normal");
   doc.setFontSize(7.5);
   doc.setTextColor(95, 95, 102);
-  doc.text(`Generated ${generatedAt} · ${asCellText(branding.businessName)}`, MARGIN_X, footerY);
+
+  const pageText = pageCount > 1 ? `Page ${pageNumber} of ${pageCount}` : "";
+  const pageTextWidth = pageText ? doc.getTextWidth(pageText) : 0;
+  const centerX = pageW / 2;
+  const footerColumnGap = 6;
+  const linkWidth = doc.getTextWidth(appLinkLabel);
+
+  const leftMaxWidth =
+    pageCount > 1
+      ? Math.max(20, centerX - pageTextWidth / 2 - MARGIN_X - footerColumnGap)
+      : Math.max(20, pageW - MARGIN_X * 2 - linkWidth - footerColumnGap);
+
+  doc.text(`Generated ${generatedAt} · ${asCellText(branding.businessName)}`, MARGIN_X, footerY, {
+    maxWidth: leftMaxWidth,
+  });
 
   if (pageCount > 1) {
-    doc.text(`Page ${pageNumber} of ${pageCount}`, pageW / 2, footerY, { align: "center" });
+    doc.text(pageText, centerX, footerY, { align: "center" });
   }
 
   doc.setTextColor(...brandRgb);
-  const linkWidth = doc.getTextWidth(appLinkLabel);
   doc.textWithLink(appLinkLabel, pageW - MARGIN_X - linkWidth, footerY, { url: APP_URL });
 };
 
