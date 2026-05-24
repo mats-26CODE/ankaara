@@ -27,6 +27,75 @@ export const DEFAULT_CATALOG_COLUMN_LABELS: ProductCatalogColumnLabels = {
   sellingPricePerItem: "Piece/Dozen/Item Price",
 };
 
+export type ProductCatalogExportOptions = {
+  includeDescription: boolean;
+  includePrice: boolean;
+};
+
+export const DEFAULT_CATALOG_EXPORT_OPTIONS: ProductCatalogExportOptions = {
+  includeDescription: true,
+  includePrice: true,
+};
+
+type CatalogTableColumn = {
+  header: string;
+  getValue: (row: ProductCatalogRow) => string;
+  pdfStyle: {
+    cellWidth?: number | "auto";
+    halign?: "left" | "right";
+    fontStyle?: "bold" | "normal";
+  };
+  excelAlign: "left" | "right";
+  excelBold: boolean;
+  excelWidth: number;
+};
+
+const buildCatalogTableColumns = (
+  columnLabels: ProductCatalogColumnLabels,
+  options: ProductCatalogExportOptions,
+): CatalogTableColumn[] => {
+  const optionalCount = Number(options.includeDescription) + Number(options.includePrice);
+  const nameWidth: number | "auto" = optionalCount === 0 ? "auto" : 44;
+
+  const columns: CatalogTableColumn[] = [
+    {
+      header: columnLabels.productName,
+      getValue: (row) => asCellText(row.name),
+      pdfStyle: { cellWidth: nameWidth, fontStyle: "bold" },
+      excelAlign: "left",
+      excelBold: true,
+      excelWidth: optionalCount === 0 ? 60 : 34,
+    },
+  ];
+
+  if (options.includeDescription) {
+    columns.push({
+      header: columnLabels.description,
+      getValue: (row) => asCellText(row.description),
+      pdfStyle: { cellWidth: "auto" },
+      excelAlign: "left",
+      excelBold: false,
+      excelWidth: 50,
+    });
+  }
+
+  if (options.includePrice) {
+    columns.push({
+      header: columnLabels.sellingPricePerItem,
+      getValue: (row) => asCellText(row.sellingPriceLabel),
+      pdfStyle: { cellWidth: 48, halign: "right", fontStyle: "bold" },
+      excelAlign: "right",
+      excelBold: true,
+      excelWidth: 32,
+    });
+  }
+
+  return columns;
+};
+
+const buildPdfColumnStyles = (columns: CatalogTableColumn[]) =>
+  Object.fromEntries(columns.map((column, index) => [index, column.pdfStyle]));
+
 type Rgb = [number, number, number];
 
 const DEFAULT_BRAND_HEX = "#2563eb";
@@ -378,6 +447,7 @@ export const buildProductCatalogPdfBlob = async (
   branding: ProductCatalogBranding,
   rows: ProductCatalogRow[],
   columnLabels: ProductCatalogColumnLabels = DEFAULT_CATALOG_COLUMN_LABELS,
+  exportOptions: ProductCatalogExportOptions = DEFAULT_CATALOG_EXPORT_OPTIONS,
 ): Promise<Blob> => {
   const { jsPDF, autoTable } = await loadPdfModules();
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
@@ -390,15 +460,12 @@ export const buildProductCatalogPdfBlob = async (
   const generatedAt = formatGeneratedTimestamp();
 
   const startY = await drawPdfHeader(doc, branding, rows.length, brandRgb);
+  const tableColumns = buildCatalogTableColumns(columnLabels, exportOptions);
 
   autoTable(doc, {
     startY,
-    head: [[columnLabels.productName, columnLabels.description, columnLabels.sellingPricePerItem]],
-    body: rows.map((row) => [
-      asCellText(row.name),
-      asCellText(row.description),
-      asCellText(row.sellingPriceLabel),
-    ]),
+    head: [tableColumns.map((column) => column.header)],
+    body: rows.map((row) => tableColumns.map((column) => column.getValue(row))),
     styles: {
       font: FONT_FAMILY,
       fontSize: 9,
@@ -418,11 +485,7 @@ export const buildProductCatalogPdfBlob = async (
     alternateRowStyles: {
       fillColor: rowTintRgb,
     },
-    columnStyles: {
-      0: { cellWidth: 44, fontStyle: "bold" },
-      1: { cellWidth: "auto" },
-      2: { cellWidth: 48, halign: "right", fontStyle: "bold" },
-    },
+    columnStyles: buildPdfColumnStyles(tableColumns),
     margin: {
       top: PAGE_TOP_MARGIN_MM,
       left: MARGIN_X,
@@ -446,8 +509,14 @@ export const downloadProductCatalogPdf = async (
   branding: ProductCatalogBranding,
   rows: ProductCatalogRow[],
   columnLabels: ProductCatalogColumnLabels = DEFAULT_CATALOG_COLUMN_LABELS,
+  exportOptions: ProductCatalogExportOptions = DEFAULT_CATALOG_EXPORT_OPTIONS,
 ) => {
-  const blob = await buildProductCatalogPdfBlob(branding, rows, columnLabels);
+  const blob = await buildProductCatalogPdfBlob(
+    branding,
+    rows,
+    columnLabels,
+    exportOptions,
+  );
   triggerBrowserDownload(blob, `${getProductCatalogFilename(branding.businessName)}.pdf`);
 };
 
@@ -455,8 +524,12 @@ export const downloadProductCatalogExcel = async (
   branding: ProductCatalogBranding,
   rows: ProductCatalogRow[],
   columnLabels: ProductCatalogColumnLabels = DEFAULT_CATALOG_COLUMN_LABELS,
+  exportOptions: ProductCatalogExportOptions = DEFAULT_CATALOG_EXPORT_OPTIONS,
 ) => {
   const XLSX = await loadXlsxModule();
+  const tableColumns = buildCatalogTableColumns(columnLabels, exportOptions);
+  const colCount = tableColumns.length;
+  const lastCol = colCount - 1;
   const brandRgb = parseHexColor(branding.brandColor);
   const brandHex = rgbToExcelHex(brandRgb);
   const headTextHex = rgbToExcelHex(contrastingTextColor(brandRgb));
@@ -490,7 +563,7 @@ export const downloadProductCatalogExcel = async (
   };
 
   const fillRow = (row: number, value: string, style: ExcelCellStyle) => {
-    for (let col = 0; col < 3; col += 1) {
+    for (let col = 0; col < colCount; col += 1) {
       setCell(row, col, col === 0 ? value : "", style);
     }
   };
@@ -511,17 +584,12 @@ export const downloadProductCatalogExcel = async (
     alignment: { horizontal: "left", vertical: "center" },
   });
 
-  const tableHeaders = [
-    columnLabels.productName,
-    columnLabels.description,
-    columnLabels.sellingPricePerItem,
-  ];
-  tableHeaders.forEach((header, col) => {
-    setCell(TABLE_HEADER_ROW, col, header, {
+  tableColumns.forEach((header, col) => {
+    setCell(TABLE_HEADER_ROW, col, header.header, {
       font: excelFont({ bold: true, sz: 10, color: headTextHex }),
       fill: { fgColor: { rgb: brandHex }, patternType: "solid" },
       alignment: {
-        horizontal: col === 2 ? "right" : "left",
+        horizontal: header.excelAlign,
         vertical: "center",
       },
       border: excelBorderAll(borderHex),
@@ -531,22 +599,17 @@ export const downloadProductCatalogExcel = async (
   rows.forEach((row, index) => {
     const rowIndex = DATA_START_ROW + index;
     const isAlt = index % 2 === 1;
-    const values = [
-      asCellText(row.name),
-      asCellText(row.description),
-      asCellText(row.sellingPriceLabel),
-    ];
 
-    values.forEach((value, col) => {
-      setCell(rowIndex, col, value, {
+    tableColumns.forEach((column, col) => {
+      setCell(rowIndex, col, column.getValue(row), {
         font: excelFont({
-          bold: col === 0 || col === 2,
+          bold: column.excelBold,
           sz: 10,
           color: "262626",
         }),
         ...(isAlt ? { fill: { fgColor: { rgb: rowTintHex }, patternType: "solid" } } : {}),
         alignment: {
-          horizontal: col === 2 ? "right" : "left",
+          horizontal: column.excelAlign,
           vertical: "top",
           wrapText: true,
         },
@@ -560,10 +623,12 @@ export const downloadProductCatalogExcel = async (
     font: excelFont({ sz: 8, color: mutedHex }),
     alignment: { horizontal: "left", vertical: "center" },
   });
-  setCell(footerRow, 1, "", {});
+  for (let col = 1; col < lastCol; col += 1) {
+    setCell(footerRow, col, "", {});
+  }
   setCell(
     footerRow,
-    2,
+    lastCol,
     appLinkLabel,
     {
       font: excelFont({ sz: 8, color: brandHex, underline: true }),
@@ -574,17 +639,19 @@ export const downloadProductCatalogExcel = async (
 
   ws["!ref"] = XLSX.utils.encode_range({
     s: { r: 0, c: 0 },
-    e: { r: footerRow, c: 2 },
+    e: { r: footerRow, c: lastCol },
   });
 
   ws["!merges"] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
-    { s: { r: 2, c: 0 }, e: { r: 2, c: 2 } },
-    { s: { r: footerRow, c: 0 }, e: { r: footerRow, c: 1 } },
+    { s: { r: 0, c: 0 }, e: { r: 0, c: lastCol } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: lastCol } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: lastCol } },
+    ...(lastCol > 0
+      ? [{ s: { r: footerRow, c: 0 }, e: { r: footerRow, c: lastCol - 1 } }]
+      : []),
   ];
 
-  ws["!cols"] = [{ wch: 34 }, { wch: 50 }, { wch: 32 }];
+  ws["!cols"] = tableColumns.map((column) => ({ wch: column.excelWidth }));
 
   ws["!rows"] = [
     { hpt: 36 },

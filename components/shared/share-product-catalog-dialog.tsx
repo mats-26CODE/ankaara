@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { ToastAlert } from "@/config/toast";
 import type { Business } from "@/hooks/use-businesses";
 import type { Product } from "@/hooks/use-products";
@@ -19,11 +20,12 @@ import {
   downloadProductCatalogPdf,
   getProductCatalogFilename,
   shareProductCatalogFile,
-  type ProductCatalogRow,
   type ProductCatalogColumnLabels,
+  type ProductCatalogExportOptions,
+  type ProductCatalogRow,
 } from "@/lib/export/product-catalog-export";
-import { FileDown, FileSpreadsheet, Mail, Share2 } from "lucide-react";
 import { useTranslation } from "@/hooks/use-translation";
+import { FileDown, FileSpreadsheet, Mail, Share2 } from "lucide-react";
 
 type ShareProductCatalogDialogProps = {
   open: boolean;
@@ -46,6 +48,8 @@ const ShareProductCatalogDialog = ({
 }: ShareProductCatalogDialogProps) => {
   const { t } = useTranslation();
   const [exporting, setExporting] = useState<"pdf" | "excel" | "share-pdf" | null>(null);
+  const [includeDescription, setIncludeDescription] = useState(true);
+  const [includePrice, setIncludePrice] = useState(true);
 
   const businessName = business?.name?.trim() || "Business";
 
@@ -58,6 +62,11 @@ const ShareProductCatalogDialog = ({
     productName: t("productCatalog.columns.productName"),
     description: t("productCatalog.columns.description"),
     sellingPricePerItem: t("productCatalog.columns.sellingPricePerItem"),
+  };
+
+  const exportOptions: ProductCatalogExportOptions = {
+    includeDescription,
+    includePrice,
   };
 
   const buildRows = (products: Product[]): ProductCatalogRow[] =>
@@ -92,7 +101,7 @@ const ShareProductCatalogDialog = ({
       logoText: business.logo_text,
       brandColor: business.brand_color,
     };
-    return { branding, rows: buildRows(products), columnLabels };
+    return { branding, rows: buildRows(products), columnLabels, exportOptions };
   };
 
   const handleDownloadPdf = async () => {
@@ -100,7 +109,12 @@ const ShareProductCatalogDialog = ({
     try {
       const data = await loadCatalogData();
       if (!data) return;
-      await downloadProductCatalogPdf(data.branding, data.rows, data.columnLabels);
+      await downloadProductCatalogPdf(
+        data.branding,
+        data.rows,
+        data.columnLabels,
+        data.exportOptions,
+      );
       ToastAlert.success("Product catalog PDF downloaded");
     } catch (err) {
       console.error("Product catalog PDF export failed:", err);
@@ -119,7 +133,12 @@ const ShareProductCatalogDialog = ({
     try {
       const data = await loadCatalogData();
       if (!data) return;
-      await downloadProductCatalogExcel(data.branding, data.rows, data.columnLabels);
+      await downloadProductCatalogExcel(
+        data.branding,
+        data.rows,
+        data.columnLabels,
+        data.exportOptions,
+      );
       ToastAlert.success("Product catalog Excel file downloaded");
     } catch (err) {
       console.error("Product catalog Excel export failed:", err);
@@ -142,6 +161,7 @@ const ShareProductCatalogDialog = ({
         data.branding,
         data.rows,
         data.columnLabels,
+        data.exportOptions,
       );
       const filename = `${getProductCatalogFilename(businessName)}.pdf`;
       const file = new File([blob], filename, { type: "application/pdf" });
@@ -183,6 +203,41 @@ const ShareProductCatalogDialog = ({
         </DialogHeader>
 
         <div className="space-y-4 py-2">
+          <div className="space-y-2 rounded-lg border p-3">
+            <p className="text-sm font-medium">{t("productCatalog.export.includeTitle")}</p>
+            <p className="text-muted-foreground text-xs">
+              {t("productCatalog.export.nameAlwaysIncluded")}
+            </p>
+            <div className="space-y-2 pt-1">
+              <Label
+                htmlFor="catalog-include-description"
+                className="hover:bg-muted/50 cursor-pointer rounded-md border px-3 py-2.5 font-normal"
+              >
+                <input
+                  id="catalog-include-description"
+                  type="checkbox"
+                  checked={includeDescription}
+                  onChange={(event) => setIncludeDescription(event.target.checked)}
+                  className="accent-primary size-4 shrink-0"
+                />
+                {t("productCatalog.export.includeDescription")}
+              </Label>
+              <Label
+                htmlFor="catalog-include-price"
+                className="hover:bg-muted/50 cursor-pointer rounded-md border px-3 py-2.5 font-normal"
+              >
+                <input
+                  id="catalog-include-price"
+                  type="checkbox"
+                  checked={includePrice}
+                  onChange={(event) => setIncludePrice(event.target.checked)}
+                  className="accent-primary size-4 shrink-0"
+                />
+                {t("productCatalog.export.includePrice")}
+              </Label>
+            </div>
+          </div>
+
           <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"

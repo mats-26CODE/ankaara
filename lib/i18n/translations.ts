@@ -32,6 +32,12 @@ export const translations = {
         description: "Maelezo",
         sellingPricePerItem: "Bei kwa Kipande/Dazeni/Bidhaa",
       },
+      export: {
+        includeTitle: "Jumuisha kwenye orodha",
+        includeDescription: "Maelezo",
+        includePrice: "Bei kwa Kipande/Dazeni/Bidhaa",
+        nameAlwaysIncluded: "Jina la bidhaa linaongezwa kila wakati.",
+      },
       share: {
         message:
           "Habari! Nimeshare nawe list bidhaa na bei husika toka {businessName}. Angalia document niliotuma. Asante",
@@ -544,6 +550,12 @@ export const translations = {
         productName: "Product Name",
         description: "Description",
         sellingPricePerItem: "Piece/Dozen/Item Price",
+      },
+      export: {
+        includeTitle: "Include in catalog",
+        includeDescription: "Description",
+        includePrice: "Piece/Dozen/Item Price",
+        nameAlwaysIncluded: "Product name is always included.",
       },
       share: {
         message:
