@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import Link from "next/link";
 import dayjs from "dayjs";
 import { useBusinesses } from "@/hooks/use-businesses";
 import { useCurrentBusinessId } from "@/lib/stores/business-store";
-import { useExpenses, useCreateExpense, useUpdateExpense, useDeleteExpense } from "@/hooks/use-expenses";
+import {
+  useExpenses,
+  useCreateExpense,
+  useUpdateExpense,
+  useDeleteExpense,
+} from "@/hooks/use-expenses";
+import { useFormatAmount } from "@/hooks/use-format-amount";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -27,7 +35,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  Building2,
+  ChevronLeft,
+  ChevronRight,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+  Wallet,
+  X,
+} from "lucide-react";
 
 const PAGE_SIZE = 10;
 const emptyForm = {
@@ -39,12 +57,14 @@ const emptyForm = {
 };
 
 const ExpensesPage = () => {
-  const { businesses } = useBusinesses();
+  const { format: formatAmount } = useFormatAmount();
+  const { businesses, loading: businessesLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -55,11 +75,16 @@ const ExpensesPage = () => {
     PAGE_SIZE,
     fromDate || null,
     toDate || null,
-    categoryFilter,
+    debouncedSearch,
   );
   const createExpense = useCreateExpense();
   const updateExpense = useUpdateExpense();
   const deleteExpense = useDeleteExpense();
+
+  const activeBusiness = useMemo(
+    () => businesses.find((business) => business.id === currentBusinessId) ?? businesses[0] ?? null,
+    [businesses, currentBusinessId],
+  );
 
   useEffect(() => {
     if (!currentBusinessId && businesses.length > 0) {
@@ -69,13 +94,12 @@ const ExpensesPage = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [currentBusinessId, fromDate, toDate, categoryFilter]);
+  }, [currentBusinessId, fromDate, toDate, debouncedSearch]);
 
   const total = totalCount ?? 0;
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const to = Math.min(page * PAGE_SIZE, total);
-  const periodTotal = expenses.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
 
   const handleSave = () => {
     if (!currentBusinessId || !form.category.trim() || Number(form.amount) <= 0) return;
@@ -111,14 +135,45 @@ const ExpensesPage = () => {
     });
   };
 
+  if (businessesLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Spinner className="size-6" />
+      </div>
+    );
+  }
+
+  if (businesses.length === 0) {
+    return (
+      <Card className="mx-auto mt-12 max-w-lg">
+        <CardContent className="flex flex-col items-center gap-4 py-12">
+          <Building2 className="text-muted-foreground size-12" />
+          <div className="space-y-1 text-center">
+            <p className="font-medium">No business yet</p>
+            <p className="text-muted-foreground text-sm">
+              Create a business first to record expenses.
+            </p>
+          </div>
+          <Button asChild>
+            <Link href="/dashboard/settings/businesses">Go to Businesses</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Expenses</h1>
-          <p className="text-muted-foreground text-sm">Track daily business expenses.</p>
+          <p className="text-muted-foreground text-sm">
+            Daily business expenses for{" "}
+            <span className="font-medium">{activeBusiness?.name ?? "your business"}</span>.
+          </p>
         </div>
         <Button
+          size="sm"
           onClick={() => {
             setEditingId(null);
             setForm(emptyForm);
@@ -133,11 +188,13 @@ const ExpensesPage = () => {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-center">
-            <div className="max-w-sm flex-1">
+            <div className="relative max-w-sm flex-1">
+              <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
               <Input
-                placeholder="Search category..."
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search category, payment method, notes..."
+                className="pl-9"
               />
             </div>
             <div className="flex w-full items-center gap-3 lg:w-auto">
@@ -164,25 +221,41 @@ const ExpensesPage = () => {
                   }}
                   className="shrink-0"
                 >
+                  <X className="size-4 text-red-400" />
                   Clear
                 </Button>
               )}
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="rounded-md border p-3">
-            <p className="text-muted-foreground text-xs">Visible total</p>
-            <p className="text-xl font-semibold">{periodTotal.toLocaleString()}</p>
-          </div>
+        <CardContent>
           {loading ? (
-            <div className="flex justify-center py-6">
+            <div className="flex items-center justify-center py-8">
               <Spinner className="size-6" />
             </div>
           ) : expenses.length === 0 ? (
-            <p className="text-muted-foreground rounded-md border p-4 text-sm">
-              No expenses found for this filter.
-            </p>
+            <div className="flex flex-col items-center gap-3 py-12 text-center">
+              <Wallet className="text-muted-foreground size-10" />
+              <p className="text-muted-foreground text-sm">
+                {debouncedSearch.trim() || fromDate || toDate
+                  ? "No expenses match your search or filters."
+                  : "No expenses recorded yet. Add your first expense."}
+              </p>
+              {!debouncedSearch.trim() && !fromDate && !toDate && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setEditingId(null);
+                    setForm(emptyForm);
+                    setDialogOpen(true);
+                  }}
+                >
+                  <Plus className="mr-1 size-4" />
+                  Add Expense
+                </Button>
+              )}
+            </div>
           ) : (
             <Table>
               <TableHeader>
@@ -203,7 +276,9 @@ const ExpensesPage = () => {
                     <TableCell className="hidden capitalize md:table-cell">
                       {expense.payment_method}
                     </TableCell>
-                    <TableCell className="text-right">{Number(expense.amount).toLocaleString()}</TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {formatAmount(Number(expense.amount), { decimalDigits: 0 })}
+                    </TableCell>
                     <TableCell className="text-muted-foreground hidden max-w-[200px] truncate md:table-cell">
                       {expense.notes || "—"}
                     </TableCell>
@@ -248,16 +323,16 @@ const ExpensesPage = () => {
           )}
 
           {total > 0 && (
-            <div className="flex items-center justify-between border-t pt-3">
+            <div className="mt-4 flex flex-col gap-2 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-muted-foreground text-sm">
                 Showing {from}-{to} of {total}
               </p>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-                  disabled={page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1 || loading}
                 >
                   <ChevronLeft className="mr-1 size-4" />
                   Previous
@@ -265,8 +340,8 @@ const ExpensesPage = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPage((prev) => Math.min(prev + 1, lastPage))}
-                  disabled={page >= lastPage}
+                  onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
+                  disabled={page >= lastPage || loading}
                 >
                   Next
                   <ChevronRight className="ml-1 size-4" />
@@ -281,7 +356,9 @@ const ExpensesPage = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{editingId ? "Edit Expense" : "Add Expense"}</DialogTitle>
-            <DialogDescription>Record a business expense for accounting and profit tracking.</DialogDescription>
+            <DialogDescription>
+              Record a business expense for accounting and profit tracking.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -321,7 +398,7 @@ const ExpensesPage = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label>Notes</Label>
+              <Label>Notes (optional)</Label>
               <Input
                 value={form.notes}
                 onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}

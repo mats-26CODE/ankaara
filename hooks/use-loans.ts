@@ -3,6 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
+import {
+  buildOrIlikeClause,
+  sanitizeSearchTerm,
+  toIlikePattern,
+} from "@/lib/supabase/table-search";
 import { ToastAlert } from "@/config/toast";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import type { Json, Tables } from "@/database.types";
@@ -34,7 +39,31 @@ export type CreateLoanPayload = {
   items: CreateLoanItemInput[];
 };
 
-export const useLoans = (businessId: string | null, page: number = 1, pageSize: number = 10) => {
+const fetchClientIdsMatchingSearch = async (
+  businessId: string,
+  search: string,
+): Promise<string[]> => {
+  const pattern = toIlikePattern(search);
+  if (!pattern) return [];
+
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("clients")
+    .select("id")
+    .eq("business_id", businessId)
+    .ilike("name", pattern);
+
+  return data?.map((client) => client.id) ?? [];
+};
+
+export const useLoans = (
+  businessId: string | null,
+  page: number = 1,
+  pageSize: number = 10,
+  fromDate?: string | null,
+  toDate?: string | null,
+  search?: string,
+) => {
   const [loans, setLoans] = useState<Loan[]>([]);
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,13 +78,32 @@ export const useLoans = (businessId: string | null, page: number = 1, pageSize: 
     const supabase = createClient();
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
-    const { data, error, count } = await supabase
+    let query = supabase
       .from("loans")
       .select("*, client:clients(id, name, phone, email)", { count: "exact" })
       .eq("business_id", businessId)
       .order("loan_date", { ascending: false })
       .order("created_at", { ascending: false })
       .range(from, to);
+
+    if (fromDate) query = query.gte("loan_date", fromDate);
+    if (toDate) query = query.lte("loan_date", toDate);
+
+    const trimmedSearch = sanitizeSearchTerm(search ?? "");
+    if (trimmedSearch) {
+      const loanNumberClause = buildOrIlikeClause(["loan_number"], trimmedSearch);
+      const matchingClientIds = await fetchClientIdsMatchingSearch(businessId, trimmedSearch);
+
+      if (matchingClientIds.length > 0 && loanNumberClause) {
+        query = query.or(`${loanNumberClause},client_id.in.(${matchingClientIds.join(",")})`);
+      } else if (loanNumberClause) {
+        query = query.or(loanNumberClause);
+      } else if (matchingClientIds.length > 0) {
+        query = query.in("client_id", matchingClientIds);
+      }
+    }
+
+    const { data, error, count } = await query;
     if (error) {
       setLoans([]);
       setTotalCount(null);
@@ -64,7 +112,7 @@ export const useLoans = (businessId: string | null, page: number = 1, pageSize: 
       setTotalCount(count ?? null);
     }
     setLoading(false);
-  }, [businessId, page, pageSize]);
+  }, [businessId, page, pageSize, fromDate, toDate, search]);
 
   useEffect(() => {
     setLoading(true);

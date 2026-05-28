@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
+import { buildOrIlikeClause, sanitizeSearchTerm } from "@/lib/supabase/table-search";
 import { ToastAlert } from "@/config/toast";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import type { Tables, TablesInsert, TablesUpdate } from "@/database.types";
@@ -20,7 +21,7 @@ export const useExpenses = (
   pageSize: number = DEFAULT_PAGE_SIZE,
   fromDate?: string | null,
   toDate?: string | null,
-  category?: string,
+  search?: string,
 ) => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [totalCount, setTotalCount] = useState<number | null>(null);
@@ -48,7 +49,12 @@ export const useExpenses = (
 
     if (fromDate) query = query.gte("expense_date", fromDate);
     if (toDate) query = query.lte("expense_date", toDate);
-    if (category?.trim()) query = query.eq("category", category.trim());
+
+    const trimmedSearch = sanitizeSearchTerm(search ?? "");
+    if (trimmedSearch) {
+      const searchClause = buildOrIlikeClause(["category", "notes", "payment_method"], trimmedSearch);
+      if (searchClause) query = query.or(searchClause);
+    }
 
     const { data, error, count } = await query;
     if (error) {
@@ -59,7 +65,7 @@ export const useExpenses = (
       setTotalCount(count ?? null);
     }
     setLoading(false);
-  }, [businessId, page, pageSize, fromDate, toDate, category]);
+  }, [businessId, page, pageSize, fromDate, toDate, search]);
 
   useEffect(() => {
     setLoading(true);
