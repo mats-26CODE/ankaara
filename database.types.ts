@@ -150,11 +150,53 @@ export type Database = {
         };
         Relationships: [];
       };
+      expense_categories: {
+        Row: {
+          business_id: string | null;
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          is_other: boolean;
+          name: string;
+          sort_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          business_id?: string | null;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          is_other?: boolean;
+          name: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          business_id?: string | null;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          is_other?: boolean;
+          name?: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expense_categories_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       expenses: {
         Row: {
           amount: number;
           business_id: string;
           category: string;
+          category_id: string | null;
           created_at: string;
           created_by: string | null;
           expense_date: string;
@@ -167,6 +209,7 @@ export type Database = {
           amount: number;
           business_id: string;
           category: string;
+          category_id?: string | null;
           created_at?: string;
           created_by?: string | null;
           expense_date?: string;
@@ -179,6 +222,7 @@ export type Database = {
           amount?: number;
           business_id?: string;
           category?: string;
+          category_id?: string | null;
           created_at?: string;
           created_by?: string | null;
           expense_date?: string;
@@ -193,6 +237,13 @@ export type Database = {
             columns: ["business_id"];
             isOneToOne: false;
             referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expenses_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "expense_categories";
             referencedColumns: ["id"];
           },
           {

@@ -10,7 +10,9 @@ import type { Tables, TablesInsert, TablesUpdate } from "@/database.types";
 
 export type Expense = Tables<"expenses">;
 export type CreateExpensePayload = Pick<TablesInsert<"expenses">, "business_id" | "category" | "amount"> &
-  Partial<Pick<TablesInsert<"expenses">, "expense_date" | "payment_method" | "notes">>;
+  Partial<
+    Pick<TablesInsert<"expenses">, "expense_date" | "payment_method" | "notes" | "category_id">
+  >;
 export type UpdateExpensePayload = TablesUpdate<"expenses"> & { id: string };
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -85,6 +87,7 @@ export const useCreateExpense = () => {
         .insert({
           business_id: payload.business_id,
           category: payload.category.trim(),
+          category_id: payload.category_id ?? null,
           amount: Number(payload.amount) || 0,
           expense_date: payload.expense_date ?? new Date().toISOString().slice(0, 10),
           payment_method: payload.payment_method?.trim() || "cash",

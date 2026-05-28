@@ -11,7 +11,9 @@ import {
   useCreateExpense,
   useUpdateExpense,
   useDeleteExpense,
+  type Expense,
 } from "@/hooks/use-expenses";
+import { useExpenseCategories } from "@/hooks/use-expense-categories";
 import { useFormatAmount } from "@/hooks/use-format-amount";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -36,6 +38,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Building2,
   ChevronLeft,
   ChevronRight,
@@ -48,9 +57,31 @@ import {
 } from "lucide-react";
 
 const PAGE_SIZE = 10;
+
+const formatAmountDisplay = (val: string): string => {
+  if (val === "" || val === ".") return val;
+  const n = Number(val.replace(/,/g, ""));
+  return Number.isNaN(n) ? val : n.toLocaleString();
+};
+
+const parseAmountInput = (raw: string): string => {
+  const cleaned = raw.replace(/,/g, "").replace(/[^\d.]/g, "");
+  const dotIdx = cleaned.indexOf(".");
+  if (dotIdx === -1) return cleaned;
+  const int = cleaned.slice(0, dotIdx);
+  const dec = cleaned
+    .slice(dotIdx + 1)
+    .replace(/\D/g, "")
+    .slice(0, 2);
+  return dec ? `${int}.${dec}` : int || ".";
+};
+
+const parseAmountValue = (val: string): number => Number(val.replace(/,/g, "")) || 0;
+
 const emptyForm = {
   expense_date: dayjs().format("YYYY-MM-DD"),
-  category: "",
+  categoryId: "",
+  customCategory: "",
   amount: "",
   payment_method: "cash",
   notes: "",
@@ -80,6 +111,12 @@ const ExpensesPage = () => {
   const createExpense = useCreateExpense();
   const updateExpense = useUpdateExpense();
   const deleteExpense = useDeleteExpense();
+  const {
+    categories,
+    selectableCategories,
+    otherCategory,
+    loading: categoriesLoading,
+  } = useExpenseCategories(currentBusinessId);
 
   const activeBusiness = useMemo(
     () => businesses.find((business) => business.id === currentBusinessId) ?? businesses[0] ?? null,
@@ -101,13 +138,49 @@ const ExpensesPage = () => {
   const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const to = Math.min(page * PAGE_SIZE, total);
 
+  const selectedCategory = categories.find((category) => category.id === form.categoryId);
+  const isOtherSelected = selectedCategory?.is_other ?? false;
+  const resolvedCategory = isOtherSelected
+    ? form.customCategory.trim()
+    : (selectedCategory?.name ?? "");
+
+  const openExpenseDialog = (expense?: Expense) => {
+    if (expense) {
+      const byId = expense.category_id
+        ? categories.find((category) => category.id === expense.category_id)
+        : null;
+      const matched =
+        byId ??
+        selectableCategories.find(
+          (category) => category.name.toLowerCase() === expense.category.toLowerCase(),
+        );
+      const useOther = matched?.is_other || !matched;
+      setEditingId(expense.id);
+      setForm({
+        expense_date: expense.expense_date,
+        categoryId: matched?.id ?? otherCategory?.id ?? "",
+        customCategory: useOther ? expense.category : "",
+        amount: String(expense.amount),
+        payment_method: expense.payment_method,
+        notes: expense.notes ?? "",
+      });
+    } else {
+      setEditingId(null);
+      setForm(emptyForm);
+    }
+    setDialogOpen(true);
+  };
+
+  const expenseAmount = parseAmountValue(form.amount);
+
   const handleSave = () => {
-    if (!currentBusinessId || !form.category.trim() || Number(form.amount) <= 0) return;
+    if (!currentBusinessId || !resolvedCategory || expenseAmount <= 0) return;
     const payload = {
       business_id: currentBusinessId,
       expense_date: form.expense_date,
-      category: form.category.trim(),
-      amount: Number(form.amount),
+      category: resolvedCategory,
+      category_id: isOtherSelected ? (otherCategory?.id ?? null) : (selectedCategory?.id ?? null),
+      amount: expenseAmount,
       payment_method: form.payment_method.trim() || "cash",
       notes: form.notes.trim() || undefined,
     };
@@ -172,14 +245,7 @@ const ExpensesPage = () => {
             <span className="font-medium">{activeBusiness?.name ?? "your business"}</span>.
           </p>
         </div>
-        <Button
-          size="sm"
-          onClick={() => {
-            setEditingId(null);
-            setForm(emptyForm);
-            setDialogOpen(true);
-          }}
-        >
+        <Button size="sm" onClick={() => openExpenseDialog()}>
           <Plus className="mr-1 size-4" />
           Add Expense
         </Button>
@@ -242,15 +308,7 @@ const ExpensesPage = () => {
                   : "No expenses recorded yet. Add your first expense."}
               </p>
               {!debouncedSearch.trim() && !fromDate && !toDate && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    setEditingId(null);
-                    setForm(emptyForm);
-                    setDialogOpen(true);
-                  }}
-                >
+                <Button size="sm" variant="outline" onClick={() => openExpenseDialog()}>
                   <Plus className="mr-1 size-4" />
                   Add Expense
                 </Button>
@@ -288,17 +346,7 @@ const ExpensesPage = () => {
                           size="icon"
                           variant="ghost"
                           className="size-8"
-                          onClick={() => {
-                            setEditingId(expense.id);
-                            setForm({
-                              expense_date: expense.expense_date,
-                              category: expense.category,
-                              amount: String(expense.amount),
-                              payment_method: expense.payment_method,
-                              notes: expense.notes ?? "",
-                            });
-                            setDialogOpen(true);
-                          }}
+                          onClick={() => openExpenseDialog(expense)}
                         >
                           <Pencil className="size-4" />
                         </Button>
@@ -372,19 +420,50 @@ const ExpensesPage = () => {
             </div>
             <div className="space-y-2">
               <Label>Category</Label>
-              <Input
-                value={form.category}
-                onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
-                placeholder="e.g. Transport, Rent, Utilities"
-              />
+              <Select
+                value={form.categoryId}
+                onValueChange={(value) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    categoryId: value,
+                    customCategory: categories.find((c) => c.id === value)?.is_other
+                      ? prev.customCategory
+                      : "",
+                  }))
+                }
+                disabled={categoriesLoading || categories.length === 0}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {selectableCategories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                  {otherCategory ? (
+                    <SelectItem value={otherCategory.id}>{otherCategory.name}</SelectItem>
+                  ) : null}
+                </SelectContent>
+              </Select>
+              {isOtherSelected ? (
+                <Input
+                  value={form.customCategory}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, customCategory: e.target.value }))
+                  }
+                  placeholder="Specify category"
+                />
+              ) : null}
             </div>
             <div className="space-y-2">
               <Label>Amount</Label>
               <Input
                 inputMode="decimal"
-                value={form.amount}
+                value={formatAmountDisplay(form.amount)}
                 onChange={(e) =>
-                  setForm((prev) => ({ ...prev, amount: e.target.value.replace(/[^\d.]/g, "") }))
+                  setForm((prev) => ({ ...prev, amount: parseAmountInput(e.target.value) }))
                 }
                 placeholder="0.00"
               />
@@ -413,7 +492,12 @@ const ExpensesPage = () => {
             <Button
               onClick={handleSave}
               isLoading={createExpense.isPending || updateExpense.isPending}
-              disabled={!form.category.trim() || Number(form.amount) <= 0}
+              disabled={
+                !form.categoryId ||
+                !resolvedCategory ||
+                expenseAmount <= 0 ||
+                categoriesLoading
+              }
             >
               Save Expense
             </Button>
