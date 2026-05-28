@@ -220,46 +220,60 @@ export const useUpdateProduct = () => {
   });
 };
 
-export const useInventoryMovements = (productId: string | null) => {
+export const useInventoryMovements = (
+  productId: string | null,
+  page: number = 1,
+  pageSize: number = 20,
+) => {
   const [movements, setMovements] = useState<InventoryMovement[]>([]);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const latestIdRef = useRef(productId);
   latestIdRef.current = productId;
+  const usePagination = page >= 1 && pageSize >= 1;
 
   const refetch = useCallback(async () => {
     if (!productId) {
       setMovements([]);
+      setTotalCount(null);
       setLoading(false);
       return;
     }
 
     const requestedId = productId;
     const supabase = createClient();
-    const { data, error } = await runSupabaseDetailQueryWithRetry(supabase, async () =>
+    const response = await runSupabaseDetailQueryWithRetry(supabase, async () =>
       supabase
         .from("inventory_movements")
-        .select("*")
+        .select("*", { count: "exact" })
         .eq("product_id", requestedId)
         .order("created_at", { ascending: false })
-        .limit(50),
+        .range((page - 1) * pageSize, page * pageSize - 1),
     );
+    const { data, error } = response;
+    const count: number | null =
+      "count" in response ? ((response as { count: number | null }).count ?? null) : null;
 
     if (latestIdRef.current !== requestedId) return;
 
     if (error) {
       setMovements([]);
+      setTotalCount(null);
     } else {
       setMovements((data as InventoryMovement[]) ?? []);
+      setTotalCount(
+        usePagination ? (count ?? null) : ((data as InventoryMovement[] | null)?.length ?? 0),
+      );
     }
     setLoading(false);
-  }, [productId]);
+  }, [productId, page, pageSize, usePagination]);
 
   useEffect(() => {
     setLoading(true);
     refetch();
   }, [refetch]);
 
-  return { movements, loading, refetch };
+  return { movements, loading, refetch, totalCount };
 };
 
 export const useAdjustProductStock = () => {
