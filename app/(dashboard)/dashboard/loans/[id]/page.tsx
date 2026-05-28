@@ -5,6 +5,8 @@ import Link from "next/link";
 import dayjs from "dayjs";
 import { useRouteUuidParam } from "@/hooks/use-route-uuid-param";
 import { useLoan, useRecordLoanPayment, useCreateInvoiceFromLoan } from "@/hooks/use-loans";
+import { formatAmount as formatCurrencyAmount } from "@/hooks/use-format-amount";
+import { findCurrency, useCurrencies } from "@/hooks/use-currencies";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +24,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const formatAmountDisplay = (val: string): string => {
   if (val === "" || val === ".") return val;
@@ -44,6 +47,7 @@ const parseAmountInput = (raw: string): string => {
 const LoanDetailPage = () => {
   const router = useRouter();
   const id = useRouteUuidParam("id");
+  const { currencies } = useCurrencies();
   const { loan, items, payments, loading, refetch } = useLoan(id);
   const recordPayment = useRecordLoanPayment();
   const createInvoiceFromLoan = useCreateInvoiceFromLoan();
@@ -95,6 +99,16 @@ const LoanDetailPage = () => {
     );
   }
 
+  const formatLoanAmount = (amount: number) =>
+    formatCurrencyAmount(amount, findCurrency(currencies, loan.currency ?? "TZS"), {
+      decimalDigits: 0,
+    });
+
+  const paymentsReceived = payments.reduce(
+    (sum, payment) => sum + (Number(payment.amount) || 0),
+    0,
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -136,24 +150,29 @@ const LoanDetailPage = () => {
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium">Loan total</p>
               </div>
-              <p className="mt-2 text-2xl font-bold">{Number(loan.total).toLocaleString()}</p>
+              <p className="mt-2 text-2xl font-bold tabular-nums">
+                {formatLoanAmount(Number(loan.total))}
+              </p>
             </div>
             <div className="rounded-lg border p-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium">Outstanding</p>
               </div>
-              <p className="mt-2 text-2xl font-bold">
-                {Number(loan.outstanding_balance).toLocaleString()}
+              <p className="mt-2 text-2xl font-bold tabular-nums">
+                {formatLoanAmount(Number(loan.outstanding_balance))}
               </p>
             </div>
-            <div className="rounded-lg border p-4">
+            <div
+              className={cn(
+                "rounded-lg border p-4",
+                paymentsReceived > 0 ? "bg-green-50 text-green-800" : "",
+              )}
+            >
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium">Payments received</p>
               </div>
-              <p className="mt-2 text-2xl font-bold">
-                {payments
-                  .reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0)
-                  .toLocaleString()}
+              <p className="mt-2 text-2xl font-bold tabular-nums">
+                {formatLoanAmount(paymentsReceived)}
               </p>
             </div>
           </div>
@@ -182,14 +201,14 @@ const LoanDetailPage = () => {
                   <TableCell className="text-right">
                     {Number(item.quantity).toLocaleString()}
                   </TableCell>
-                  <TableCell className="text-right">
-                    {Number(item.unit_price).toLocaleString()}
+                  <TableCell className="text-right tabular-nums">
+                    {formatLoanAmount(Number(item.unit_price))}
                   </TableCell>
-                  <TableCell className="text-right">
-                    {Number(item.discount).toLocaleString()}
+                  <TableCell className="text-right tabular-nums">
+                    {formatLoanAmount(Number(item.discount))}
                   </TableCell>
-                  <TableCell className="text-right">
-                    {Number(item.total).toLocaleString()}
+                  <TableCell className="text-right tabular-nums">
+                    {formatLoanAmount(Number(item.total))}
                   </TableCell>
                 </TableRow>
               ))}
@@ -235,14 +254,14 @@ const LoanDetailPage = () => {
             <p className="text-muted-foreground text-xs">Payment impact</p>
             <p className="mt-1 text-sm">
               Remaining balance after this payment:{" "}
-              <span className="font-semibold">
-                {Math.max(outstandingBalance - paymentAmount, 0).toLocaleString()}
+              <span className="font-semibold tabular-nums">
+                {formatLoanAmount(Math.max(outstandingBalance - paymentAmount, 0))}
               </span>
             </p>
             {exceedsOutstanding ? (
               <p className="text-destructive mt-2 text-xs">
                 Payment amount cannot exceed outstanding balance (
-                {outstandingBalance.toLocaleString()}).
+                {formatLoanAmount(outstandingBalance)}).
               </p>
             ) : null}
           </div>
@@ -303,8 +322,8 @@ const LoanDetailPage = () => {
                     <TableCell>{dayjs(payment.payment_date).format("MMM D, YYYY")}</TableCell>
                     <TableCell>{payment.method}</TableCell>
                     <TableCell>{payment.reference || "—"}</TableCell>
-                    <TableCell className="text-right">
-                      {Number(payment.amount).toLocaleString()}
+                    <TableCell className="text-right tabular-nums">
+                      {formatLoanAmount(Number(payment.amount))}
                     </TableCell>
                   </TableRow>
                 ))}
