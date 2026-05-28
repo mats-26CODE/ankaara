@@ -3,7 +3,6 @@
 import Link from "next/link";
 import dayjs from "dayjs";
 import { useRouteUuidParam } from "@/hooks/use-route-uuid-param";
-import { useLoan } from "@/hooks/use-loans";
 import { useFormatAmount } from "@/hooks/use-format-amount";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
@@ -22,7 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 
 type ClientLoanRow = {
   id: string;
@@ -39,8 +38,10 @@ const ClientDetailPage = () => {
   const id = useRouteUuidParam("id");
   const [client, setClient] = useState<Client | null>(null);
   const [loans, setLoans] = useState<ClientLoanRow[]>([]);
+  const [loanPage, setLoanPage] = useState(1);
+  const [loanTotalCount, setLoanTotalCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const { loan: latestLoan } = useLoan(loans[0]?.id ?? null);
+  const LOAN_PAGE_SIZE = 10;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,17 +51,23 @@ const ClientDetailPage = () => {
       }
       const supabase = createClient();
       const { data: clientData } = await supabase.from("clients").select("*").eq("id", id).single();
-      const { data: loanData } = await supabase
+      const from = (loanPage - 1) * LOAN_PAGE_SIZE;
+      const to = from + LOAN_PAGE_SIZE - 1;
+      const { data: loanData, count: loanCount } = await supabase
         .from("loans")
-        .select("id, loan_number, loan_date, status, total, outstanding_balance")
+        .select("id, loan_number, loan_date, status, total, outstanding_balance", {
+          count: "exact",
+        })
         .eq("client_id", id)
-        .order("loan_date", { ascending: false });
+        .order("loan_date", { ascending: false })
+        .range(from, to);
       setClient((clientData as Client) ?? null);
       setLoans((loanData as ClientLoanRow[]) ?? []);
+      setLoanTotalCount(loanCount ?? null);
       setLoading(false);
     };
     fetchData();
-  }, [id]);
+  }, [id, loanPage]);
 
   if (loading) {
     return (
@@ -85,6 +92,10 @@ const ClientDetailPage = () => {
     (sum, loan) => sum + (Number(loan.outstanding_balance) || 0),
     0,
   );
+  const totalLoans = loanTotalCount ?? 0;
+  const loanLastPage = Math.max(1, Math.ceil(totalLoans / LOAN_PAGE_SIZE));
+  const loanFrom = totalLoans === 0 ? 0 : (loanPage - 1) * LOAN_PAGE_SIZE + 1;
+  const loanTo = Math.min(loanPage * LOAN_PAGE_SIZE, totalLoans);
 
   return (
     <div className="space-y-6">
@@ -140,14 +151,13 @@ const ClientDetailPage = () => {
               </TableHeader>
               <TableBody>
                 {loans.map((loan) => (
-                  <TableRow key={loan.id}>
+                  <TableRow
+                    key={loan.id}
+                    className="hover:bg-muted/50 cursor-pointer"
+                    onClick={() => router.push(`/dashboard/loans/${loan.id}`)}
+                  >
                     <TableCell>
-                      <Link
-                        href={`/dashboard/loans/${loan.id}`}
-                        className="underline underline-offset-2"
-                      >
-                        {loan.loan_number}
-                      </Link>
+                      {loan.loan_number}
                     </TableCell>
                     <TableCell>{dayjs(loan.loan_date).format("MMM D, YYYY")}</TableCell>
                     <TableCell>
@@ -166,22 +176,35 @@ const ClientDetailPage = () => {
               </TableBody>
             </Table>
           )}
+          {totalLoans > 0 && (
+            <div className="mt-4 flex flex-col gap-2 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-muted-foreground text-sm">
+                Showing {loanFrom}-{loanTo} of {totalLoans}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLoanPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={loanPage <= 1}
+                >
+                  <ChevronLeft className="mr-1 size-4" />
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLoanPage((prev) => Math.min(prev + 1, loanLastPage))}
+                  disabled={loanPage >= loanLastPage}
+                >
+                  Next
+                  <ChevronRight className="ml-1 size-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      {latestLoan?.id ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Latest loan snapshot</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm">
-              Latest loan is <span className="font-medium">{latestLoan.loan_number}</span> with
-              status <span className="font-medium">{latestLoan.status}</span>.
-            </p>
-          </CardContent>
-        </Card>
-      ) : null}
     </div>
   );
 };

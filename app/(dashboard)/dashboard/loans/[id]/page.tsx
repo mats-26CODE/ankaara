@@ -1,15 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import dayjs from "dayjs";
 import { useRouteUuidParam } from "@/hooks/use-route-uuid-param";
-import {
-  useLoan,
-  useRecordLoanPayment,
-  useClearLoanToSale,
-  useCreateInvoiceFromLoan,
-} from "@/hooks/use-loans";
+import { useLoan, useRecordLoanPayment, useCreateInvoiceFromLoan } from "@/hooks/use-loans";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,30 +23,45 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft } from "lucide-react";
 
+const formatAmountDisplay = (val: string): string => {
+  if (val === "" || val === ".") return val;
+  const n = Number(val.replace(/,/g, ""));
+  return Number.isNaN(n) ? val : n.toLocaleString();
+};
+
+const parseAmountInput = (raw: string): string => {
+  const cleaned = raw.replace(/,/g, "").replace(/[^\d.]/g, "");
+  const dotIdx = cleaned.indexOf(".");
+  if (dotIdx === -1) return cleaned;
+  const int = cleaned.slice(0, dotIdx);
+  const dec = cleaned
+    .slice(dotIdx + 1)
+    .replace(/\D/g, "")
+    .slice(0, 2);
+  return dec ? `${int}.${dec}` : int || ".";
+};
+
 const LoanDetailPage = () => {
   const router = useRouter();
   const id = useRouteUuidParam("id");
   const { loan, items, payments, loading, refetch } = useLoan(id);
   const recordPayment = useRecordLoanPayment();
-  const clearLoanToSale = useClearLoanToSale();
   const createInvoiceFromLoan = useCreateInvoiceFromLoan();
 
   const [amount, setAmount] = useState("");
   const [paymentDate, setPaymentDate] = useState(dayjs().format("YYYY-MM-DD"));
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [reference, setReference] = useState("");
-
-  const canClear = useMemo(
-    () => !!loan && Number(loan.outstanding_balance) === 0 && !loan.sale_id,
-    [loan],
-  );
+  const paymentAmount = Number(amount.replace(/,/g, "")) || 0;
+  const outstandingBalance = Number(loan?.outstanding_balance) || 0;
+  const exceedsOutstanding = paymentAmount > outstandingBalance;
 
   const submitPayment = () => {
-    if (!id || Number(amount) <= 0) return;
+    if (!id || paymentAmount <= 0) return;
     recordPayment.mutate(
       {
         loan_id: id,
-        amount: Number(amount),
+        amount: paymentAmount,
         payment_date: paymentDate,
         method: paymentMethod,
         reference: reference.trim() || null,
@@ -93,10 +103,15 @@ const LoanDetailPage = () => {
             <ArrowLeft className="size-4" />
           </Button>
           <div>
-          <h1 className="text-2xl font-bold tracking-tight">{loan.loan_number}</h1>
-          <p className="text-muted-foreground text-sm">
-            {loan.client?.name ?? "Client"} • {dayjs(loan.loan_date).format("MMM D, YYYY")}
-          </p>
+            <h1 className="text-2xl font-bold tracking-tight">{loan.loan_number}</h1>
+            <p className="text-muted-foreground text-sm">
+              {loan.client?.name ?? "Client"} • {dayjs(loan.loan_date).format("MMM D, YYYY")}
+            </p>
+            {loan.sale_id ? (
+              <p className="text-muted-foreground mt-1 text-xs">
+                Auto-converted to sale after final payment.
+              </p>
+            ) : null}
           </div>
         </div>
         <div className="flex gap-2">
@@ -111,36 +126,39 @@ const LoanDetailPage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Loan total</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xl font-semibold">{Number(loan.total).toLocaleString()}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Outstanding</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xl font-semibold">{Number(loan.outstanding_balance).toLocaleString()}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Payments received</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xl font-semibold">
-              {payments
-                .reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0)
-                .toLocaleString()}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Loan Stats</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">Loan total</p>
+              </div>
+              <p className="mt-2 text-2xl font-bold">{Number(loan.total).toLocaleString()}</p>
+            </div>
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">Outstanding</p>
+              </div>
+              <p className="mt-2 text-2xl font-bold">
+                {Number(loan.outstanding_balance).toLocaleString()}
+              </p>
+            </div>
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">Payments received</p>
+              </div>
+              <p className="mt-2 text-2xl font-bold">
+                {payments
+                  .reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0)
+                  .toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -161,10 +179,18 @@ const LoanDetailPage = () => {
               {items.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell>{item.description}</TableCell>
-                  <TableCell className="text-right">{Number(item.quantity).toLocaleString()}</TableCell>
-                  <TableCell className="text-right">{Number(item.unit_price).toLocaleString()}</TableCell>
-                  <TableCell className="text-right">{Number(item.discount).toLocaleString()}</TableCell>
-                  <TableCell className="text-right">{Number(item.total).toLocaleString()}</TableCell>
+                  <TableCell className="text-right">
+                    {Number(item.quantity).toLocaleString()}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {Number(item.unit_price).toLocaleString()}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {Number(item.discount).toLocaleString()}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {Number(item.total).toLocaleString()}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -177,13 +203,13 @@ const LoanDetailPage = () => {
           <CardTitle>Record payment</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-2">
               <Label>Amount</Label>
               <Input
                 inputMode="decimal"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value.replace(/[^\d.]/g, ""))}
+                value={formatAmountDisplay(amount)}
+                onChange={(e) => setAmount(parseAmountInput(e.target.value))}
                 placeholder="0.00"
               />
             </div>
@@ -201,49 +227,55 @@ const LoanDetailPage = () => {
               <Input value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Reference</Label>
+              <Label>Reference (optional)</Label>
               <Input value={reference} onChange={(e) => setReference(e.target.value)} />
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              onClick={submitPayment}
-              isLoading={recordPayment.isPending}
-              disabled={Number(amount) <= 0 || loan.status === "paid"}
-            >
-              Save payment
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() =>
-                clearLoanToSale.mutate(
-                  { loan_id: loan.id, sale_date: paymentDate },
-                  { onSuccess: () => refetch() },
-                )
-              }
-              isLoading={clearLoanToSale.isPending}
-              disabled={!canClear}
-            >
-              Clear loan to sale
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() =>
-                createInvoiceFromLoan.mutate(
-                  { loan_id: loan.id, issue_date: paymentDate },
-                  { onSuccess: () => refetch() },
-                )
-              }
-              isLoading={createInvoiceFromLoan.isPending}
-              disabled={!!loan.invoice_id}
-            >
-              {loan.invoice_id ? "Invoice created" : "Create invoice"}
-            </Button>
-            {loan.invoice_id ? (
-              <Button asChild variant="outline">
-                <Link href={`/dashboard/invoices/${loan.invoice_id}`}>View invoice</Link>
-              </Button>
+          <div className="rounded-md border p-3">
+            <p className="text-muted-foreground text-xs">Payment impact</p>
+            <p className="mt-1 text-sm">
+              Remaining balance after this payment:{" "}
+              <span className="font-semibold">
+                {Math.max(outstandingBalance - paymentAmount, 0).toLocaleString()}
+              </span>
+            </p>
+            {exceedsOutstanding ? (
+              <p className="text-destructive mt-2 text-xs">
+                Payment amount cannot exceed outstanding balance (
+                {outstandingBalance.toLocaleString()}).
+              </p>
             ) : null}
+          </div>
+          <div className="flex flex-col gap-3 border-t pt-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                onClick={submitPayment}
+                isLoading={recordPayment.isPending}
+                disabled={paymentAmount <= 0 || loan.status === "paid" || exceedsOutstanding}
+              >
+                Save payment
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                onClick={() =>
+                  createInvoiceFromLoan.mutate(
+                    { loan_id: loan.id, issue_date: paymentDate },
+                    { onSuccess: () => refetch() },
+                  )
+                }
+                isLoading={createInvoiceFromLoan.isPending}
+                disabled={!!loan.invoice_id || exceedsOutstanding}
+              >
+                {loan.invoice_id ? "Invoice created" : "Create invoice"}
+              </Button>
+              {loan.invoice_id ? (
+                <Button asChild variant="outline">
+                  <Link href={`/dashboard/invoices/${loan.invoice_id}`}>View invoice</Link>
+                </Button>
+              ) : null}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -271,7 +303,9 @@ const LoanDetailPage = () => {
                     <TableCell>{dayjs(payment.payment_date).format("MMM D, YYYY")}</TableCell>
                     <TableCell>{payment.method}</TableCell>
                     <TableCell>{payment.reference || "—"}</TableCell>
-                    <TableCell className="text-right">{Number(payment.amount).toLocaleString()}</TableCell>
+                    <TableCell className="text-right">
+                      {Number(payment.amount).toLocaleString()}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
