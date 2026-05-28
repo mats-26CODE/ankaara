@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   useClients,
   useCreateClient,
@@ -63,6 +64,7 @@ const emptyForm: FormState = { name: "", email: "", phone: "", address: "" };
 const PAGE_SIZE = 10;
 
 const ClientsPage = () => {
+  const router = useRouter();
   const { businesses, loading: bizLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
   const [page, setPage] = useState(1);
@@ -260,7 +262,11 @@ const ClientsPage = () => {
               </TableHeader>
               <TableBody>
                 {clients.map((client) => (
-                  <TableRow key={client.id}>
+                  <TableRow
+                    key={client.id}
+                    className="hover:bg-muted/50 cursor-pointer"
+                    onClick={() => router.push(`/dashboard/clients/${client.id}`)}
+                  >
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         <span>{client.name}</span>
@@ -280,7 +286,7 @@ const ClientsPage = () => {
                     <TableCell className="text-muted-foreground hidden max-w-[200px] truncate lg:table-cell">
                       {client.address || "—"}
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="size-8">

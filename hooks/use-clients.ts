@@ -220,6 +220,15 @@ export const useDeleteClient = () => {
         throw new Error("Cannot delete this client — they still have sales records.");
       }
 
+      const { count: loanCount } = await supabase
+        .from("loans")
+        .select("id", { count: "exact", head: true })
+        .eq("client_id", id);
+
+      if (loanCount && loanCount > 0) {
+        throw new Error("Cannot delete this client — they still have loan records.");
+      }
+
       const { error } = await supabase.from("clients").delete().eq("id", id);
       if (error) throw error;
     },

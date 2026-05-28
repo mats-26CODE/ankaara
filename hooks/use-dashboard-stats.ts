@@ -18,6 +18,7 @@ export type SalesStats = {
   totalProfit: number;
   todaySales: number;
   todayProfit: number;
+  todayExpenses: number;
 };
 
 export type InventoryStats = {
@@ -39,6 +40,7 @@ const defaultSalesStats: SalesStats = {
   totalProfit: 0,
   todaySales: 0,
   todayProfit: 0,
+  todayExpenses: 0,
 };
 
 const defaultInventoryStats: InventoryStats = {
@@ -132,6 +134,19 @@ const fetchDashboardStats = async (
         salesStats.todayProfit += profit;
       }
     }
+  }
+
+  const { data: todayExpenses } = await supabase
+    .from("expenses")
+    .select("amount")
+    .in("business_id", bizIds)
+    .eq("expense_date", today);
+
+  if (todayExpenses) {
+    salesStats.todayExpenses = todayExpenses.reduce(
+      (sum, expense) => sum + (Number(expense.amount) || 0),
+      0,
+    );
   }
 
   const { count: clientCountResult } = await supabase

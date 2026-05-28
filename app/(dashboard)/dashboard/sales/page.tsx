@@ -206,8 +206,20 @@ const SalesPage = () => {
                     <TableCell className="font-medium">{sale.sale_number}</TableCell>
                     <TableCell>{dayjs(sale.sale_date).format("MMM D, YYYY")}</TableCell>
                     <TableCell>
-                      <Badge variant={sale.source === "invoice" ? "secondary" : "default"}>
-                        {sale.source === "invoice" ? "Invoice" : "Direct"}
+                      <Badge
+                        variant={
+                          sale.source === "invoice"
+                            ? "secondary"
+                            : sale.source === "loan"
+                              ? "outline"
+                              : "default"
+                        }
+                      >
+                        {sale.source === "invoice"
+                          ? "Invoice"
+                          : sale.source === "loan"
+                            ? "Loan"
+                            : "Direct"}
                       </Badge>
                     </TableCell>
                     <TableCell className="hidden md:table-cell">

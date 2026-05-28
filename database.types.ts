@@ -150,6 +150,60 @@ export type Database = {
         };
         Relationships: [];
       };
+      expenses: {
+        Row: {
+          amount: number;
+          business_id: string;
+          category: string;
+          created_at: string;
+          created_by: string | null;
+          expense_date: string;
+          id: string;
+          notes: string | null;
+          payment_method: string;
+          updated_at: string;
+        };
+        Insert: {
+          amount: number;
+          business_id: string;
+          category: string;
+          created_at?: string;
+          created_by?: string | null;
+          expense_date?: string;
+          id?: string;
+          notes?: string | null;
+          payment_method?: string;
+          updated_at?: string;
+        };
+        Update: {
+          amount?: number;
+          business_id?: string;
+          category?: string;
+          created_at?: string;
+          created_by?: string | null;
+          expense_date?: string;
+          id?: string;
+          notes?: string | null;
+          payment_method?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expenses_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expenses_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       inventory_movements: {
         Row: {
           business_id: string;
@@ -506,6 +560,229 @@ export type Database = {
             columns: ["quotation_id"];
             isOneToOne: false;
             referencedRelation: "quotations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      loan_items: {
+        Row: {
+          base_price: number;
+          cost_total: number;
+          description: string;
+          discount: number;
+          id: string;
+          item_type: string;
+          loan_id: string;
+          product_id: string | null;
+          profit: number;
+          quantity: number;
+          total: number;
+          unit_price: number;
+        };
+        Insert: {
+          base_price?: number;
+          cost_total?: number;
+          description: string;
+          discount?: number;
+          id?: string;
+          item_type?: string;
+          loan_id: string;
+          product_id?: string | null;
+          profit?: number;
+          quantity?: number;
+          total?: number;
+          unit_price?: number;
+        };
+        Update: {
+          base_price?: number;
+          cost_total?: number;
+          description?: string;
+          discount?: number;
+          id?: string;
+          item_type?: string;
+          loan_id?: string;
+          product_id?: string | null;
+          profit?: number;
+          quantity?: number;
+          total?: number;
+          unit_price?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "loan_items_loan_id_fkey";
+            columns: ["loan_id"];
+            isOneToOne: false;
+            referencedRelation: "loans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "loan_items_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      loan_payments: {
+        Row: {
+          amount: number;
+          business_id: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          loan_id: string;
+          method: string;
+          notes: string | null;
+          payment_date: string;
+          reference: string | null;
+        };
+        Insert: {
+          amount: number;
+          business_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          loan_id: string;
+          method?: string;
+          notes?: string | null;
+          payment_date?: string;
+          reference?: string | null;
+        };
+        Update: {
+          amount?: number;
+          business_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          loan_id?: string;
+          method?: string;
+          notes?: string | null;
+          payment_date?: string;
+          reference?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "loan_payments_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "loan_payments_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "loan_payments_loan_id_fkey";
+            columns: ["loan_id"];
+            isOneToOne: false;
+            referencedRelation: "loans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      loans: {
+        Row: {
+          business_id: string;
+          client_id: string;
+          created_at: string;
+          created_by: string | null;
+          currency: string;
+          id: string;
+          invoice_id: string | null;
+          loan_date: string;
+          loan_number: string;
+          notes: string | null;
+          outstanding_balance: number;
+          paid_at: string | null;
+          sale_id: string | null;
+          status: string;
+          subtotal: number;
+          tax: number;
+          total: number;
+          total_cost: number;
+          updated_at: string;
+        };
+        Insert: {
+          business_id: string;
+          client_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          currency?: string;
+          id?: string;
+          invoice_id?: string | null;
+          loan_date?: string;
+          loan_number: string;
+          notes?: string | null;
+          outstanding_balance?: number;
+          paid_at?: string | null;
+          sale_id?: string | null;
+          status?: string;
+          subtotal?: number;
+          tax?: number;
+          total?: number;
+          total_cost?: number;
+          updated_at?: string;
+        };
+        Update: {
+          business_id?: string;
+          client_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          currency?: string;
+          id?: string;
+          invoice_id?: string | null;
+          loan_date?: string;
+          loan_number?: string;
+          notes?: string | null;
+          outstanding_balance?: number;
+          paid_at?: string | null;
+          sale_id?: string | null;
+          status?: string;
+          subtotal?: number;
+          tax?: number;
+          total?: number;
+          total_cost?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "loans_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "loans_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "loans_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "loans_invoice_id_fkey";
+            columns: ["invoice_id"];
+            isOneToOne: false;
+            referencedRelation: "invoices";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "loans_sale_id_fkey";
+            columns: ["sale_id"];
+            isOneToOne: false;
+            referencedRelation: "sales";
             referencedColumns: ["id"];
           },
         ];
@@ -919,6 +1196,7 @@ export type Database = {
           currency: string;
           id: string;
           invoice_id: string | null;
+          loan_id: string | null;
           notes: string | null;
           profit: number;
           recorded_at: string;
@@ -938,6 +1216,7 @@ export type Database = {
           currency?: string;
           id?: string;
           invoice_id?: string | null;
+          loan_id?: string | null;
           notes?: string | null;
           profit?: number;
           recorded_at?: string;
@@ -957,6 +1236,7 @@ export type Database = {
           currency?: string;
           id?: string;
           invoice_id?: string | null;
+          loan_id?: string | null;
           notes?: string | null;
           profit?: number;
           recorded_at?: string;
@@ -989,6 +1269,13 @@ export type Database = {
             columns: ["invoice_id"];
             isOneToOne: false;
             referencedRelation: "invoices";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "sales_loan_id_fkey";
+            columns: ["loan_id"];
+            isOneToOne: false;
+            referencedRelation: "loans";
             referencedColumns: ["id"];
           },
         ];
@@ -1267,6 +1554,35 @@ export type Database = {
         Args: { p_user_id: string };
         Returns: boolean;
       };
+      clear_loan_to_sale: {
+        Args: { p_loan_id: string; p_sale_date?: string };
+        Returns: {
+          business_id: string;
+          client_id: string | null;
+          created_at: string;
+          currency: string;
+          id: string;
+          invoice_id: string | null;
+          loan_id: string | null;
+          notes: string | null;
+          profit: number;
+          recorded_at: string;
+          sale_date: string;
+          sale_number: string;
+          source: string;
+          subtotal: number;
+          tax: number;
+          total: number;
+          total_cost: number;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "sales";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       convert_invoice_to_sale: {
         Args: { p_invoice_id: string; p_sale_date?: string };
         Returns: {
@@ -1276,6 +1592,7 @@ export type Database = {
           currency: string;
           id: string;
           invoice_id: string | null;
+          loan_id: string | null;
           notes: string | null;
           profit: number;
           recorded_at: string;
@@ -1311,6 +1628,7 @@ export type Database = {
           currency: string;
           id: string;
           invoice_id: string | null;
+          loan_id: string | null;
           notes: string | null;
           profit: number;
           recorded_at: string;
@@ -1326,6 +1644,74 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "sales";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      create_invoice_from_loan: {
+        Args: { p_due_date?: string; p_issue_date?: string; p_loan_id: string };
+        Returns: {
+          accent_color: string | null;
+          business_id: string;
+          client_id: string;
+          created_at: string;
+          currency: string;
+          due_date: string;
+          footer_note: string | null;
+          id: string;
+          invoice_number: string;
+          issue_date: string;
+          notes: string | null;
+          payment_link: string | null;
+          quotation_id: string | null;
+          status: string;
+          subtotal: number;
+          tax: number;
+          tax_percentage: number;
+          template_id: string;
+          total: number;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "invoices";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      create_loan: {
+        Args: {
+          p_business_id: string;
+          p_client_id: string;
+          p_currency?: string;
+          p_items?: Json;
+          p_loan_date?: string;
+          p_notes?: string;
+        };
+        Returns: {
+          business_id: string;
+          client_id: string;
+          created_at: string;
+          created_by: string | null;
+          currency: string;
+          id: string;
+          invoice_id: string | null;
+          loan_date: string;
+          loan_number: string;
+          notes: string | null;
+          outstanding_balance: number;
+          paid_at: string | null;
+          sale_id: string | null;
+          status: string;
+          subtotal: number;
+          tax: number;
+          total: number;
+          total_cost: number;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "loans";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -1359,12 +1745,50 @@ export type Database = {
         }[];
       };
       next_invoice_number: { Args: { p_business_id: string }; Returns: string };
+      next_loan_number: { Args: { p_business_id: string }; Returns: string };
       next_quotation_number: {
         Args: { p_business_id: string };
         Returns: string;
       };
       next_sale_number: { Args: { p_business_id: string }; Returns: string };
       resolve_sale_short_link: { Args: { p_slug: string }; Returns: string };
+      record_loan_payment: {
+        Args: {
+          p_amount: number;
+          p_loan_id: string;
+          p_method?: string;
+          p_notes?: string;
+          p_payment_date?: string;
+          p_reference?: string;
+        };
+        Returns: {
+          business_id: string;
+          client_id: string;
+          created_at: string;
+          created_by: string | null;
+          currency: string;
+          id: string;
+          invoice_id: string | null;
+          loan_date: string;
+          loan_number: string;
+          notes: string | null;
+          outstanding_balance: number;
+          paid_at: string | null;
+          sale_id: string | null;
+          status: string;
+          subtotal: number;
+          tax: number;
+          total: number;
+          total_cost: number;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "loans";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       set_confirmation: {
         Args: { code: string; phone_number: string };
         Returns: string;

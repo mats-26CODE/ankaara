@@ -50,6 +50,7 @@ import {
   ShoppingCart,
   TrendingUp,
   Package,
+  Wallet,
 } from "lucide-react";
 
 /**
@@ -309,7 +310,7 @@ const DashboardPage = () => {
       </Card>
 
       {/* ────── Core POS Stats ────── */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-medium">Today's Sales</CardTitle>
@@ -341,7 +342,25 @@ const DashboardPage = () => {
           </CardContent>
           <CardFooter>
             <Button variant="outline" size="sm" asChild className="w-full">
-              <Link href="/dashboard/sales">View profit</Link>
+              <Link href="/dashboard/profits">View profit</Link>
+            </Button>
+          </CardFooter>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-sm font-medium">Today's Expenses</CardTitle>
+            <Wallet className="size-4 text-amber-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold">
+              {statsLoading ? "—" : formatAmount(salesStats.todayExpenses, { decimalDigits: 0 })}
+            </div>
+            <p className="text-muted-foreground mt-1 text-xs">Expenses dated today</p>
+          </CardContent>
+          <CardFooter>
+            <Button variant="outline" size="sm" asChild className="w-full">
+              <Link href="/dashboard/expenses">View expenses</Link>
             </Button>
           </CardFooter>
         </Card>
@@ -437,6 +456,12 @@ const DashboardPage = () => {
               <Link href="/dashboard/clients">
                 <Users className="mr-2 size-4" />
                 Manage Clients
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link href="/dashboard/loans">
+                <Users className="mr-2 size-4" />
+                Manage Loans
               </Link>
             </Button>
             <Button variant="outline" className="w-full justify-start" asChild>

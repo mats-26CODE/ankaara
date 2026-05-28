@@ -12,6 +12,9 @@ import {
   Users,
   Package,
   ShoppingCart,
+  Wallet,
+  HandCoins,
+  ChartColumnIncreasing,
   Plus,
   ChevronRight,
   Send,
@@ -115,6 +118,19 @@ export const DashboardSidebar = () => {
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname.startsWith("/dashboard/profits")}
+                  tooltip="Profits"
+                >
+                  <Link href="/dashboard/profits">
+                    <ChartColumnIncreasing className="size-4" />
+                    <span>Profits</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
               {/* Inventory */}
               <SidebarMenuItem>
                 <SidebarMenuButton
@@ -139,6 +155,32 @@ export const DashboardSidebar = () => {
                   <Link href="/dashboard/clients">
                     <Users className="size-4" />
                     <span>Clients</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname.startsWith("/dashboard/loans")}
+                  tooltip="Loans"
+                >
+                  <Link href="/dashboard/loans">
+                    <HandCoins className="size-4" />
+                    <span>Loans</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname.startsWith("/dashboard/expenses")}
+                  tooltip="Expenses"
+                >
+                  <Link href="/dashboard/expenses">
+                    <Wallet className="size-4" />
+                    <span>Expenses</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
