@@ -16,6 +16,8 @@ import {
 } from "@/components/shared/scroll-reveal";
 import { useLandingMotion } from "@/hooks/use-landing-motion";
 
+const HERO_AVATARS = ["/avatar_one.png", "/avatar_two.png", "/avatar_three.png"] as const;
+
 const HeroSection = () => {
   const { t } = useTranslation();
   const { user } = useUser();
@@ -51,25 +53,25 @@ const HeroSection = () => {
         >
           <motion.div
             variants={landingFadeUpTight}
-            className="dark:bg-primary/10 border-border dark:border-primary/10 rounded-full border bg-gray-100 px-4 py-2"
+            className="dark:bg-primary/10 border-border dark:border-primary/10 max-w-[min(100%,20rem)] rounded-full border bg-gray-100 px-3 py-1.5 sm:max-w-none sm:px-4 sm:py-2"
           >
-            <p className="text-muted-foreground dark:text-primary-foreground text-sm font-medium tracking-wide">
+            <p className="text-muted-foreground dark:text-primary-foreground text-xs font-medium tracking-wide text-balance sm:text-sm">
               {t("landing.heroLabel")}
             </p>
           </motion.div>
 
           <motion.div
             variants={landingFadeUp}
-            className="mx-auto w-full max-w-2xl space-y-2 md:max-w-3xl md:space-y-2.5 lg:max-w-4xl"
+            className="mx-auto w-full max-w-2xl space-y-2 sm:space-y-2.5 md:max-w-3xl lg:max-w-4xl"
           >
-            <h1 className="text-foreground text-4xl leading-[1.08] font-bold tracking-tight text-pretty md:text-5xl lg:text-6xl">
+            <h1 className="text-foreground text-3xl leading-[1.12] font-bold tracking-tight text-balance sm:text-4xl sm:leading-[1.1] md:text-5xl lg:text-6xl">
               {t("landing.headline")}
             </h1>
 
-            <p className="text-muted-foreground text-base text-pretty md:text-lg">
+            <p className="text-muted-foreground text-sm leading-relaxed text-pretty sm:text-base sm:leading-relaxed md:text-lg">
               {t("landing.subheadline")}
             </p>
-            <p className="text-muted-foreground/90 text-sm text-pretty md:text-base">
+            <p className="text-muted-foreground/90 text-xs leading-relaxed text-pretty sm:text-sm md:text-base">
               {t("landing.supportingText")}
             </p>
           </motion.div>
@@ -94,18 +96,21 @@ const HeroSection = () => {
             className="flex flex-col items-center justify-center gap-5"
           >
             <AvatarGroup className="grayscale">
-              <Avatar className="size-10">
-                <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
-              <Avatar className="size-10">
-                <AvatarImage src="https://github.com/maxleiter.png" alt="@maxleiter" />
-                <AvatarFallback>LR</AvatarFallback>
-              </Avatar>
-              <Avatar className="size-10">
-                <AvatarImage src="https://github.com/evilrabbit.png" alt="@evilrabbit" />
-                <AvatarFallback>ER</AvatarFallback>
-              </Avatar>
+              {HERO_AVATARS.map((src, index) => {
+                const key = testimonialKeys[index];
+                const name = t(`landing.testimonials.${key}.name`);
+                const initials = name
+                  .split(" ")
+                  .map((part) => part[0])
+                  .join("");
+
+                return (
+                  <Avatar key={src} className="size-10">
+                    <AvatarImage src={src} alt={name} />
+                    <AvatarFallback>{initials}</AvatarFallback>
+                  </Avatar>
+                );
+              })}
             </AvatarGroup>
 
             <div className="flex flex-col items-center justify-center space-y-2">
@@ -114,7 +119,9 @@ const HeroSection = () => {
                   <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" aria-hidden />
                 ))}
               </div>
-              <p className="text-muted-foreground text-sm">{t("landing.socialProof")}</p>
+              <p className="text-muted-foreground/90 text-xs leading-relaxed text-pretty sm:text-sm md:text-base">
+                {t("landing.socialProof")}
+              </p>
             </div>
           </motion.div>
         </motion.div>
@@ -189,7 +196,10 @@ const HeroSection = () => {
 
                   <div className="mt-5 flex items-center gap-3">
                     <Avatar className="border-border size-9 border">
-                      <AvatarImage src="" alt="" />
+                      <AvatarImage
+                        src={HERO_AVATARS[index]}
+                        alt={t(`landing.testimonials.${key}.name`)}
+                      />
                       <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
                         {t(`landing.testimonials.${key}.name`)
                           .split(" ")

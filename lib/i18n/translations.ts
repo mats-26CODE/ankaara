@@ -48,9 +48,9 @@ export const translations = {
       },
     },
     footer: {
-      tagline: `${APP_NAME} · POS, Mauzo na Ankara kwa Urahisi`,
+      tagline: `${APP_NAME} · POS mtandaoni rahisi kwa biashara zinazokua`,
       description:
-        "Jukwaa la biashara kwa mauzo, hifadhi ya bidhaa, ankara na quotation — rekodi kila muamala, fuatilia stoku, na uelewe faida yako kwa uwazi.",
+        "Usimamizi wa biashara mtandaoni kwa biashara zinazokua. Mauzo, hifadhi, ankara, matumizi, mikopo na faida halisi — mahali pamoja.",
       company: "Kampuni",
       aboutUs: "Kuhusu Sisi",
       resources: "Rasilimali",
@@ -591,9 +591,9 @@ export const translations = {
       },
     },
     footer: {
-      tagline: `${APP_NAME} · POS, Sales and Invoicing Made Simple`,
+      tagline: `${APP_NAME} · Simple online POS for growing businesses`,
       description:
-        "A business platform for sales, inventory, invoices and quotations - record every transaction, track stock, and understand profit clearly.",
+        "Simple online business management for growing businesses. Sales, inventory, invoices, expenses, loans, and real profit—all in one place.",
       company: "Company",
       aboutUs: "About Us",
       resources: "Resources",
