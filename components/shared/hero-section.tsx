@@ -11,14 +11,15 @@ import {
   landingEase,
   landingFadeUp,
   landingFadeUpTight,
-  landingStaggerLoose,
   landingStaggerParent,
   landingViewport,
 } from "@/components/shared/scroll-reveal";
+import { useLandingMotion } from "@/hooks/use-landing-motion";
 
 const HeroSection = () => {
   const { t } = useTranslation();
   const { user } = useUser();
+  const { instant, scrollViewport } = useLandingMotion();
   const testimonialKeys = ["one", "two", "three"] as const;
   const trustMetrics = [
     {
@@ -26,12 +27,12 @@ const HeroSection = () => {
       label: t("landing.trustMetrics.salesLabel"),
     },
     {
-      value: t("landing.trustMetrics.inventoryValue"),
-      label: t("landing.trustMetrics.inventoryLabel"),
+      value: t("landing.trustMetrics.expensesValue"),
+      label: t("landing.trustMetrics.expensesLabel"),
     },
     {
-      value: t("landing.trustMetrics.reportsValue"),
-      label: t("landing.trustMetrics.reportsLabel"),
+      value: t("landing.trustMetrics.profitValue"),
+      label: t("landing.trustMetrics.profitLabel"),
     },
   ];
 
@@ -41,11 +42,11 @@ const HeroSection = () => {
         className="from-primary/15 via-primary/5 to-accent/10 absolute inset-0 -z-10 bg-linear-to-br"
         aria-hidden
       />
-      <div className="container mx-auto w-full px-4 pt-16 pb-16 md:max-w-4xl">
+      <div className="container mx-auto w-full px-4 pt-14 pb-14 md:max-w-5xl md:pt-16 md:pb-14">
         <motion.div
-          className="flex flex-col items-center space-y-4 text-center md:space-y-7"
+          className="flex flex-col items-center space-y-4 text-center md:space-y-6"
           variants={landingStaggerParent}
-          initial="hidden"
+          initial={instant ? "visible" : "hidden"}
           animate="visible"
         >
           <motion.div
@@ -57,13 +58,19 @@ const HeroSection = () => {
             </p>
           </motion.div>
 
-          <motion.div variants={landingFadeUp} className="space-y-3">
-            <h1 className="text-foreground text-4xl leading-[1.1] font-bold tracking-tight text-balance capitalize md:text-5xl lg:text-7xl 2xl:text-8xl">
+          <motion.div
+            variants={landingFadeUp}
+            className="mx-auto w-full max-w-2xl space-y-2 md:max-w-3xl md:space-y-2.5 lg:max-w-4xl"
+          >
+            <h1 className="text-foreground text-4xl leading-[1.08] font-bold tracking-tight text-pretty md:text-5xl lg:text-6xl">
               {t("landing.headline")}
             </h1>
 
-            <p className="text-muted-foreground mx-auto max-w-xl text-base text-pretty md:text-lg">
+            <p className="text-muted-foreground text-base text-pretty md:text-lg">
               {t("landing.subheadline")}
+            </p>
+            <p className="text-muted-foreground/90 text-sm text-pretty md:text-base">
+              {t("landing.supportingText")}
             </p>
           </motion.div>
 
@@ -113,27 +120,18 @@ const HeroSection = () => {
         </motion.div>
 
         <motion.div
-          className="border-border/70 bg-card/70 relative mt-14 overflow-hidden rounded-3xl border p-4 shadow-sm backdrop-blur md:mt-18 md:p-6"
-          initial={{ opacity: 0, y: 48, scale: 0.98 }}
-          whileInView={{ opacity: 1, y: 0, scale: 1 }}
-          viewport={landingViewport}
-          transition={{ duration: 0.58, ease: landingEase }}
+          className="border-border/70 bg-card/70 relative mt-14 overflow-hidden rounded-3xl border p-4 shadow-sm md:mt-18 md:p-6 md:backdrop-blur"
+          initial={instant ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={scrollViewport}
+          transition={{ duration: instant ? 0 : 0.4, ease: landingEase }}
         >
           <div
             className="from-primary/10 to-accent/10 pointer-events-none absolute inset-0 bg-linear-to-br via-transparent"
             aria-hidden
           />
-          <motion.div
-            className="relative space-y-6"
-            variants={landingStaggerLoose}
-            initial="hidden"
-            whileInView="visible"
-            viewport={landingViewport}
-          >
-            <motion.div
-              variants={landingFadeUpTight}
-              className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
-            >
+          <div className="relative space-y-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="text-center md:text-left">
                 <p className="text-primary text-xs font-semibold tracking-[0.22em] uppercase">
                   {t("landing.trustedBy")}
@@ -149,15 +147,20 @@ const HeroSection = () => {
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div variants={landingStaggerParent} className="grid gap-3 md:grid-cols-3">
+            <motion.div
+              variants={landingStaggerParent}
+              initial={instant ? "visible" : "hidden"}
+              whileInView="visible"
+              viewport={scrollViewport}
+              className="grid gap-3 md:grid-cols-3"
+            >
               {testimonialKeys.map((key, index) => (
                 <motion.div
                   key={key}
                   variants={landingFadeUpTight}
-                  whileHover={{ y: -4, transition: { duration: 0.22, ease: landingEase } }}
-                  className="group bg-background/85 hover:border-primary/40 relative overflow-hidden rounded-2xl border p-4 text-left shadow-xs transition-colors hover:shadow-md"
+                  className="group bg-background/85 hover:border-primary/40 relative overflow-hidden rounded-2xl border p-4 text-left shadow-xs transition-colors md:hover:shadow-md"
                 >
                   <div className="mb-4 flex items-center justify-between">
                     <div className="flex items-center gap-1">
@@ -206,7 +209,7 @@ const HeroSection = () => {
                 </motion.div>
               ))}
             </motion.div>
-          </motion.div>
+          </div>
         </motion.div>
       </div>
     </section>

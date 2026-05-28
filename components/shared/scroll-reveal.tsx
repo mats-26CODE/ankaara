@@ -1,20 +1,32 @@
 "use client";
 
 import * as React from "react";
-import { motion, type Variants } from "motion/react";
+import { motion, useReducedMotion, type Variants } from "motion/react";
 
 import { cn } from "@/lib/utils";
 
 export const landingEase = [0.22, 1, 0.36, 1] as const;
 
-export const landingViewport = { once: true, margin: "-10% 0px -6% 0px" } as const;
+/** Default scroll trigger — fires a bit before the section fully enters view. */
+export const landingViewport = {
+  once: true,
+  amount: 0.12,
+  margin: "0px 0px 80px 0px",
+} as const;
+
+/** Sections directly under the hero — reveal earlier to avoid empty gaps while scrolling. */
+export const landingViewportEager = {
+  once: true,
+  amount: 0.05,
+  margin: "0px 0px 40% 0px",
+} as const;
 
 export const landingStaggerParent: Variants = {
   hidden: {},
   visible: {
     transition: {
-      staggerChildren: 0.09,
-      delayChildren: 0.05,
+      staggerChildren: 0.05,
+      delayChildren: 0.02,
     },
   },
 };
@@ -23,27 +35,27 @@ export const landingStaggerLoose: Variants = {
   hidden: {},
   visible: {
     transition: {
-      staggerChildren: 0.12,
-      delayChildren: 0.1,
+      staggerChildren: 0.07,
+      delayChildren: 0.04,
     },
   },
 };
 
 export const landingFadeUp: Variants = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 0, y: 16 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, ease: landingEase },
+    transition: { duration: 0.38, ease: landingEase },
   },
 };
 
 export const landingFadeUpTight: Variants = {
-  hidden: { opacity: 0, y: 14 },
+  hidden: { opacity: 0, y: 10 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.42, ease: landingEase },
+    transition: { duration: 0.32, ease: landingEase },
   },
 };
 
@@ -51,7 +63,7 @@ export const landingFadeIn: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { duration: 0.45, ease: landingEase },
+    transition: { duration: 0.35, ease: landingEase },
   },
 };
 
@@ -86,6 +98,9 @@ export type ScrollRevealProps = {
   direction?: "up" | "down" | "left" | "right";
   distance?: number;
   duration?: number;
+  eager?: boolean;
+  /** Skip animation and show content immediately. */
+  instant?: boolean;
 };
 
 export const ScrollReveal = ({
@@ -94,9 +109,14 @@ export const ScrollReveal = ({
   as = "div",
   delay = 0,
   direction = "up",
-  distance = 32,
-  duration = 0.52,
+  distance = 20,
+  duration = 0.38,
+  eager = false,
+  instant = false,
 }: ScrollRevealProps) => {
+  const reduced = useReducedMotion();
+  const skip = instant || Boolean(reduced);
+
   const initial =
     direction === "up"
       ? { opacity: 0, y: distance }
@@ -107,12 +127,17 @@ export const ScrollReveal = ({
           : { opacity: 0, x: -distance };
 
   const Motion = motionFor(as);
+  const viewport = eager ? landingViewportEager : landingViewport;
+
+  if (skip) {
+    return <Motion className={cn(className)}>{children}</Motion>;
+  }
 
   return (
     <Motion
       initial={initial}
       whileInView={{ opacity: 1, x: 0, y: 0 }}
-      viewport={landingViewport}
+      viewport={viewport}
       transition={{ duration, delay, ease: landingEase }}
       className={cn(className)}
     >

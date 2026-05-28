@@ -182,25 +182,24 @@ export const translations = {
         "Ikiwa una maswali kuhusu sera hii ya faragha, tafadhali wasiliana nasi kwa barua pepe ya msaada.",
     },
     landing: {
-      tagline: `Endesha biashara yako kwa ${APP_NAME}`,
-      headline: "POS rahisi kwa mauzo, inventory na ankara",
+      tagline: `${APP_NAME} · POS mtandaoni rahisi kwa biashara zinazokua`,
+      headline: "Hatimaye Fahamu Biashara Yako Inayokua Inaendelea Vipi",
       subheadline:
-        "Rekodi mauzo ya dukani, badili ankara zilizolipwa kuwa mauzo, fuatilia bidhaa na huduma, na ona mapato na faida kwenye dashibodi moja.",
-      supportingText: `${APP_NAME} inakusaidia kusimamia mauzo, inventory, wateja, ankara na quotations bila mfumo mzito wa accounting.`,
+        "Mauzo, matumizi, mikopo na faida halisi katika mfumo mmoja rahisi mtandaoni. POS unayoweza kutegemea kwa biashara zinazokua—si programu nzito wala ghali.",
+      supportingText: "Anza bure. Panda daraja unapokua.",
       cta: "Anza Bure",
       ctaDashboard: "Nenda kwenye Dashibodi",
-      heroLabel: "POS ya kisasa kwa biashara yako",
-      noCreditCard: "Hakuna kadi ya malipo inayohitajika",
-      socialProof:
-        "Wamiliki wa biashara wanaotumia mfumo huu wanapongeza urahisi wa kurekodi mauzo kila siku",
+      heroLabel: "POS Mtandaoni kwa Biashara Zinazokua",
+      noCreditCard: "Hakuna kadi ya malipo inayohitajika · Anza bure",
+      socialProof: "Biashara zinazokua zinapenda uwazi na urahisi, si programu ngumu",
       trustedBy: "Inaaminika na maduka, watoa huduma na biashara zinazokua",
       trustMetrics: {
-        salesValue: "POS",
-        salesLabel: "Mauzo",
-        inventoryValue: "Stock",
-        inventoryLabel: "Hifadhi ya bidhaa",
-        reportsValue: "Faida",
-        reportsLabel: "Ripoti",
+        salesValue: "Mauzo",
+        salesLabel: "POS",
+        expensesValue: "Matumizi",
+        expensesLabel: "Kila siku",
+        profitValue: "Faida",
+        profitLabel: "Halisi",
       },
       testimonials: {
         one: {
@@ -218,31 +217,56 @@ export const translations = {
           affiliation: "Mtoa huduma",
         },
         three: {
-          quoteStart: "Kuanzia quotation mpaka ankara na sale, ",
-          quoteHighlight: "mtiririko ni mwepesi",
-          quoteEnd: " kwa timu yetu.",
+          quoteStart: "Tunarekodi mikopo na matumizi ",
+          quoteHighlight: "bila vitabu vya ziada",
+          quoteEnd: ", na tunajua faida halisi kila siku.",
           name: "Tiffany W.",
           affiliation: "Biashara inayokua",
         },
       },
       secondaryCta: "Jifunze Zaidi",
       simpleSection: {
-        title: "POS rahisi, lakini yenye nguvu",
-        createInvoices: "Rekodi mauzo ya bidhaa au huduma kwa haraka",
-        sendAndTrack: "Fuatilia stock, restock na historia ya bidhaa",
-        acceptPayments: "Tengeneza quotations na ankara kutoka kwa wateja wako",
-        monitorStatus: "Ona mauzo, mapato, gharama na faida kwa muda halisi",
+        title: "Kila kitu unachohitaji kuendesha duka lako",
+        recordSales: "Rekodi mauzo ya bidhaa au huduma kwa sekunde chache",
+        manageInventory: "Fuatilia stock, restock na historia ya bidhaa",
+        invoicesAndQuotes: "Tengeneza quotations na ankara, kisha badili zilizolipwa kuwa mauzo",
+        clientLoans:
+          "Toa mikopo kwa wateja, rekodi malipo, na mikopo iliyolipwa inabadilika mauzo kiotomatiki",
+        trackExpenses: "Andika matumizi ya kila siku kwa makundi ili ujue ulitumia nini",
+        profitDashboard: "Ona mauzo, gharama, matumizi na faida halisi kwa leo au muda wowote",
       },
       features: {
-        title: "Suluhisho Rahisi kwa Biashara Yako",
-        subtitle: `${APP_NAME} inakufanya uweze kurekodi na kusimamia rekodi za biashara yako kwa urahisi na uwazi.`,
+        title: "Imejengwa kwa biashara halisi",
+        subtitle: `${APP_NAME} inakuletea POS, mikopo, matumizi na faida katika mfumo mmoja rahisi.`,
         recordSales: {
-          title: "Rekodi Mauzo",
-          description: "Rekodi mauzo yako haraka na urahisi. Huru na rahisi kutumia.",
+          title: "Mauzo na POS",
+          description:
+            "Rekodi mauzo ya dukani, huduma, na mauzo kutoka ankara—na uone mapato na faida kwa kila muuzo.",
+        },
+        inventory: {
+          title: "Inventory na bidhaa",
+          description:
+            "Simamia bidhaa na huduma, fuatilia stock, na ona historia ya harakati za bidhaa.",
+        },
+        invoicesQuotations: {
+          title: "Ankara na quotations",
+          description:
+            "Tengeneza ankara na quotations za kitaalamu, shiriki na wateja, na badili zilizolipwa kuwa mauzo.",
+        },
+        clientLoans: {
+          title: "Mikopo ya wateja",
+          description:
+            "Toa bidhaa kwa mkopo, rekodi malipo ya sehemu, tengeneza ankara kutoka mkopo, na ubadilishe mikopo iliyokamilika kuwa mauzo.",
         },
         trackExpenses: {
-          title: "Fuatilia matumizi",
-          description: "Hifadhi matumizi kwa makundi na usimamie matumizi yako kwa urahisi.",
+          title: "Matumizi ya kila siku",
+          description:
+            "Andika matumizi kwa makundi—rent, usafiri, mishahara na zaidi—na chagua Nyingine kwa matumizi maalum.",
+        },
+        profitDashboard: {
+          title: "Dashibodi ya faida",
+          description:
+            "Angalia mapato, gharama za bidhaa, matumizi, na faida halisi kwa leo, mwezi huu, au muda wowote.",
         },
         monthlyReports: {
           title: "Ripoti za Kila Mwezi",
@@ -418,10 +442,10 @@ export const translations = {
         comingSoon: "Sehemu hii itajengwa hivi karibuni.",
       },
       finalCta: {
-        title: "Anza kusimamia mauzo yako leo",
+        title: "Anza kujua biashara yako kwa kweli",
         subtitle:
-          "Fungua akaunti ya bure, ongeza bidhaa au huduma zako, na rekodi muamala wako wa kwanza wa mauzo.",
-        cta: "Anza Bure Leo",
+          "Fungua akaunti bure na simamia mauzo, matumizi na faida kutoka dashibodi moja rahisi.",
+        cta: "Anza bure leo",
       },
     },
     auth: {
@@ -702,24 +726,24 @@ export const translations = {
         "If you have questions about this privacy policy, please contact us at our support email.",
     },
     landing: {
-      tagline: `${APP_NAME} · POS, Sales and Invoicing Made Simple`,
-      headline: "Simple POS for sales, inventory and invoices",
+      tagline: `${APP_NAME} · Simple online POS for growing businesses`,
+      headline: "Finally Know How Your Growing Business is Really Doing",
       subheadline:
-        "Record walk-in sales, convert paid invoices into sales, manage products and services, and track revenue and profit from one dashboard.",
-      supportingText: `${APP_NAME} helps businesses manage sales, inventory, clients, invoices and quotations without heavy accounting software.`,
+        "Sales, expenses, loans, and real profit in one simple online system. A reliable POS for growing businesses that want clarity—not complicated, expensive software.",
+      supportingText: "Start free. Upgrade when you grow.",
       cta: `Try ${APP_NAME} free`,
       ctaDashboard: "Go to Dashboard",
-      heroLabel: "Modern POS for Your Business",
-      noCreditCard: "No credit card required",
-      socialProof: "Rated 5.0 by businesses tracking daily sales",
+      heroLabel: "Online POS for Growing Businesses",
+      noCreditCard: "No credit card required · Start free",
+      socialProof: "Loved by growing businesses that want clarity, not complexity",
       trustedBy: "Trusted by shops, service providers and growing businesses",
       trustMetrics: {
-        salesValue: "POS",
-        salesLabel: "Sales",
-        inventoryValue: "Stock",
-        inventoryLabel: "Inventory",
-        reportsValue: "Profit",
-        reportsLabel: "Reports",
+        salesValue: "Sales",
+        salesLabel: "POS",
+        expensesValue: "Expenses",
+        expensesLabel: "Daily",
+        profitValue: "Profit",
+        profitLabel: "Real-time",
       },
       testimonials: {
         one: {
@@ -737,31 +761,56 @@ export const translations = {
           affiliation: "Service provider",
         },
         three: {
-          quoteStart: "From quotation to invoice to sale, ",
-          quoteHighlight: "the flow is simple",
-          quoteEnd: " for our team.",
+          quoteStart: "We track loans and expenses ",
+          quoteHighlight: "without extra notebooks",
+          quoteEnd: ", and we know our real profit every day.",
           name: "Tiffany W.",
           affiliation: "Growing business",
         },
       },
       secondaryCta: "Learn more",
       simpleSection: {
-        title: "Simple POS, powerful control",
-        createInvoices: "Record product or service sales in seconds",
-        sendAndTrack: "Track stock, restocks and product history",
-        acceptPayments: "Create quotations and invoices for your clients",
-        monitorStatus: "Monitor sales, revenue, costs and profit in real time",
+        title: "Everything you need to run your shop",
+        recordSales: "Record product or service sales in seconds",
+        manageInventory: "Track stock, restocks and product movement history",
+        invoicesAndQuotes: "Create quotations and invoices, then convert paid ones to sales",
+        clientLoans:
+          "Offer credit to trusted clients, record repayments, and auto-convert settled loans to sales",
+        trackExpenses: "Log daily expenses by category so you always know what you spent",
+        profitDashboard: "See sales, costs, expenses and net profit for today or any date range",
       },
       features: {
-        title: "Simple Solutions for Your Business",
-        subtitle: `${APP_NAME} makes it easy to record and manage your business records with clarity and transparency.`,
+        title: "Built for real businesses",
+        subtitle: `${APP_NAME} brings POS, client loans, expenses and profit together in one simple system.`,
         recordSales: {
-          title: "Record Sales",
-          description: "Record your sales quickly and easily. Free and simple to use.",
+          title: "Sales & POS",
+          description:
+            "Record walk-in sales, services, and invoice conversions—see revenue and profit on every sale.",
+        },
+        inventory: {
+          title: "Inventory & products",
+          description:
+            "Manage products and services, track stock levels, and review product movement history.",
+        },
+        invoicesQuotations: {
+          title: "Invoices & quotations",
+          description:
+            "Create professional invoices and quotations, share with clients, and convert paid invoices to sales.",
+        },
+        clientLoans: {
+          title: "Client loans",
+          description:
+            "Issue goods on credit, record partial payments, generate invoices from loans, and auto-convert fully paid loans to sales.",
         },
         trackExpenses: {
-          title: "Track Expenses",
-          description: "Store your expenses by category and manage your spending.",
+          title: "Daily expenses",
+          description:
+            "Log expenses by category—rent, transport, salaries and more—with an Other option for custom types.",
+        },
+        profitDashboard: {
+          title: "Profit dashboard",
+          description:
+            "View revenue, cost of goods, expenses, and net profit for today, this month, or any timeline you choose.",
         },
         monthlyReports: {
           title: "Monthly Reports",
@@ -937,9 +986,9 @@ export const translations = {
       subscribeButton: "Subscribe",
       emailPlaceholder: "Enter your email",
       finalCta: {
-        title: "Start managing your sales today",
+        title: "Start knowing your business for real",
         subtitle:
-          "Create a free account, add your products or services, and record your first sale.",
+          "Create your free account and manage sales, expenses, and profit from one simple online dashboard.",
         cta: "Start free today",
       },
     },

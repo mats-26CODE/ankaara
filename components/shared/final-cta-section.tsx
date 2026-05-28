@@ -6,7 +6,6 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 import {
-  landingEase,
   landingFadeUp,
   landingStaggerParent,
   landingViewport,
@@ -17,13 +16,9 @@ const FinalCTASection = () => {
 
   return (
     <section className="relative overflow-hidden border-t border-border/60 bg-muted/20 py-16 md:py-24">
-      <motion.div
+      <div
         aria-hidden
         className="from-primary/8 via-transparent to-accent/10 pointer-events-none absolute inset-0 bg-linear-to-t"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={landingViewport}
-        transition={{ duration: 0.8, ease: landingEase }}
       />
       <motion.div
         className="container relative mx-auto w-full px-4 text-center md:max-w-4xl"

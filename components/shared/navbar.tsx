@@ -15,10 +15,12 @@ import type { LucideIcon } from "lucide-react";
 import {
   AlertTriangle,
   Building2,
+  ChartColumnIncreasing,
   CheckCircle2,
   Clock,
   Eye,
   FileText,
+  HandCoins,
   Languages,
   LayoutDashboard,
   LogOut,
@@ -33,6 +35,7 @@ import {
   Sun,
   User,
   Users,
+  Wallet,
   XCircle,
 } from "lucide-react";
 import Logo from "./logo";
@@ -72,16 +75,34 @@ const DASHBOARD_MOBILE_NAV_GROUPS: DashboardNavGroup[] = [
         isActive: (pathname) => pathname.startsWith("/dashboard/sales"),
       },
       {
+        label: "Profits",
+        href: "/dashboard/profits",
+        Icon: ChartColumnIncreasing,
+        isActive: (pathname) => pathname.startsWith("/dashboard/profits"),
+      },
+      {
         label: "Inventory",
         href: "/dashboard/products",
         Icon: Package,
-        isActive: (pathname) => pathname === "/dashboard/products",
+        isActive: (pathname) => pathname.startsWith("/dashboard/products"),
       },
       {
         label: "Clients",
         href: "/dashboard/clients",
         Icon: Users,
-        isActive: (pathname) => pathname === "/dashboard/clients",
+        isActive: (pathname) => pathname.startsWith("/dashboard/clients"),
+      },
+      {
+        label: "Loans",
+        href: "/dashboard/loans",
+        Icon: HandCoins,
+        isActive: (pathname) => pathname.startsWith("/dashboard/loans"),
+      },
+      {
+        label: "Expenses",
+        href: "/dashboard/expenses",
+        Icon: Wallet,
+        isActive: (pathname) => pathname.startsWith("/dashboard/expenses"),
       },
       {
         label: "Invoice Templates",
