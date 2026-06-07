@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { APP_NAME } from "@/constants/values";
+import { getCopyrightNotice } from "@/constants/values";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Collapsible } from "radix-ui";
 import {
@@ -629,7 +629,7 @@ export const DashboardSidebar = () => {
 
       <SidebarFooter className="border-sidebar-border border-t p-2 group-data-[collapsible=icon]:hidden">
         <p className="text-sidebar-foreground/50 text-center text-xs">
-          Copyright © {new Date().getFullYear()} All rights reserved.
+          {getCopyrightNotice()}
         </p>
       </SidebarFooter>
     </Sidebar>

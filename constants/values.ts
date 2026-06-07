@@ -8,7 +8,11 @@ export const CONTACT_US_WHATSAPP_URL = `https://wa.me/${CONTACT_US_PHONE.replace
 export const CONTACT_US_INSTAGRAM_URL = "https://www.instagram.com/ankaara.app/";
 export const CONTACT_US_FACEBOOK_URL = "https://www.facebook.com/ankaara.app";
 export const CONTACT_US_ADDRESS = "Dar es Salaam, Tanzania";
-export const APP_NAME = "ankaara";
+export const APP_NAME = "Ankaara";
 export const APP_URL = "https://ankaara.app";
+
+/** Sidebar footer: `Copyright © 2026 Ankaara. All rights reserved.` */
+export const getCopyrightNotice = (year = new Date().getFullYear()) =>
+  `Copyright © ${year} ${APP_NAME}. All rights reserved.`;
 export const PAYMENT_GATEWAY_URL = "https://snippe.sh";
 export const PAYMENT_GATEWAY_NAME = "Snippe";
