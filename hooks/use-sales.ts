@@ -64,6 +64,40 @@ const getSalesErrorMessage = (message: string) => {
 
 const DEFAULT_PAGE_SIZE = 10;
 
+const fetchClientIdsMatchingSearch = async (
+  businessId: string,
+  search: string,
+): Promise<string[]> => {
+  const supabase = createClient();
+  const clientClause = buildOrIlikeClause(["name", "email", "phone"], search);
+  if (!clientClause) return [];
+
+  const { data } = await supabase
+    .from("clients")
+    .select("id")
+    .eq("business_id", businessId)
+    .or(clientClause);
+
+  return data?.map((client) => client.id) ?? [];
+};
+
+const fetchInvoiceIdsMatchingSearch = async (
+  businessId: string,
+  search: string,
+): Promise<string[]> => {
+  const supabase = createClient();
+  const pattern = toIlikePattern(search);
+  if (!pattern) return [];
+
+  const { data } = await supabase
+    .from("invoices")
+    .select("id")
+    .eq("business_id", businessId)
+    .ilike("invoice_number", pattern);
+
+  return data?.map((invoice) => invoice.id) ?? [];
+};
+
 const fetchSaleIdsMatchingItemSearch = async (
   businessId: string,
   search: string,
@@ -106,6 +140,35 @@ const fetchSaleIdsMatchingItemSearch = async (
   return [...ids];
 };
 
+const buildSalesSearchOrClause = async (
+  businessId: string,
+  search: string,
+): Promise<string | null> => {
+  const trimmedSearch = sanitizeSearchTerm(search);
+  if (!trimmedSearch) return null;
+
+  const [matchingClientIds, matchingInvoiceIds, itemSaleIds] = await Promise.all([
+    fetchClientIdsMatchingSearch(businessId, trimmedSearch),
+    fetchInvoiceIdsMatchingSearch(businessId, trimmedSearch),
+    fetchSaleIdsMatchingItemSearch(businessId, trimmedSearch),
+  ]);
+
+  const parts: string[] = [];
+  const salesClause = buildOrIlikeClause(["sale_number", "source", "notes"], trimmedSearch);
+  if (salesClause) parts.push(salesClause);
+  if (matchingClientIds.length > 0) {
+    parts.push(`client_id.in.(${matchingClientIds.join(",")})`);
+  }
+  if (matchingInvoiceIds.length > 0) {
+    parts.push(`invoice_id.in.(${matchingInvoiceIds.join(",")})`);
+  }
+  if (itemSaleIds.length > 0) {
+    parts.push(`id.in.(${itemSaleIds.join(",")})`);
+  }
+
+  return parts.length > 0 ? parts.join(",") : null;
+};
+
 export const useSales = (
   businessId: string | null,
   page: number = 1,
@@ -145,20 +208,9 @@ export const useSales = (
     if (fromDate) query = query.gte("sale_date", fromDate);
     if (toDate) query = query.lte("sale_date", toDate);
 
-    const trimmedSearch = sanitizeSearchTerm(search ?? "");
-    if (trimmedSearch) {
-      const mainClause = buildOrIlikeClause(
-        ["sale_number", "source", "notes", "clients.name", "invoices.invoice_number"],
-        trimmedSearch,
-      );
-      const itemSaleIds = await fetchSaleIdsMatchingItemSearch(businessId, trimmedSearch);
-      if (itemSaleIds.length > 0 && mainClause) {
-        query = query.or(`${mainClause},id.in.(${itemSaleIds.join(",")})`);
-      } else if (mainClause) {
-        query = query.or(mainClause);
-      } else if (itemSaleIds.length > 0) {
-        query = query.in("id", itemSaleIds);
-      }
+    const searchOrClause = await buildSalesSearchOrClause(businessId, search ?? "");
+    if (searchOrClause) {
+      query = query.or(searchOrClause);
     }
 
     const { data, error, count } = await query;
