@@ -32,6 +32,7 @@ import { ArrowLeft, Pencil, Trash2, Share2, Quote, ShoppingCart } from "lucide-r
 import dayjs from "dayjs";
 import { useRouteUuidParam } from "@/hooks/use-route-uuid-param";
 import { canConvertInvoiceToSale } from "@/lib/invoice-sale-conversion";
+import { canShareInvoice } from "@/lib/invoices/can-share-invoice";
 
 const STATUS_CONFIG: Record<
   InvoiceStatus,
@@ -117,19 +118,7 @@ const InvoiceDetailPage = () => {
   }
 
   const isDraft = invoice.status === "draft";
-  const draftHasRequiredDetails =
-    !!invoice.client_id &&
-    !!invoice.issue_date &&
-    !!invoice.due_date &&
-    !!invoice.currency &&
-    (invoice.items?.length ?? 0) > 0 &&
-    (invoice.items ?? []).every(
-      (item) =>
-        !!String(item.description).trim() &&
-        Number(item.quantity) > 0 &&
-        Number(item.unit_price) > 0,
-    );
-  const canShare = !isDraft || draftHasRequiredDetails;
+  const canShare = canShareInvoice(invoice, invoice.items);
   const shareUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/invoice/${invoice.id}`;
   const canShowConvertToSale =
     canConvertInvoiceToSale(invoice.status, !!linkedSale) && !saleLoading;
@@ -295,7 +284,11 @@ const InvoiceDetailPage = () => {
         currency={invoice.currency}
         shareUrl={shareUrl}
         isDraft={isDraft}
-        onShare={() => sendInvoice.mutate(invoice.id, { onSuccess: () => refetch() })}
+        onSendIfDraft={async () => {
+          if (!isDraft) return;
+          await sendInvoice.mutateAsync(invoice.id);
+          await refetch();
+        }}
         invoiceElementId={INVOICE_ELEMENT_ID}
       />
 

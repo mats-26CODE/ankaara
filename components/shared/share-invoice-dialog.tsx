@@ -24,7 +24,7 @@ type ShareInvoiceDialogProps = {
   currency: string;
   shareUrl: string;
   isDraft?: boolean;
-  onShare?: () => void;
+  onSendIfDraft?: () => Promise<void>;
   /** ID of the invoice DOM element to capture as image (e.g. when sharing from dashboard detail) */
   invoiceElementId?: string;
 };
@@ -46,14 +46,22 @@ const ShareInvoiceDialog = ({
   currency,
   shareUrl,
   isDraft,
-  onShare,
+  onSendIfDraft,
   invoiceElementId,
 }: ShareInvoiceDialogProps) => {
-  const markAsSentIfDraft = () => {
-    if (isDraft && onShare) onShare();
-  };
   const [copied, setCopied] = useState(false);
   const [exporting, setExporting] = useState<"pdf" | "image" | null>(null);
+  const [sending, setSending] = useState(false);
+
+  const ensureSentBeforeShare = async () => {
+    if (!isDraft || !onSendIfDraft) return;
+    setSending(true);
+    try {
+      await onSendIfDraft();
+    } finally {
+      setSending(false);
+    }
+  };
 
   const message = `Hi ${clientName}, here is your invoice ${invoiceNumber} for ${currency} ${total}. You can view and pay it here: ${shareUrl}`;
 
@@ -87,17 +95,25 @@ const ShareInvoiceDialog = ({
   ];
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(shareUrl);
-    setCopied(true);
-    ToastAlert.success("Link copied to clipboard");
-    setTimeout(() => setCopied(false), 2000);
-    markAsSentIfDraft();
+    try {
+      await ensureSentBeforeShare();
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      ToastAlert.success("Link copied to clipboard");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      ToastAlert.error("Could not mark invoice as sent");
+    }
   };
 
-  const handleShare = (channel: ShareChannel) => {
-    const url = channel.getUrl(shareUrl, message);
-    window.open(url, "_blank", "noopener,noreferrer");
-    markAsSentIfDraft();
+  const handleShare = async (channel: ShareChannel) => {
+    try {
+      await ensureSentBeforeShare();
+      const url = channel.getUrl(shareUrl, message);
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch {
+      ToastAlert.error("Could not mark invoice as sent");
+    }
   };
 
   const captureInvoiceCanvas = async () => {
@@ -108,9 +124,9 @@ const ShareInvoiceDialog = ({
   };
 
   const handleExportImage = async () => {
-    markAsSentIfDraft();
     setExporting("image");
     try {
+      await ensureSentBeforeShare();
       const canvas = await captureInvoiceCanvas();
       if (!canvas) {
         ToastAlert.error("Could not capture invoice");
@@ -125,9 +141,9 @@ const ShareInvoiceDialog = ({
   };
 
   const handleExportPdf = async () => {
-    markAsSentIfDraft();
     setExporting("pdf");
     try {
+      await ensureSentBeforeShare();
       const canvas = await captureInvoiceCanvas();
       if (!canvas) {
         ToastAlert.error("Could not capture invoice");
@@ -142,19 +158,29 @@ const ShareInvoiceDialog = ({
   };
 
   const handleNativeShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `Invoice ${invoiceNumber}`,
-          text: message,
-          url: shareUrl,
-        });
-        markAsSentIfDraft();
-      } catch {
-        // user cancelled
-      }
+    if (!navigator.share) return;
+    try {
+      await ensureSentBeforeShare();
+      await navigator.share({
+        title: `Invoice ${invoiceNumber}`,
+        text: message,
+        url: shareUrl,
+      });
+    } catch {
+      // user cancelled or send failed
     }
   };
+
+  const handleOpenPublicPage = async () => {
+    try {
+      await ensureSentBeforeShare();
+      window.open(shareUrl, "_blank", "noopener,noreferrer");
+    } catch {
+      ToastAlert.error("Could not mark invoice as sent");
+    }
+  };
+
+  const isBusy = sending || !!exporting;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -164,6 +190,7 @@ const ShareInvoiceDialog = ({
           <DialogDescription>
             Share invoice <span className="font-medium">{invoiceNumber}</span> with {clientName} via
             any channel.
+            {isDraft ? " This draft will be marked as sent when you share." : null}
           </DialogDescription>
         </DialogHeader>
 
@@ -176,7 +203,7 @@ const ShareInvoiceDialog = ({
                 size="sm"
                 className="min-w-0 flex-1"
                 onClick={handleExportImage}
-                disabled={!!exporting}
+                disabled={isBusy}
               >
                 <FileImage className="mr-2 size-4 shrink-0" />
                 {exporting === "image" ? "Downloading..." : "Download as PNG"}
@@ -186,7 +213,7 @@ const ShareInvoiceDialog = ({
                 size="sm"
                 className="min-w-0 flex-1"
                 onClick={handleExportPdf}
-                disabled={!!exporting}
+                disabled={isBusy}
               >
                 <FileDown className="mr-2 size-4 shrink-0" />
                 {exporting === "pdf" ? "Downloading..." : "Download as PDF"}
@@ -204,7 +231,7 @@ const ShareInvoiceDialog = ({
                 className="bg-muted text-xs"
                 onClick={(e) => (e.target as HTMLInputElement).select()}
               />
-              <Button variant="outline" size="icon" className="shrink-0" onClick={handleCopy}>
+              <Button variant="outline" size="icon" className="shrink-0" onClick={handleCopy} disabled={isBusy}>
                 {copied ? (
                   <Check className="size-4 text-emerald-600" />
                 ) : (
@@ -222,7 +249,8 @@ const ShareInvoiceDialog = ({
                 <button
                   key={channel.id}
                   type="button"
-                  onClick={() => handleShare(channel)}
+                  onClick={() => void handleShare(channel)}
+                  disabled={isBusy}
                   className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${channel.color}`}
                 >
                   {channel.icon}
@@ -234,18 +262,16 @@ const ShareInvoiceDialog = ({
 
           {/* Native share (mobile) */}
           {typeof navigator !== "undefined" && "share" in navigator && (
-            <Button variant="outline" className="w-full" onClick={handleNativeShare}>
+            <Button variant="outline" className="w-full" onClick={handleNativeShare} disabled={isBusy}>
               <Share2 className="mr-2 size-4" />
               More sharing options...
             </Button>
           )}
 
           {/* Open public page */}
-          <Button variant="outline" className="w-full" asChild>
-            <a href={shareUrl} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="mr-2 size-4" />
-              Open Public Invoice Page
-            </a>
+          <Button variant="outline" className="w-full" onClick={handleOpenPublicPage} disabled={isBusy}>
+            <ExternalLink className="mr-2 size-4" />
+            Open Public Invoice Page
           </Button>
         </div>
       </DialogContent>

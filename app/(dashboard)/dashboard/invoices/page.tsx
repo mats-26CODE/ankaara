@@ -66,6 +66,7 @@ import {
 import dayjs from "dayjs";
 import { ShareInvoiceDialog } from "@/components/shared/share-invoice-dialog";
 import { canConvertInvoiceToSale } from "@/lib/invoice-sale-conversion";
+import { canShareInvoice } from "@/lib/invoices/can-share-invoice";
 
 const STATUS_CONFIG: Record<
   InvoiceStatus,
@@ -345,12 +346,18 @@ const InvoicesContent = () => {
                               </Link>
                             </DropdownMenuItem>
                           )}
-                          {inv.status !== "draft" && (
-                            <DropdownMenuItem onClick={() => handleShare(inv)}>
-                              <Share2 className="mr-2 size-4" />
-                              Share
-                            </DropdownMenuItem>
-                          )}
+                          <DropdownMenuItem
+                            onClick={() => handleShare(inv)}
+                            disabled={!canShareInvoice(inv)}
+                            title={
+                              !canShareInvoice(inv) && inv.status === "draft"
+                                ? "Complete client, dates, currency, and line items to share"
+                                : undefined
+                            }
+                          >
+                            <Share2 className="mr-2 size-4" />
+                            Share
+                          </DropdownMenuItem>
                           {canConvertInvoiceToSale(inv.status, !!inv.linked_sale_id) && (
                             <DropdownMenuItem asChild>
                               <Link href={`/dashboard/invoices/${inv.id}?convert=1`}>
@@ -417,7 +424,11 @@ const InvoicesContent = () => {
           currency={sharingInvoice.currency}
           shareUrl={`${typeof window !== "undefined" ? window.location.origin : ""}/invoice/${sharingInvoice.id}`}
           isDraft={sharingInvoice.status === "draft"}
-          onShare={() => sendInvoice.mutate(sharingInvoice.id, { onSuccess: () => refetch() })}
+          onSendIfDraft={async () => {
+            if (sharingInvoice.status !== "draft") return;
+            await sendInvoice.mutateAsync(sharingInvoice.id);
+            await refetch();
+          }}
         />
       )}
 
