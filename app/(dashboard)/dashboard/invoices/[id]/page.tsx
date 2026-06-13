@@ -33,6 +33,7 @@ import dayjs from "dayjs";
 import { useRouteUuidParam } from "@/hooks/use-route-uuid-param";
 import { canConvertInvoiceToSale } from "@/lib/invoice-sale-conversion";
 import { canShareInvoice } from "@/lib/invoices/can-share-invoice";
+import { canDeleteInvoice, INVOICE_DELETE_PAID_BLOCKED } from "@/lib/invoices/can-delete-invoice";
 
 const STATUS_CONFIG: Record<
   InvoiceStatus,
@@ -228,6 +229,10 @@ const InvoiceDetailPage = () => {
             variant="ghost"
             size="icon"
             onClick={() => setDeleteDialogOpen(true)}
+            disabled={!canDeleteInvoice(invoice.status)}
+            title={
+              !canDeleteInvoice(invoice.status) ? INVOICE_DELETE_PAID_BLOCKED : undefined
+            }
             className="text-destructive hover:text-destructive"
           >
             <Trash2 className="size-4" />

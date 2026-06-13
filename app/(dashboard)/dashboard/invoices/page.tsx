@@ -67,6 +67,7 @@ import dayjs from "dayjs";
 import { ShareInvoiceDialog } from "@/components/shared/share-invoice-dialog";
 import { canConvertInvoiceToSale } from "@/lib/invoice-sale-conversion";
 import { canShareInvoice } from "@/lib/invoices/can-share-invoice";
+import { canDeleteInvoice, INVOICE_DELETE_PAID_BLOCKED } from "@/lib/invoices/can-delete-invoice";
 
 const STATUS_CONFIG: Record<
   InvoiceStatus,
@@ -369,7 +370,11 @@ const InvoicesContent = () => {
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => openDelete(inv)}
+                            disabled={!canDeleteInvoice(inv.status)}
                             className="text-destructive focus:text-destructive"
+                            title={
+                              !canDeleteInvoice(inv.status) ? INVOICE_DELETE_PAID_BLOCKED : undefined
+                            }
                           >
                             <Trash2 className="mr-2 size-4" />
                             Delete
