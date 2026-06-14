@@ -25,6 +25,7 @@ import {
   sendExpoPushToUser,
   verifyPushWebhookSecret,
 } from "../_shared/expo-push.ts";
+import { mobilePushRoutes } from "../_shared/mobile-push-routes.ts";
 import { formatMoneyAmountForSms } from "../_shared/format-money-amount-for-sms.ts";
 
 type DbWebhookPayload = {
@@ -70,8 +71,8 @@ const buildSalePushCopy = (opts: {
   }
 
   return {
-    title: "Mauzo mapya yamekodiwa",
-    body: `Habari ${name}, mauzo ${id} ya ${saleAmt} (faida ${profitAmt}) yamekodiwa.`,
+    title: "Mauzo mapya yamerekodiwa",
+    body: `Habari ${name}, mauzo ${id} ya ${saleAmt} (faida ${profitAmt}) yamerekodiwa.`,
   };
 };
 
@@ -126,7 +127,7 @@ const handleSaleInsert = async (
     return {
       title: copy.title,
       body: copy.body,
-      data: { url: "/(app)/(main)/(tabs)/index" },
+      data: { url: mobilePushRoutes.saleDetail(saleId) },
     };
   });
 };
@@ -168,14 +169,14 @@ const handleInvoiceViewInsert = async (
       return {
         title: "Invoice viewed",
         body: `${firstName ? `Hi ${firstName}, ` : ""}${invoiceNumber} was opened by your client.`,
-        data: { url: "/(app)/(main)/(tabs)/index", invoiceId },
+        data: { url: mobilePushRoutes.invoiceDetail(invoiceId) },
       };
     }
 
     return {
-      title: "Ankara imefunguliwa",
+      title: "Invoice imefunguliwa",
       body: `${firstName ? `Habari ${firstName}, ` : ""}${invoiceNumber} imefunguliwa na mteja wako.`,
-      data: { url: "/(app)/(main)/(tabs)/index", invoiceId },
+      data: { url: mobilePushRoutes.invoiceDetail(invoiceId) },
     };
   });
 };
@@ -229,14 +230,14 @@ const handleProductUpdate = async (
       return {
         title: "Low stock alert",
         body: `${firstName ? `${firstName}, ` : ""}${productName} is low (${stockQty} left, alert at ${threshold}).`,
-        data: { url: "/(app)/(main)/(tabs)/inventory" },
+        data: { url: mobilePushRoutes.productStockHistory(productId) },
       };
     }
 
     return {
-      title: "Onyo la akiba ndogo",
+      title: "Bidhaa inaisha",
       body: `${firstName ? `${firstName}, ` : ""}${productName} ina akiba ndogo (${stockQty} zimesalia, kiwango ${threshold}).`,
-      data: { url: "/(app)/(main)/(tabs)/inventory" },
+      data: { url: mobilePushRoutes.productStockHistory(productId) },
     };
   });
 };
@@ -258,14 +259,14 @@ const handleBusinessInsert = async (
       return {
         title: "Business ready",
         body: `${firstName ? `Hi ${firstName}, ` : ""}${businessName} is set up. Start selling from Ankaara.`,
-        data: { url: "/(app)/(main)/(tabs)/index" },
+        data: { url: mobilePushRoutes.business() },
       };
     }
 
     return {
       title: "Biashara iko tayari",
       body: `${firstName ? `Habari ${firstName}, ` : ""}${businessName} imewekwa. Anza kuuza na Ankaara.`,
-      data: { url: "/(app)/(main)/(tabs)/index" },
+      data: { url: mobilePushRoutes.business() },
     };
   });
 };
@@ -307,14 +308,14 @@ const runDocumentReminders = async (supabase: ReturnType<typeof createServiceSup
         return {
           title: "Invoice due soon",
           body: `${firstName ? `${firstName}, ` : ""}${number} is due in 3 days.`,
-          data: { url: "/(app)/(main)/(tabs)/index", invoiceId: invoice.id },
+          data: { url: mobilePushRoutes.invoiceDetail(String(invoice.id)) },
         };
       }
 
       return {
-        title: "Ankara inakaribia muda",
+        title: "Invoice inakaribia muda",
         body: `${firstName ? `${firstName}, ` : ""}${number} ina muda wa siku 3.`,
-        data: { url: "/(app)/(main)/(tabs)/index", invoiceId: invoice.id },
+        data: { url: mobilePushRoutes.invoiceDetail(String(invoice.id)) },
       };
     });
 
@@ -349,14 +350,14 @@ const runDocumentReminders = async (supabase: ReturnType<typeof createServiceSup
           return {
             title: "Quotation expiring soon",
             body: `${firstName ? `${firstName}, ` : ""}${number} expires in 3 days.`,
-            data: { url: "/(app)/(main)/(tabs)/index", quotationId: quotation.id },
+            data: { url: mobilePushRoutes.quotationDetail(String(quotation.id)) },
           };
         }
 
         return {
           title: "Quotation inakaribia kuisha",
           body: `${firstName ? `${firstName}, ` : ""}${number} inaisha siku 3.`,
-          data: { url: "/(app)/(main)/(tabs)/index", quotationId: quotation.id },
+          data: { url: mobilePushRoutes.quotationDetail(String(quotation.id)) },
         };
       });
 
@@ -399,14 +400,14 @@ const runSubscriptionReminders = async (supabase: ReturnType<typeof createServic
         return {
           title: "Plan expiring soon",
           body: `${firstName ? `${firstName}, ` : ""}your ${plan} plan expires in 7 days. Renew to keep premium features.`,
-          data: { url: "/(app)/(main)/subscribe" },
+          data: { url: mobilePushRoutes.subscribe() },
         };
       }
 
       return {
         title: "Mpango unakaribia kuisha",
         body: `${firstName ? `${firstName}, ` : ""}mpango wako wa ${plan} unaisha siku 7. Endelea ili kubaki na vipengele vya premium.`,
-        data: { url: "/(app)/(main)/subscribe" },
+        data: { url: mobilePushRoutes.subscribe() },
       };
     });
 
@@ -447,16 +448,16 @@ const runFreePlanUpsell = async (supabase: ReturnType<typeof createServiceSupaba
 
       if (lang === "en") {
         return {
-          title: "Unlock more with Pro",
+          title: "Unlock more with Pro Plan",
           body: `${firstName ? `${firstName}, ` : ""}upgrade to Pro or Business for higher limits, quotations, and more.`,
-          data: { url: "/(app)/(main)/subscribe" },
+          data: { url: mobilePushRoutes.subscribe() },
         };
       }
 
       return {
-        title: "Fungua zaidi na Pro",
+        title: "Enjoy zaidi na Pro Plan",
         body: `${firstName ? `${firstName}, ` : ""}panda hadi Pro au Business kwa mipaka zaidi, quotations, na zaidi.`,
-        data: { url: "/(app)/(main)/subscribe" },
+        data: { url: mobilePushRoutes.subscribe() },
       };
     });
 
