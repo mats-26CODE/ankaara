@@ -870,6 +870,7 @@ export type Database = {
       };
       products: {
         Row: {
+          bar_code: string | null;
           base_price: number;
           business_id: string;
           created_at: string;
@@ -887,6 +888,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          bar_code?: string | null;
           base_price?: number;
           business_id: string;
           created_at?: string;
@@ -904,6 +906,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          bar_code?: string | null;
           base_price?: number;
           business_id?: string;
           created_at?: string;
