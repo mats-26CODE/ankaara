@@ -127,8 +127,7 @@ export const sendExpoPushToUser = async (
   }
 
   const { notificationType, businessId, ...pushFields } = payload;
-  const deepLink =
-    typeof pushFields.data?.url === "string" ? pushFields.data.url : null;
+  const deepLink = typeof pushFields.data?.url === "string" ? pushFields.data.url : null;
 
   const saved = await saveUserNotification(supabase, {
     userId,
