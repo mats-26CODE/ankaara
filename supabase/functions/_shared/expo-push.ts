@@ -10,6 +10,16 @@ export type ExpoPushMessage = {
   data?: Record<string, unknown>;
 };
 
+export type UserPushNotificationContent = {
+  title: string;
+  body: string;
+  sound?: "default";
+  priority?: "default" | "normal" | "high";
+  data?: Record<string, unknown>;
+  notificationType: string;
+  businessId?: string | null;
+};
+
 export type ProfilePushTarget = {
   notification_token: string | null;
   full_name: string | null;
@@ -69,27 +79,77 @@ export const loadProfilePushTarget = async (
   return data as ProfilePushTarget | null;
 };
 
+export const saveUserNotification = async (
+  supabase: SupabaseClient,
+  input: {
+    userId: string;
+    businessId?: string | null;
+    type: string;
+    title: string;
+    body: string;
+    deepLink?: string | null;
+    data?: Record<string, unknown>;
+  },
+): Promise<boolean> => {
+  const { error } = await supabase.from("notifications").insert({
+    user_id: input.userId,
+    business_id: input.businessId ?? null,
+    type: input.type,
+    title: input.title,
+    body: input.body,
+    deep_link: input.deepLink ?? null,
+    data: input.data ?? {},
+  });
+
+  if (error) {
+    console.error("[expo-push] save notification error", error);
+    return false;
+  }
+
+  return true;
+};
+
 export const sendExpoPushToUser = async (
   supabase: SupabaseClient,
   userId: string,
-  buildMessage: (profile: ProfilePushTarget) => Omit<ExpoPushMessage, "to"> | null,
-): Promise<{ sent: boolean; reason?: string }> => {
+  buildMessage: (profile: ProfilePushTarget) => UserPushNotificationContent | null,
+): Promise<{ sent: boolean; saved: boolean; reason?: string }> => {
   const profile = await loadProfilePushTarget(supabase, userId);
-  if (!profile?.notification_token) {
-    return { sent: false, reason: "no_notification_token" };
+  const fallbackProfile: ProfilePushTarget = {
+    notification_token: null,
+    full_name: null,
+    preferred_language: null,
+  };
+
+  const payload = buildMessage(profile ?? fallbackProfile);
+  if (!payload) {
+    return { sent: false, saved: false, reason: "message_skipped" };
   }
 
-  const payload = buildMessage(profile);
-  if (!payload) {
-    return { sent: false, reason: "message_skipped" };
+  const { notificationType, businessId, ...pushFields } = payload;
+  const deepLink =
+    typeof pushFields.data?.url === "string" ? pushFields.data.url : null;
+
+  const saved = await saveUserNotification(supabase, {
+    userId,
+    businessId: businessId ?? null,
+    type: notificationType,
+    title: pushFields.title,
+    body: pushFields.body,
+    deepLink,
+    data: pushFields.data ?? {},
+  });
+
+  if (!profile?.notification_token) {
+    return { sent: false, saved, reason: "no_notification_token" };
   }
 
   await sendExpoPush({
     to: profile.notification_token,
-    ...payload,
+    ...pushFields,
   });
 
-  return { sent: true };
+  return { sent: true, saved };
 };
 
 export const createServiceSupabase = () => {

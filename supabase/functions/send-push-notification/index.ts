@@ -127,6 +127,8 @@ const handleSaleInsert = async (
     return {
       title: copy.title,
       body: copy.body,
+      notificationType: "sale",
+      businessId,
       data: { url: mobilePushRoutes.saleDetail(saleId) },
     };
   });
@@ -169,6 +171,8 @@ const handleInvoiceViewInsert = async (
       return {
         title: "Invoice viewed",
         body: `${firstName ? `Hi ${firstName}, ` : ""}${invoiceNumber} was opened by your client.`,
+        notificationType: "invoice_view",
+        businessId: invoice.business_id,
         data: { url: mobilePushRoutes.invoiceDetail(invoiceId) },
       };
     }
@@ -176,6 +180,8 @@ const handleInvoiceViewInsert = async (
     return {
       title: "Invoice imefunguliwa",
       body: `${firstName ? `Habari ${firstName}, ` : ""}${invoiceNumber} imefunguliwa na mteja wako.`,
+      notificationType: "invoice_view",
+      businessId: invoice.business_id,
       data: { url: mobilePushRoutes.invoiceDetail(invoiceId) },
     };
   });
@@ -230,6 +236,8 @@ const handleProductUpdate = async (
       return {
         title: "Low stock alert",
         body: `${firstName ? `${firstName}, ` : ""}${productName} is low (${stockQty} left, alert at ${threshold}).`,
+        notificationType: "low_stock",
+        businessId,
         data: { url: mobilePushRoutes.productStockHistory(productId) },
       };
     }
@@ -237,6 +245,8 @@ const handleProductUpdate = async (
     return {
       title: "Bidhaa inaisha",
       body: `${firstName ? `${firstName}, ` : ""}${productName} ina akiba ndogo (${stockQty} zimesalia, kiwango ${threshold}).`,
+      notificationType: "low_stock",
+      businessId,
       data: { url: mobilePushRoutes.productStockHistory(productId) },
     };
   });
@@ -251,6 +261,8 @@ const handleBusinessInsert = async (
 
   const businessName = String(record.name ?? "your business");
 
+  const businessId = String(record.id ?? "");
+
   return sendExpoPushToUser(supabase, ownerId, (profile) => {
     const firstName = getFirstName(profile.full_name);
     const lang = profile.preferred_language === "en" ? "en" : "sw";
@@ -259,6 +271,8 @@ const handleBusinessInsert = async (
       return {
         title: "Business ready",
         body: `${firstName ? `Hi ${firstName}, ` : ""}${businessName} is set up. Start selling from Ankaara.`,
+        notificationType: "business_created",
+        businessId,
         data: { url: mobilePushRoutes.business() },
       };
     }
@@ -266,6 +280,8 @@ const handleBusinessInsert = async (
     return {
       title: "Biashara iko tayari",
       body: `${firstName ? `Habari ${firstName}, ` : ""}${businessName} imewekwa. Anza kuuza na Ankaara.`,
+      notificationType: "business_created",
+      businessId,
       data: { url: mobilePushRoutes.business() },
     };
   });
@@ -308,6 +324,8 @@ const runDocumentReminders = async (supabase: ReturnType<typeof createServiceSup
         return {
           title: "Invoice due soon",
           body: `${firstName ? `${firstName}, ` : ""}${number} is due in 3 days.`,
+          notificationType: "invoice_due",
+          businessId: invoice.business_id,
           data: { url: mobilePushRoutes.invoiceDetail(String(invoice.id)) },
         };
       }
@@ -315,6 +333,8 @@ const runDocumentReminders = async (supabase: ReturnType<typeof createServiceSup
       return {
         title: "Invoice inakaribia muda",
         body: `${firstName ? `${firstName}, ` : ""}${number} ina muda wa siku 3.`,
+        notificationType: "invoice_due",
+        businessId: invoice.business_id,
         data: { url: mobilePushRoutes.invoiceDetail(String(invoice.id)) },
       };
     });
@@ -350,6 +370,8 @@ const runDocumentReminders = async (supabase: ReturnType<typeof createServiceSup
           return {
             title: "Quotation expiring soon",
             body: `${firstName ? `${firstName}, ` : ""}${number} expires in 3 days.`,
+            notificationType: "quotation_due",
+            businessId: quotation.business_id,
             data: { url: mobilePushRoutes.quotationDetail(String(quotation.id)) },
           };
         }
@@ -357,6 +379,8 @@ const runDocumentReminders = async (supabase: ReturnType<typeof createServiceSup
         return {
           title: "Quotation inakaribia kuisha",
           body: `${firstName ? `${firstName}, ` : ""}${number} inaisha siku 3.`,
+          notificationType: "quotation_due",
+          businessId: quotation.business_id,
           data: { url: mobilePushRoutes.quotationDetail(String(quotation.id)) },
         };
       });
@@ -400,6 +424,7 @@ const runSubscriptionReminders = async (supabase: ReturnType<typeof createServic
         return {
           title: "Plan expiring soon",
           body: `${firstName ? `${firstName}, ` : ""}your ${plan} plan expires in 7 days. Renew to keep premium features.`,
+          notificationType: "subscription_reminder",
           data: { url: mobilePushRoutes.subscribe() },
         };
       }
@@ -407,6 +432,7 @@ const runSubscriptionReminders = async (supabase: ReturnType<typeof createServic
       return {
         title: "Mpango unakaribia kuisha",
         body: `${firstName ? `${firstName}, ` : ""}mpango wako wa ${plan} unaisha siku 7. Endelea ili kubaki na vipengele vya premium.`,
+        notificationType: "subscription_reminder",
         data: { url: mobilePushRoutes.subscribe() },
       };
     });
@@ -450,6 +476,7 @@ const runFreePlanUpsell = async (supabase: ReturnType<typeof createServiceSupaba
         return {
           title: "Unlock more with Pro Plan",
           body: `${firstName ? `${firstName}, ` : ""}upgrade to Pro or Business for higher limits, quotations, and more.`,
+          notificationType: "plan_upsell",
           data: { url: mobilePushRoutes.subscribe() },
         };
       }
@@ -457,6 +484,7 @@ const runFreePlanUpsell = async (supabase: ReturnType<typeof createServiceSupaba
       return {
         title: "Enjoy zaidi na Pro Plan",
         body: `${firstName ? `${firstName}, ` : ""}panda hadi Pro au Business kwa mipaka zaidi, quotations, na zaidi.`,
+        notificationType: "plan_upsell",
         data: { url: mobilePushRoutes.subscribe() },
       };
     });
