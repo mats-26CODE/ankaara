@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { ToastAlert } from "@/config/toast";
+import { toastMutationSuccess } from "@/lib/mutation-toast";
 import type { Tables } from "@/database.types";
 
 export const EXPENSE_CATEGORIES_QUERY_KEY = ["expense-categories"] as const;
@@ -67,9 +68,9 @@ export const useCreateExpenseCategory = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: EXPENSE_CATEGORIES_QUERY_KEY });
-      ToastAlert.success("Category added");
+      toastMutationSuccess(context, "Category added");
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to add category");

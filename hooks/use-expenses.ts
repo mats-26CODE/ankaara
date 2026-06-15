@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { buildOrIlikeClause, sanitizeSearchTerm } from "@/lib/supabase/table-search";
 import { ToastAlert } from "@/config/toast";
+import { toastMutationSuccess } from "@/lib/mutation-toast";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import type { Tables, TablesInsert, TablesUpdate } from "@/database.types";
 
@@ -98,9 +99,9 @@ export const useCreateExpense = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
-      ToastAlert.success("Expense recorded successfully");
+      toastMutationSuccess(context, "Expense recorded successfully");
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to record expense");
@@ -126,8 +127,8 @@ export const useUpdateExpense = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      ToastAlert.success("Expense updated");
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
+      toastMutationSuccess(context, "Expense updated");
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to update expense");
@@ -142,8 +143,8 @@ export const useDeleteExpense = () => {
       const { error } = await supabase.from("expenses").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      ToastAlert.success("Expense deleted");
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
+      toastMutationSuccess(context, "Expense deleted");
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to delete expense");

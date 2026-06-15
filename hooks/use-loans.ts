@@ -9,6 +9,7 @@ import {
   toIlikePattern,
 } from "@/lib/supabase/table-search";
 import { ToastAlert } from "@/config/toast";
+import { toastMutationSuccess } from "@/lib/mutation-toast";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import type { Json, Tables } from "@/database.types";
 
@@ -201,10 +202,10 @@ export const useCreateLoan = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: LOANS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
-      ToastAlert.success("Loan recorded");
+      toastMutationSuccess(context, "Loan recorded");
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to record loan");
@@ -235,9 +236,9 @@ export const useRecordLoanPayment = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: LOANS_QUERY_KEY });
-      ToastAlert.success("Loan payment recorded");
+      toastMutationSuccess(context, "Loan payment recorded");
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to record payment");
@@ -257,10 +258,10 @@ export const useClearLoanToSale = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: LOANS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
-      ToastAlert.success("Loan converted to sale");
+      toastMutationSuccess(context, "Loan converted to sale");
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to clear loan");
@@ -281,9 +282,9 @@ export const useCreateInvoiceFromLoan = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: LOANS_QUERY_KEY });
-      ToastAlert.success("Invoice generated from loan");
+      toastMutationSuccess(context, "Invoice generated from loan");
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to create invoice");

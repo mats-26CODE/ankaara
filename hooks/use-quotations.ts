@@ -7,6 +7,7 @@ import { ensureRowId, type SupabaseRowId } from "@/lib/ensure-supabase-row-id";
 import { runSupabaseDetailQueryWithRetry } from "@/lib/supabase/detail-fetch-retry";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
+import { toastMutationSuccess } from "@/lib/mutation-toast";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
 import { buildOrIlikeClause } from "@/lib/supabase/table-search";
 import type { Tables } from "@/database.types";
@@ -252,9 +253,9 @@ export const useCreateQuotation = () => {
 
       return { id: insertedId };
     },
-    onSuccess: () => {
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
-      ToastAlert.success("Quotation created");
+      toastMutationSuccess(context, "Quotation created");
     },
     onError: (error: Error) => {
       if (isPlanLimitError(error)) {
@@ -328,8 +329,8 @@ export const useUpdateQuotation = () => {
 
       return { id: rowId };
     },
-    onSuccess: () => {
-      ToastAlert.success("Quotation updated");
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
+      toastMutationSuccess(context, "Quotation updated");
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to update quotation");
@@ -351,8 +352,8 @@ export const useCancelQuotation = () => {
       if (error) throw error;
       return { id: ensureRowId(data, "Quotation cancel") };
     },
-    onSuccess: () => {
-      ToastAlert.success("Quotation cancelled");
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
+      toastMutationSuccess(context, "Quotation cancelled");
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to cancel quotation");
@@ -374,8 +375,8 @@ export const useSendQuotation = () => {
       if (error) throw error;
       return { id: ensureRowId(data, "Quotation send") };
     },
-    onSuccess: () => {
-      ToastAlert.success("Quotation marked as sent");
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
+      toastMutationSuccess(context, "Quotation marked as sent");
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to send quotation");
@@ -392,8 +393,8 @@ export const useDeleteQuotation = () => {
       const { error } = await supabase.from("quotations").delete().eq("id", quotationId);
       if (error) throw error;
     },
-    onSuccess: () => {
-      ToastAlert.success("Quotation deleted");
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
+      toastMutationSuccess(context, "Quotation deleted");
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to delete quotation");

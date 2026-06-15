@@ -3,6 +3,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { ToastAlert } from "@/config/toast";
+import { toastMutationSuccess } from "@/lib/mutation-toast";
 
 type CompleteOnboardingPayload = {
   userId: string;
@@ -84,8 +85,8 @@ export const useCompleteOnboarding = () => {
         is_primary: payload.isPrimary ?? true,
       });
     },
-    onSuccess: () => {
-      ToastAlert.success("Profile setup complete!");
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
+      toastMutationSuccess(context, "Profile setup complete!");
     },
     onError: (error: Error & { code?: string }) => {
       const isDuplicatePhone =

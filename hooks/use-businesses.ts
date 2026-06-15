@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
+import { toastMutationSuccess } from "@/lib/mutation-toast";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
 import { useBusinessStore } from "@/lib/stores/business-store";
 import type { Tables, TablesInsert, TablesUpdate } from "@/database.types";
@@ -92,12 +93,12 @@ export const useCreateBusiness = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data, _variables, _onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
       if (data?.is_primary) {
         useBusinessStore.getState().setCurrentBusiness(data.id);
       }
-      ToastAlert.success("Business created successfully");
+      toastMutationSuccess(context, "Business created successfully");
     },
     onError: (error: Error) => {
       if (isPlanLimitError(error)) {
@@ -132,11 +133,11 @@ export const useUpdateBusiness = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data, _variables, _onMutateResult, context) => {
       if (data?.is_primary) {
         useBusinessStore.getState().setCurrentBusiness(data.id);
       }
-      ToastAlert.success("Business updated successfully");
+      toastMutationSuccess(context, "Business updated successfully");
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to update business");
@@ -171,8 +172,8 @@ export const useDeleteBusiness = () => {
 
       if (error) throw error;
     },
-    onSuccess: () => {
-      ToastAlert.success("Business deleted");
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
+      toastMutationSuccess(context, "Business deleted");
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to delete business");

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { runSupabaseDetailQueryWithRetry } from "@/lib/supabase/detail-fetch-retry";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
+import { toastMutationSuccess } from "@/lib/mutation-toast";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
 import { buildOrIlikeClause } from "@/lib/supabase/table-search";
 import type { Tables, TablesInsert, TablesUpdate } from "@/database.types";
@@ -167,9 +168,9 @@ export const useCreateProduct = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
-      ToastAlert.success("Product added successfully");
+      toastMutationSuccess(context, "Product added successfully");
     },
     onError: (error: Error) => {
       if (isPlanLimitError(error)) {
@@ -211,8 +212,8 @@ export const useUpdateProduct = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      ToastAlert.success("Product updated successfully");
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
+      toastMutationSuccess(context, "Product updated successfully");
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to update product");
@@ -292,9 +293,9 @@ export const useAdjustProductStock = () => {
       if (error) throw error;
       return data as InventoryMovement;
     },
-    onSuccess: () => {
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
-      ToastAlert.success("Stock updated successfully");
+      toastMutationSuccess(context, "Stock updated successfully");
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to update stock");
@@ -309,8 +310,8 @@ export const useDeleteProduct = () => {
       const { error } = await supabase.from("products").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      ToastAlert.success("Product deleted");
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
+      toastMutationSuccess(context, "Product deleted");
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to delete product");

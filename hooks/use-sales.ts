@@ -7,6 +7,7 @@ import { ensureRowId, type SupabaseRowId } from "@/lib/ensure-supabase-row-id";
 import { runSupabaseDetailQueryWithRetry } from "@/lib/supabase/detail-fetch-retry";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
+import { toastMutationSuccess } from "@/lib/mutation-toast";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
 import { buildOrIlikeClause, sanitizeSearchTerm, toIlikePattern } from "@/lib/supabase/table-search";
 import type { Json, Tables } from "@/database.types";
@@ -356,10 +357,10 @@ export const useCreateDirectSale = () => {
       }
       return { id: ensureRowId(row as { id?: unknown }, "create_direct_sale") };
     },
-    onSuccess: () => {
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: SALES_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
-      ToastAlert.success("Sale recorded");
+      toastMutationSuccess(context, "Sale recorded");
     },
     onError: (error: Error) => {
       if (isPlanLimitError(error)) {
@@ -391,10 +392,10 @@ export const useConvertInvoiceToSale = () => {
       }
       return { id: ensureRowId(row as { id?: unknown }, "convert_invoice_to_sale") };
     },
-    onSuccess: () => {
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: SALES_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
-      ToastAlert.success("Invoice converted to sale");
+      toastMutationSuccess(context, "Invoice converted to sale");
     },
     onError: (error: Error) => {
       if (isPlanLimitError(error)) {

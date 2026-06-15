@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { ToastAlert } from "@/config/toast";
+import { toastMutationSuccess } from "@/lib/mutation-toast";
 import { createClient } from "@/lib/supabase/client";
 import {
   FunctionsFetchError,
@@ -96,8 +97,8 @@ export const useSendOtp = (
 
       return data;
     },
-    onSuccess: () => {
-      ToastAlert.success("OTP sent to your phone!");
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
+      toastMutationSuccess(context, "OTP sent to your phone!");
     },
     onError: (error: Error) => {
       if (error instanceof AuthPhoneError) return;
@@ -127,10 +128,10 @@ export const useVerifyOtp = (options?: { redirect?: string }) => {
       if (error) throw error;
       return data;
     },
-    onSuccess: async (data) => {
+    onSuccess: async (data, _variables, _onMutateResult, context) => {
       if (data.user && data.session) {
         router.push(redirectTo ?? "/dashboard");
-        ToastAlert.success("Phone verified successfully! 🎉");
+        toastMutationSuccess(context, "Phone verified successfully! 🎉");
       }
     },
     onError: (error: AuthError) => {
@@ -167,8 +168,8 @@ export const useSendOtpForOnboarding = () => {
       if (errMsg && (data as { success?: boolean })?.success !== true) throw new Error(errMsg);
       return data;
     },
-    onSuccess: () => {
-      ToastAlert.success("OTP sent to your phone!");
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
+      toastMutationSuccess(context, "OTP sent to your phone!");
     },
     onError: (error: AuthError) => {
       ToastAlert.error(error.message || "Failed to send OTP. Please try again.");
@@ -263,8 +264,8 @@ export const useSendOtpForPhoneChange = () => {
       }
       return data;
     },
-    onSuccess: () => {
-      ToastAlert.success("OTP sent to your phone!");
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
+      toastMutationSuccess(context, "OTP sent to your phone!");
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to send OTP. Please try again.");
@@ -304,8 +305,8 @@ export const useVerifyPhoneChange = () => {
       await supabase.auth.signOut();
       return data;
     },
-    onSuccess: () => {
-      ToastAlert.success("Phone updated. Please sign in with your new number.");
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
+      toastMutationSuccess(context, "Phone updated. Please sign in with your new number.");
       router.push("/login");
     },
     onError: (error: Error) => {
@@ -360,8 +361,8 @@ export const useUpdateUserEmail = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      ToastAlert.success("Check your email and click the confirmation link to complete setup.");
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
+      toastMutationSuccess(context, "Check your email and click the confirmation link to complete setup.");
     },
     onError: (error: AuthError) => {
       ToastAlert.error(error.message || "Failed to send confirmation email. Please try again.");

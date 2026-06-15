@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { ToastAlert } from "@/config/toast";
+import { toastMutationSuccess } from "@/lib/mutation-toast";
 import type { Tables } from "@/database.types";
 
 /**
@@ -139,8 +140,8 @@ export const useUpdateProfile = () => {
 
       if (error) throw error;
     },
-    onSuccess: () => {
-      ToastAlert.success("Profile updated");
+    onSuccess: (_data, _variables, _onMutateResult, context) => {
+      toastMutationSuccess(context, "Profile updated");
     },
     onError: (error: Error & { code?: string }) => {
       const isDuplicatePhone =
