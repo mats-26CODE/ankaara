@@ -20,17 +20,15 @@ function Spinner({ className }: SpinnerProps) {
   }, []);
 
   const isDark = mounted && resolvedTheme === "dark";
-  const animationData = isDark
-    ? LOTTIE_ASSETS.loadingSpinnerWhite
-    : LOTTIE_ASSETS.loadingSpinner;
+  const animationData = isDark ? LOTTIE_ASSETS.loadingSpinnerWhite : LOTTIE_ASSETS.loadingSpinner;
 
   return (
     <div
       role="status"
       aria-label="Loading"
-      className={cn("inline-flex size-6 shrink-0 items-center justify-center", className)}
+      className={cn("inline-flex size-16 shrink-0 items-center justify-center", className)}
     >
-      <Lottie animationData={animationData} loop className="size-full" />
+      <Lottie animationData={animationData} loop className="size-full scale-200" />
     </div>
   );
 }
