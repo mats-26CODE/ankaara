@@ -9,9 +9,11 @@ import { cn } from "@/lib/utils";
 
 type SpinnerProps = {
   className?: string;
+  /** Use on colored surfaces (e.g. primary buttons) where the brand spinner would clash. */
+  variant?: "default" | "white";
 };
 
-function Spinner({ className }: SpinnerProps) {
+function Spinner({ className, variant = "default" }: SpinnerProps) {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -20,7 +22,12 @@ function Spinner({ className }: SpinnerProps) {
   }, []);
 
   const isDark = mounted && resolvedTheme === "dark";
-  const animationData = isDark ? LOTTIE_ASSETS.loadingSpinnerWhite : LOTTIE_ASSETS.loadingSpinner;
+  const animationData =
+    variant === "white"
+      ? LOTTIE_ASSETS.loadingSpinnerWhite
+      : isDark
+        ? LOTTIE_ASSETS.loadingSpinnerWhite
+        : LOTTIE_ASSETS.loadingSpinner;
 
   return (
     <div
