@@ -1,16 +1,38 @@
-import { Loader2Icon } from "lucide-react"
+"use client";
 
-import { cn } from "@/lib/utils"
+import Lottie from "lottie-react";
+import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 
-function Spinner({ className, ...props }: React.ComponentProps<"svg">) {
+import { LOTTIE_ASSETS } from "@/lib/lotties";
+import { cn } from "@/lib/utils";
+
+type SpinnerProps = {
+  className?: string;
+};
+
+function Spinner({ className }: SpinnerProps) {
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted && resolvedTheme === "dark";
+  const animationData = isDark
+    ? LOTTIE_ASSETS.loadingSpinnerWhite
+    : LOTTIE_ASSETS.loadingSpinner;
+
   return (
-    <Loader2Icon
+    <div
       role="status"
       aria-label="Loading"
-      className={cn("size-4 animate-spin", className)}
-      {...props}
-    />
-  )
+      className={cn("inline-flex size-6 shrink-0 items-center justify-center", className)}
+    >
+      <Lottie animationData={animationData} loop className="size-full" />
+    </div>
+  );
 }
 
-export { Spinner }
+export { Spinner };
