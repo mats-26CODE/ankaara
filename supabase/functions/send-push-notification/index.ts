@@ -5,10 +5,10 @@
  * 1. Database webhook (Supabase Dashboard → Database → Webhooks):
  *    POST with standard `{ type, table, record, old_record }` payload.
  *    Supported tables: sales (INSERT), invoice_views (INSERT), products (UPDATE),
- *    businesses (INSERT).
+ *    businesses (INSERT), invoice_payments (INSERT/UPDATE), quotations (UPDATE).
  *
  * 2. Cron / manual dispatch:
- *    POST `{ "mode": "cron", "job": "document_reminders" | "subscription_reminders" | "free_plan_upsell" }`
+ *    POST `{ "mode": "cron", "job": "document_reminders" | "subscription_reminders" | "free_plan_upsell" | "loan_repayment_reminders" | "sales_summary_daily" | "sales_summary_weekly" }`
  *
  * Setup:
  * - Deploy with verify_jwt disabled (supabase/config.toml).
@@ -38,7 +38,13 @@ type DbWebhookPayload = {
 
 type CronPayload = {
   mode: "cron";
-  job: "document_reminders" | "subscription_reminders" | "free_plan_upsell";
+  job:
+    | "document_reminders"
+    | "subscription_reminders"
+    | "free_plan_upsell"
+    | "loan_repayment_reminders"
+    | "sales_summary_daily"
+    | "sales_summary_weekly";
 };
 
 const corsHeaders = {
@@ -287,6 +293,218 @@ const handleBusinessInsert = async (
   });
 };
 
+const handleInvoicePayment = async (
+  supabase: ReturnType<typeof createServiceSupabase>,
+  record: Record<string, unknown>,
+  oldRecord: Record<string, unknown> | null,
+) => {
+  const status = String(record.status ?? "");
+  if (status !== "success") return { skipped: true, reason: "not_success" };
+
+  if (oldRecord && String(oldRecord.status ?? "") === "success") {
+    return { skipped: true, reason: "already_success" };
+  }
+
+  const invoiceId = String(record.invoice_id ?? "");
+  if (!invoiceId) return { skipped: true, reason: "missing_invoice_id" };
+
+  const { data: invoice, error: invErr } = await supabase
+    .from("invoices")
+    .select("id, invoice_number, business_id")
+    .eq("id", invoiceId)
+    .maybeSingle();
+
+  if (invErr || !invoice) {
+    console.error("[send-push-notification] invoice payment invoice load", invErr);
+    return { skipped: true, reason: "invoice_not_found" };
+  }
+
+  const { data: business } = await supabase
+    .from("businesses")
+    .select("owner_id")
+    .eq("id", invoice.business_id)
+    .maybeSingle();
+
+  const ownerId = typeof business?.owner_id === "string" ? business.owner_id : "";
+  if (!ownerId) return { skipped: true, reason: "missing_owner" };
+
+  const invoiceNumber = String(invoice.invoice_number ?? "Invoice");
+  const amount = parseMoney(record.amount);
+  const currency = String(record.currency ?? "TZS");
+  const amountLabel = formatAmount(currency, amount);
+  const paymentId = String(record.id ?? "");
+
+  return sendExpoPushToUser(supabase, ownerId, (profile) => {
+    const firstName = getFirstName(profile.full_name);
+    const lang = profile.preferred_language === "en" ? "en" : "sw";
+
+    if (lang === "en") {
+      return {
+        title: "Payment received",
+        body: `${firstName ? `${firstName}, ` : ""}${amountLabel} received for ${invoiceNumber}.`,
+        notificationType: "invoice_payment",
+        businessId: invoice.business_id,
+        data: { url: mobilePushRoutes.invoiceDetail(invoiceId), paymentId },
+      };
+    }
+
+    return {
+      title: "Malipo yamepokelewa",
+      body: `${firstName ? `${firstName}, ` : ""}${amountLabel} yamepokelewa kwa ${invoiceNumber}.`,
+      notificationType: "invoice_payment",
+      businessId: invoice.business_id,
+      data: { url: mobilePushRoutes.invoiceDetail(invoiceId), paymentId },
+    };
+  });
+};
+
+const handleQuotationUpdate = async (
+  supabase: ReturnType<typeof createServiceSupabase>,
+  record: Record<string, unknown>,
+  oldRecord: Record<string, unknown> | null,
+) => {
+  const newStatus = String(record.status ?? "");
+  const oldStatus = oldRecord ? String(oldRecord.status ?? "") : "";
+
+  if (newStatus !== "accepted" || oldStatus === "accepted") {
+    return { skipped: true, reason: "not_newly_accepted" };
+  }
+
+  const quotationId = String(record.id ?? "");
+  const businessId = String(record.business_id ?? "");
+  if (!quotationId || !businessId) return { skipped: true, reason: "missing_ids" };
+
+  const { data: business } = await supabase
+    .from("businesses")
+    .select("owner_id, name")
+    .eq("id", businessId)
+    .maybeSingle();
+
+  const ownerId = typeof business?.owner_id === "string" ? business.owner_id : "";
+  if (!ownerId) return { skipped: true, reason: "missing_owner" };
+
+  const quotationNumber = String(record.quotation_number ?? "Quotation");
+  const clientId = typeof record.client_id === "string" ? record.client_id : null;
+
+  let clientName = "Your client";
+  if (clientId) {
+    const { data: client } = await supabase
+      .from("clients")
+      .select("name")
+      .eq("id", clientId)
+      .maybeSingle();
+    if (client?.name) clientName = String(client.name);
+  }
+
+  return sendExpoPushToUser(supabase, ownerId, (profile) => {
+    const firstName = getFirstName(profile.full_name);
+    const lang = profile.preferred_language === "en" ? "en" : "sw";
+
+    if (lang === "en") {
+      return {
+        title: "Quotation accepted",
+        body: `${firstName ? `${firstName}, ` : ""}${clientName} accepted ${quotationNumber}.`,
+        notificationType: "quotation_accepted",
+        businessId,
+        data: { url: mobilePushRoutes.quotationDetail(quotationId) },
+      };
+    }
+
+    return {
+      title: "Quotation imekubaliwa",
+      body: `${firstName ? `${firstName}, ` : ""}${clientName} amekubali ${quotationNumber}.`,
+      notificationType: "quotation_accepted",
+      businessId,
+      data: { url: mobilePushRoutes.quotationDetail(quotationId) },
+    };
+  });
+};
+
+const toDateString = (date: Date): string => date.toISOString().slice(0, 10);
+
+type SalesAggregate = {
+  count: number;
+  total: number;
+  profit: number;
+  currency: string;
+};
+
+const aggregateSalesByBusiness = (
+  rows: Array<{
+    business_id: string;
+    total: unknown;
+    profit: unknown;
+    currency: string;
+  }>,
+): Map<string, SalesAggregate> => {
+  const map = new Map<string, SalesAggregate>();
+
+  for (const row of rows) {
+    const businessId = String(row.business_id ?? "");
+    if (!businessId) continue;
+
+    const existing = map.get(businessId) ?? {
+      count: 0,
+      total: 0,
+      profit: 0,
+      currency: String(row.currency ?? "TZS"),
+    };
+
+    existing.count += 1;
+    existing.total += parseMoney(row.total);
+    existing.profit += parseMoney(row.profit);
+    map.set(businessId, existing);
+  }
+
+  return map;
+};
+
+const notifyOwnerSalesSummary = async (
+  supabase: ReturnType<typeof createServiceSupabase>,
+  businessId: string,
+  agg: SalesAggregate,
+  periodLabel: { en: string; sw: string },
+  notificationType: string,
+) => {
+  const { data: business } = await supabase
+    .from("businesses")
+    .select("owner_id, name")
+    .eq("id", businessId)
+    .maybeSingle();
+
+  const ownerId = typeof business?.owner_id === "string" ? business.owner_id : "";
+  if (!ownerId) return false;
+
+  const businessName = String(business?.name ?? "your business");
+  const totalLabel = formatAmount(agg.currency, agg.total);
+  const profitLabel = formatAmount(agg.currency, agg.profit);
+
+  const result = await sendExpoPushToUser(supabase, ownerId, (profile) => {
+    const firstName = getFirstName(profile.full_name);
+    const lang = profile.preferred_language === "en" ? "en" : "sw";
+
+    if (lang === "en") {
+      return {
+        title: periodLabel.en,
+        body: `${firstName ? `${firstName}, ` : ""}${businessName}: ${agg.count} sale${agg.count === 1 ? "" : "s"}, ${totalLabel} total (profit ${profitLabel}).`,
+        notificationType,
+        businessId,
+        data: { url: mobilePushRoutes.sales() },
+      };
+    }
+
+    return {
+      title: periodLabel.sw,
+      body: `${firstName ? `${firstName}, ` : ""}${businessName}: mauzo ${agg.count}, jumla ${totalLabel} (faida ${profitLabel}).`,
+      notificationType,
+      businessId,
+      data: { url: mobilePushRoutes.sales() },
+    };
+  });
+
+  return result.sent;
+};
+
 const runDocumentReminders = async (supabase: ReturnType<typeof createServiceSupabase>) => {
   const today = new Date();
   const inThreeDays = new Date(today);
@@ -495,6 +713,165 @@ const runFreePlanUpsell = async (supabase: ReturnType<typeof createServiceSupaba
   return { job: "free_plan_upsell", sent };
 };
 
+const runLoanRepaymentReminders = async (supabase: ReturnType<typeof createServiceSupabase>) => {
+  const today = new Date();
+  const inThreeDays = new Date(today);
+  inThreeDays.setDate(today.getDate() + 3);
+  const dueDate = toDateString(inThreeDays);
+
+  const { data: dueInvoices, error: invoiceErr } = await supabase
+    .from("invoices")
+    .select("id")
+    .eq("due_date", dueDate);
+
+  if (invoiceErr) {
+    console.error("[send-push-notification] loan repayment invoice lookup", invoiceErr);
+    return { error: invoiceErr.message };
+  }
+
+  const invoiceIds = (dueInvoices ?? [])
+    .map((row) => String(row.id ?? ""))
+    .filter((id) => id.length > 0);
+
+  if (invoiceIds.length === 0) {
+    return { job: "loan_repayment_reminders", sent: 0 };
+  }
+
+  const { data: loans, error } = await supabase
+    .from("loans")
+    .select(
+      "id, loan_number, business_id, outstanding_balance, currency, status, invoice_id, clients(name)",
+    )
+    .in("invoice_id", invoiceIds)
+    .in("status", ["open", "partially_paid"])
+    .gt("outstanding_balance", 0);
+
+  if (error) {
+    console.error("[send-push-notification] loan repayment reminders", error);
+    return { error: error.message };
+  }
+
+  let sent = 0;
+  for (const loan of loans ?? []) {
+    const { data: business } = await supabase
+      .from("businesses")
+      .select("owner_id")
+      .eq("id", loan.business_id)
+      .maybeSingle();
+
+    const ownerId = typeof business?.owner_id === "string" ? business.owner_id : "";
+    if (!ownerId) continue;
+
+    const loanNumber = String(loan.loan_number ?? "Loan");
+    const balance = parseMoney(loan.outstanding_balance);
+    const currency = String(loan.currency ?? "TZS");
+    const balanceLabel = formatAmount(currency, balance);
+    const loanId = String(loan.id ?? "");
+    const clientName =
+      loan.clients && typeof loan.clients === "object" && "name" in loan.clients
+        ? String((loan.clients as { name?: string }).name ?? "")
+        : "";
+
+    const result = await sendExpoPushToUser(supabase, ownerId, (profile) => {
+      const firstName = getFirstName(profile.full_name);
+      const lang = profile.preferred_language === "en" ? "en" : "sw";
+
+      if (lang === "en") {
+        return {
+          title: "Loan repayment due soon",
+          body: `${firstName ? `${firstName}, ` : ""}${loanNumber}${clientName ? ` (${clientName})` : ""} — ${balanceLabel} due in 3 days.`,
+          notificationType: "loan_due",
+          businessId: loan.business_id,
+          data: { url: mobilePushRoutes.loanDetail(loanId) },
+        };
+      }
+
+      return {
+        title: "Mkopo unakaribia muda",
+        body: `${firstName ? `${firstName}, ` : ""}${loanNumber}${clientName ? ` (${clientName})` : ""} — ${balanceLabel} ina muda wa siku 3.`,
+        notificationType: "loan_due",
+        businessId: loan.business_id,
+        data: { url: mobilePushRoutes.loanDetail(loanId) },
+      };
+    });
+
+    if (result.sent) sent += 1;
+  }
+
+  return { job: "loan_repayment_reminders", sent };
+};
+
+const runSalesSummaryDaily = async (supabase: ReturnType<typeof createServiceSupabase>) => {
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const saleDate = toDateString(yesterday);
+
+  const { data: sales, error } = await supabase
+    .from("sales")
+    .select("business_id, total, profit, currency")
+    .eq("sale_date", saleDate);
+
+  if (error) {
+    console.error("[send-push-notification] sales summary daily", error);
+    return { error: error.message };
+  }
+
+  const aggregates = aggregateSalesByBusiness(sales ?? []);
+  let sent = 0;
+
+  for (const [businessId, agg] of aggregates) {
+    const didSend = await notifyOwnerSalesSummary(
+      supabase,
+      businessId,
+      agg,
+      { en: "Yesterday's sales", sw: "Mauzo ya jana" },
+      "sales_summary_daily",
+    );
+    if (didSend) sent += 1;
+  }
+
+  return { job: "sales_summary_daily", saleDate, sent };
+};
+
+const runSalesSummaryWeekly = async (supabase: ReturnType<typeof createServiceSupabase>) => {
+  const today = new Date();
+  const end = new Date(today);
+  end.setDate(today.getDate() - 1);
+  const start = new Date(end);
+  start.setDate(end.getDate() - 6);
+
+  const startDate = toDateString(start);
+  const endDate = toDateString(end);
+
+  const { data: sales, error } = await supabase
+    .from("sales")
+    .select("business_id, total, profit, currency")
+    .gte("sale_date", startDate)
+    .lte("sale_date", endDate);
+
+  if (error) {
+    console.error("[send-push-notification] sales summary weekly", error);
+    return { error: error.message };
+  }
+
+  const aggregates = aggregateSalesByBusiness(sales ?? []);
+  let sent = 0;
+
+  for (const [businessId, agg] of aggregates) {
+    const didSend = await notifyOwnerSalesSummary(
+      supabase,
+      businessId,
+      agg,
+      { en: "Weekly sales summary", sw: "Muhtasari wa mauzo ya wiki" },
+      "sales_summary_weekly",
+    );
+    if (didSend) sent += 1;
+  }
+
+  return { job: "sales_summary_weekly", startDate, endDate, sent };
+};
+
 const handleCronJob = async (
   supabase: ReturnType<typeof createServiceSupabase>,
   job: CronPayload["job"],
@@ -506,6 +883,12 @@ const handleCronJob = async (
       return runSubscriptionReminders(supabase);
     case "free_plan_upsell":
       return runFreePlanUpsell(supabase);
+    case "loan_repayment_reminders":
+      return runLoanRepaymentReminders(supabase);
+    case "sales_summary_daily":
+      return runSalesSummaryDaily(supabase);
+    case "sales_summary_weekly":
+      return runSalesSummaryWeekly(supabase);
     default:
       return { skipped: true, reason: "unknown_cron_job" };
   }
@@ -532,6 +915,17 @@ const handleDbWebhook = async (payload: DbWebhookPayload) => {
 
   if (payload.table === "businesses" && payload.type === "INSERT") {
     return handleBusinessInsert(supabase, payload.record);
+  }
+
+  if (
+    payload.table === "invoice_payments" &&
+    (payload.type === "INSERT" || payload.type === "UPDATE")
+  ) {
+    return handleInvoicePayment(supabase, payload.record, payload.old_record);
+  }
+
+  if (payload.table === "quotations" && payload.type === "UPDATE") {
+    return handleQuotationUpdate(supabase, payload.record, payload.old_record);
   }
 
   return { skipped: true, reason: "unsupported_webhook" };
