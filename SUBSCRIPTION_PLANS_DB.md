@@ -27,15 +27,15 @@ Plans are stored in Supabase so you can change pricing and features without code
 | `slug` | text | `free` \| `pro` \| `business` (unique) |
 | `name` | text | Display name |
 | `description` | text | Optional |
-| `price_amount` | numeric | Null for free or “contact sales” (Business) |
-| `price_currency` | text | e.g. USD |
-| `billing_interval` | text | `monthly` \| `yearly` \| null |
-| `is_contact_sales` | boolean | True for Business (custom pricing) |
+| `price_amount` | numeric | Null only for legacy/contact-sales plans |
+| `price_currency` | text | e.g. TZS |
+| `billing_interval` | text | `monthly` \| `6_month` \| `yearly` \| null |
+| `is_contact_sales` | boolean | True when price is custom / contact sales |
 | `sort_order` | smallint | For ordering on pricing page |
 
 - **Free:** `price_amount = 0`, `is_contact_sales = false`
-- **Pro:** Fixed price (e.g. 19.99), `is_contact_sales = false`
-- **Business:** `price_amount = null`, `is_contact_sales = true`
+- **Pro:** Fixed TZS price per interval, `is_contact_sales = false`
+- **Business:** Fixed TZS price per interval (54,000 / 316,000 / 620,000), `is_contact_sales = false`
 
 ### Table: `subscription_plan_features`
 
@@ -117,7 +117,7 @@ Records each payment made **for** a subscription (e.g. Pro monthly charge), sepa
 
 3. **Subscription flow (frontend)**  
    - **Landing:** Pricing section fetches `subscription_plans` + features and shows "Choose this plan". Logged-in → `/subscribe?plan=<slug>`; else → `/login?redirect=/subscribe?plan=<slug>`.  
-   - **Subscribe page (`/subscribe`):** Requires auth. Query `?plan=free|pro|business` pre-selects plan; `?from=onboarding` shows "Skip for now". Free → set subscription and go to dashboard; Pro → "Continue to payment" (Snippe integration); Business → contact mailto.  
+   - **Subscribe page (`/subscribe`):** Requires auth. Query `?plan=free|pro-monthly|business-monthly` etc. pre-selects plan; `?from=onboarding` shows "Skip for now". Free → set subscription and go to dashboard; Pro/Business → "Continue to payment" (Snippe integration).  
    - **After sign-up/onboarding:** Verify OTP success redirects to `/subscribe?from=onboarding` (paywall with skip).  
    - **Payment:** Pro/Business payments will use Snippe (POST /v1/payments, webhook, then insert `subscription_payments` and set subscription). See [Snippe docs](https://docs.snippe.sh/docs/2026-01-25).
 

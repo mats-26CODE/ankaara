@@ -378,7 +378,7 @@ export const translations = {
         freeDefaultNote: "Bure — chaguo-msingi kwa akaunti mpya",
         contactUs: "Wasiliana nasi",
         free: {
-          name: "Bure",
+          name: "Mpango wa Bure",
           description: "Anza kurekodi mauzo, bidhaa, wateja na ankara za msingi.",
           price: "TZS 0",
           period: "/mwezi",
@@ -393,7 +393,7 @@ export const translations = {
           ],
         },
         pro: {
-          name: "Pro",
+          name: "Mpango wa Pro",
           description:
             "Kwa biashara zinazokua — mauzo yasiyo na kikomo, wateja wasio na kikomo, na bidhaa 50.",
           price: "24,000",
@@ -409,11 +409,11 @@ export const translations = {
           ],
         },
         business: {
-          name: "Biashara",
+          name: "Mpango wa Biashara",
           description: "Kwa timu na biashara zenye matawi, bidhaa nyingi na mahitaji maalum.",
-          price: "",
-          period: "",
-          cta: "Wasiliana nasi",
+          price: "54,000",
+          period: "/mwezi",
+          cta: "Chagua mpango huu",
           features: [
             "Biashara zisizo na kikomo",
             "Mauzo yasiyo na kikomo",
@@ -922,7 +922,7 @@ export const translations = {
         freeDefaultNote: "Free — default for new accounts",
         contactUs: "Contact us",
         free: {
-          name: "Free",
+          name: "Free Plan",
           description: "Start recording sales, products, clients and basic invoices.",
           price: "$0",
           period: "/month",
@@ -937,7 +937,7 @@ export const translations = {
           ],
         },
         pro: {
-          name: "Pro",
+          name: "Pro Plan",
           description:
             "For growing businesses — unlimited sales and clients, plus 50 products or services per business.",
           price: "$9",
@@ -953,11 +953,11 @@ export const translations = {
           ],
         },
         business: {
-          name: "Business",
+          name: "Business Plan",
           description: "For teams, branches and businesses with larger catalogues or custom needs.",
-          price: "",
-          period: "",
-          cta: "Contact us",
+          price: "54,000",
+          period: "/month",
+          cta: "Choose this plan",
           features: [
             "Unlimited businesses",
             "Unlimited sales",
