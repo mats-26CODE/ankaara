@@ -91,6 +91,7 @@ export const PLAN_FEATURE_DISPLAY_ORDER = [
   "products_per_business",
   "clients_per_business",
   "quotations_count",
+  "product_sales_reports",
 ] as const;
 
 export const sortPlanFeatures = (
@@ -137,6 +138,11 @@ const FEATURE_LABELS: Record<string, { singular: string; plural: string; unlimit
     singular: "sale per month",
     plural: "sales per month",
     unlimited: "Unlimited sales",
+  },
+  product_sales_reports: {
+    singular: "product sales report",
+    plural: "product sales reports",
+    unlimited: "Product sales performance reports",
   },
 };
 

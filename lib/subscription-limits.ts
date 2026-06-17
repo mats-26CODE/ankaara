@@ -70,6 +70,8 @@ const PLAN_LIMIT_REACHED_MESSAGES: Record<string, string> = {
   businesses_count: "You've reached your business limit. Upgrade to add more businesses.",
   quotations_count:
     "You've reached your monthly quotation limit. Upgrade to create more quotations.",
+  product_sales_reports:
+    "Product sales reports are available on Pro and Business plans. Upgrade to unlock reports.",
 };
 
 /** User-facing copy when redirected to subscribe after hitting a plan limit. */

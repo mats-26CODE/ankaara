@@ -1844,6 +1844,24 @@ export type Database = {
         }
       }
       expire_stale_documents: { Args: never; Returns: undefined }
+      get_product_sales_performance: {
+        Args: {
+          p_business_id: string
+          p_from_date?: string
+          p_to_date?: string
+        }
+        Returns: {
+          cogs: number
+          is_orphan_line: boolean
+          product_id: string | null
+          product_name: string
+          profit: number
+          revenue: number
+          sale_count: number
+          sku: string | null
+          units_sold: number
+        }[]
+      }
       get_user_by_phone: {
         Args: { phone_number: string }
         Returns: {

@@ -1,0 +1,405 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import {
+  ArrowLeft,
+  Building2,
+  Package,
+  Search,
+  ShoppingBag,
+  Trophy,
+  Wallet,
+  X,
+} from "lucide-react";
+import { useBusinesses } from "@/hooks/use-businesses";
+import { useCurrentSubscription } from "@/hooks/use-current-subscription";
+import { useFormatAmount } from "@/hooks/use-format-amount";
+import { useProductSalesReport } from "@/hooks/use-product-sales-report";
+import { useUser } from "@/hooks/use-user";
+import { getPlanTier } from "@/hooks/use-subscription-plans";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { useCurrentBusinessId } from "@/lib/stores/business-store";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { ProductSalesSummaryStats } from "@/components/reports/product-sales-summary-stats";
+import { ReportsIcon } from "@/components/icons/reports-icon";
+import {
+  PRODUCT_SALES_REPORT,
+  REPORTS_EMPTY_NO_BUSINESS,
+  REPORTS_UPGRADE_REQUIRED,
+} from "@/constants/reports";
+import { resolveReportPeriodRange, type ReportPeriodPreset } from "@/lib/dates/report-period";
+import {
+  filterProductSalesRows,
+  getRevenueSharePercent,
+  sortProductSalesRows,
+  type ProductSalesSortKey,
+} from "@/lib/reports/product-sales-report";
+import { getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
+
+const SORT_OPTIONS: ProductSalesSortKey[] = ["units", "revenue", "profit"];
+
+const PERIOD_OPTIONS: { id: ReportPeriodPreset; label: string }[] = [
+  { id: "weekly", label: PRODUCT_SALES_REPORT.period.last7Days },
+  { id: "monthly", label: PRODUCT_SALES_REPORT.period.thisMonth },
+  { id: "all_time", label: PRODUCT_SALES_REPORT.period.allTime },
+];
+
+const ProductSalesReportPage = () => {
+  const { user } = useUser();
+  const { format: formatAmount } = useFormatAmount();
+  const { businesses, loading: businessesLoading } = useBusinesses();
+  const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
+  const { data: subscription, isLoading: subscriptionLoading } = useCurrentSubscription(user?.id);
+
+  const [periodPreset, setPeriodPreset] = useState<ReportPeriodPreset>("weekly");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<ProductSalesSortKey>("revenue");
+  const debouncedSearch = useDebouncedValue(search);
+
+  const planTier = getPlanTier(subscription?.planSlug);
+  const hasReportAccess = planTier !== "free";
+
+  const activeBusiness =
+    businesses.find((business) => business.id === currentBusinessId) ?? businesses[0] ?? null;
+
+  const resolvedRange = useMemo(() => {
+    if (periodPreset === "custom") {
+      return resolveReportPeriodRange("custom", fromDate, toDate);
+    }
+    return resolveReportPeriodRange(periodPreset);
+  }, [fromDate, periodPreset, toDate]);
+
+  const { rows, summary, isLoading, isRefetching } = useProductSalesReport(
+    currentBusinessId,
+    resolvedRange.fromDate,
+    resolvedRange.toDate,
+    hasReportAccess,
+  );
+
+  const displayRows = useMemo(() => {
+    const filtered = filterProductSalesRows(rows, debouncedSearch);
+    return sortProductSalesRows(filtered, sortBy);
+  }, [debouncedSearch, rows, sortBy]);
+
+  const summaryLoading = isLoading || isRefetching;
+
+  const summaryMetrics = useMemo(
+    () => [
+      {
+        key: "revenue",
+        label: PRODUCT_SALES_REPORT.summary.totalRevenue,
+        value: formatAmount(summary.totalRevenue, { decimalDigits: 0 }),
+        icon: Wallet,
+        iconClassName: "text-blue-600",
+      },
+      {
+        key: "units",
+        label: PRODUCT_SALES_REPORT.summary.totalUnits,
+        value: summary.totalUnits.toLocaleString(),
+        icon: ShoppingBag,
+        iconClassName: "text-violet-600",
+      },
+      {
+        key: "products",
+        label: PRODUCT_SALES_REPORT.summary.productsSold,
+        value: summary.productCount.toLocaleString(),
+        icon: Package,
+        iconClassName: "text-amber-600",
+      },
+      {
+        key: "top",
+        label: PRODUCT_SALES_REPORT.summary.topProduct,
+        value: summary.topProductName ?? "—",
+        icon: Trophy,
+        iconClassName: "text-green-600",
+        valueClassName: "truncate text-xl font-bold lg:text-2xl",
+      },
+    ],
+    [formatAmount, summary],
+  );
+
+  useEffect(() => {
+    if (!currentBusinessId && businesses.length > 0) {
+      setCurrentBusiness((businesses.find((business) => business.is_primary) ?? businesses[0]).id);
+    }
+  }, [businesses, currentBusinessId, setCurrentBusiness]);
+
+  const handlePresetChange = (preset: ReportPeriodPreset) => {
+    setPeriodPreset(preset);
+    if (preset !== "custom") {
+      setFromDate("");
+      setToDate("");
+    }
+  };
+
+  const handleFromDateChange = (value: string) => {
+    setFromDate(value);
+    setPeriodPreset("custom");
+  };
+
+  const handleToDateChange = (value: string) => {
+    setToDate(value);
+    setPeriodPreset("custom");
+  };
+
+  const handleClearDates = () => {
+    setFromDate("");
+    setToDate("");
+    setPeriodPreset("weekly");
+  };
+
+  if (businessesLoading || subscriptionLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Spinner className="size-6" />
+      </div>
+    );
+  }
+
+  if (businesses.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{PRODUCT_SALES_REPORT.title}</h1>
+          <p className="text-muted-foreground text-sm">{PRODUCT_SALES_REPORT.description}</p>
+        </div>
+        <Card>
+          <CardContent className="flex min-h-[320px] flex-col items-center justify-center gap-4 py-12 text-center">
+            <Building2 className="text-muted-foreground size-12" />
+            <div className="space-y-1">
+              <p className="font-medium">{REPORTS_EMPTY_NO_BUSINESS.title}</p>
+              <p className="text-muted-foreground text-sm">
+                {REPORTS_EMPTY_NO_BUSINESS.description}
+              </p>
+            </div>
+            <Button asChild>
+              <Link href={REPORTS_EMPTY_NO_BUSINESS.actionHref}>
+                {REPORTS_EMPTY_NO_BUSINESS.actionLabel}
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!hasReportAccess) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{PRODUCT_SALES_REPORT.title}</h1>
+          <p className="text-muted-foreground text-sm">{PRODUCT_SALES_REPORT.description}</p>
+        </div>
+        <Card>
+          <CardContent className="flex min-h-[320px] flex-col items-center justify-center gap-4 py-12 text-center">
+            <ReportsIcon className="text-muted-foreground size-12" />
+            <div className="max-w-md space-y-1">
+              <p className="font-medium">{REPORTS_UPGRADE_REQUIRED.title}</p>
+              <p className="text-muted-foreground text-sm">
+                {REPORTS_UPGRADE_REQUIRED.description}
+              </p>
+            </div>
+            <Button asChild>
+              <Link href={getSubscribeUrlForPlanLimit("PLAN_LIMIT:product_sales_reports")}>
+                {REPORTS_UPGRADE_REQUIRED.actionLabel}
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1 space-y-3">
+          <Button variant="outline" size="icon" asChild>
+            <Link href="/dashboard/reports" aria-label="Back to reports">
+              <ArrowLeft className="size-4" />
+            </Link>
+          </Button>
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold tracking-tight">{PRODUCT_SALES_REPORT.title}</h1>
+            <p className="text-muted-foreground text-sm">
+              {activeBusiness
+                ? PRODUCT_SALES_REPORT.businessSubtitle(activeBusiness.name)
+                : PRODUCT_SALES_REPORT.description}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader className="space-y-4">
+          <div className="flex flex-col justify-between gap-3 xl:flex-row xl:items-center">
+            <div>
+              <CardTitle>Performance Summary</CardTitle>
+              <CardDescription>Totals for the selected timeline.</CardDescription>
+            </div>
+            <div className="flex w-full flex-col gap-3 xl:w-auto">
+              <div className="flex flex-wrap gap-2">
+                {PERIOD_OPTIONS.map((option) => (
+                  <Button
+                    key={option.id}
+                    size="sm"
+                    variant={periodPreset === option.id ? "default" : "outline"}
+                    onClick={() => handlePresetChange(option.id)}
+                  >
+                    {option.label}
+                  </Button>
+                ))}
+              </div>
+              <div className="flex w-full items-center gap-3 xl:w-auto">
+                <DatePicker
+                  value={fromDate}
+                  onChange={handleFromDateChange}
+                  placeholder="From date"
+                  className="min-w-0 flex-1 xl:w-fit xl:flex-none"
+                  disableFuture
+                />
+                <DatePicker
+                  value={toDate}
+                  onChange={handleToDateChange}
+                  placeholder="To date"
+                  className="min-w-0 flex-1 xl:w-fit xl:flex-none"
+                  disableFuture
+                />
+                {(fromDate || toDate || periodPreset === "custom") && (
+                  <Button variant="outline" onClick={handleClearDates} className="shrink-0">
+                    <X className="size-4 text-red-400" />
+                    Clear
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <ProductSalesSummaryStats loading={summaryLoading} metrics={summaryMetrics} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="space-y-4">
+          <div>
+            <CardTitle>Product Rankings</CardTitle>
+            <CardDescription>Products ranked by your selected sort order.</CardDescription>
+          </div>
+          <div className="flex flex-col justify-between gap-3 xl:flex-row xl:items-center">
+            <div className="relative w-full max-w-sm flex-1">
+              <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={PRODUCT_SALES_REPORT.searchPlaceholder}
+                className="pl-9"
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-muted-foreground hidden text-sm font-medium md:block">
+                {PRODUCT_SALES_REPORT.sortByLabel}
+              </p>
+              {SORT_OPTIONS.map((key) => (
+                <Button
+                  key={key}
+                  size="sm"
+                  variant={sortBy === key ? "default" : "outline"}
+                  onClick={() => setSortBy(key)}
+                >
+                  {PRODUCT_SALES_REPORT.sort[key]}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {summaryLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Spinner className="size-6" />
+            </div>
+          ) : displayRows.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 py-12 text-center">
+              <ReportsIcon className="text-muted-foreground size-10" />
+              <p className="text-muted-foreground text-sm">
+                {debouncedSearch.trim()
+                  ? "No products match your search."
+                  : PRODUCT_SALES_REPORT.emptyDescription}
+              </p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">{PRODUCT_SALES_REPORT.columns.rank}</TableHead>
+                  <TableHead className="min-w-[120px]">
+                    {PRODUCT_SALES_REPORT.columns.product}
+                  </TableHead>
+                  <TableHead className="hidden text-right sm:table-cell">
+                    {PRODUCT_SALES_REPORT.columns.units}
+                  </TableHead>
+                  <TableHead className="text-right">
+                    {PRODUCT_SALES_REPORT.columns.revenue}
+                  </TableHead>
+                  <TableHead className="hidden text-right md:table-cell">
+                    {PRODUCT_SALES_REPORT.columns.profit}
+                  </TableHead>
+                  <TableHead className="hidden text-right md:table-cell">
+                    {PRODUCT_SALES_REPORT.columns.share}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {displayRows.map((row, index) => (
+                  <TableRow key={`${row.product_id ?? "orphan"}-${row.product_name}-${index}`}>
+                    <TableCell className="text-muted-foreground">{index + 1}</TableCell>
+                    <TableCell className="max-w-[180px] whitespace-normal sm:max-w-none">
+                      <div className="font-medium">{row.product_name}</div>
+                      {row.sku ? (
+                        <div className="text-muted-foreground text-xs">{row.sku}</div>
+                      ) : null}
+                      {row.is_orphan_line ? (
+                        <div className="text-muted-foreground text-xs">
+                          {PRODUCT_SALES_REPORT.deletedProductHint}
+                        </div>
+                      ) : null}
+                    </TableCell>
+                    <TableCell className="hidden text-right tabular-nums sm:table-cell">
+                      {row.units_sold.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {formatAmount(row.revenue, { decimalDigits: 0 })}
+                    </TableCell>
+                    <TableCell className="hidden text-right tabular-nums md:table-cell">
+                      {formatAmount(row.profit, { decimalDigits: 0 })}
+                    </TableCell>
+                    <TableCell className="hidden text-right tabular-nums md:table-cell">
+                      {getRevenueSharePercent(row.revenue, summary.totalRevenue).toFixed(1)}%
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default ProductSalesReportPage;

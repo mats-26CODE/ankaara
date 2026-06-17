@@ -52,6 +52,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { ReportsIcon } from "@/components/icons/reports-icon";
 
 export const DashboardSidebar = () => {
   const pathname = usePathname();
@@ -127,6 +128,19 @@ export const DashboardSidebar = () => {
                   <Link href="/dashboard/profits">
                     <ChartColumnIncreasing className="size-4" />
                     <span>Profits</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname.startsWith("/dashboard/reports")}
+                  tooltip="Reports"
+                >
+                  <Link href="/dashboard/reports">
+                    <ReportsIcon className="size-4" />
+                    <span>Reports</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
