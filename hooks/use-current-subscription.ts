@@ -7,9 +7,14 @@ import { VALID_PLAN_SLUGS } from "@/hooks/use-subscription-plans";
 
 const SUBSCRIPTION_QUERY_KEY = ["subscriptions"] as const;
 
+export type CurrentSubscription = {
+  planSlug: SubscriptionPlanSlug;
+  endDate: string | null;
+};
+
 const fetchCurrentSubscription = async (
   userId: string | undefined,
-): Promise<{ planSlug: SubscriptionPlanSlug } | null> => {
+): Promise<CurrentSubscription | null> => {
   if (!userId) return null;
 
   const supabase = createClient();
@@ -18,7 +23,7 @@ const fetchCurrentSubscription = async (
 
   const { data, error } = await supabase
     .from("subscriptions")
-    .select("plan")
+    .select("plan, end_date")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -26,13 +31,13 @@ const fetchCurrentSubscription = async (
   const slug = data?.plan as string | undefined;
   const valid = slug && VALID_PLAN_SLUGS.includes(slug);
   const normalizedSlug: SubscriptionPlanSlug = valid
-    ? (slug === "pro"
-        ? "pro-monthly"
-        : slug === "business"
-          ? "business-monthly"
-          : (slug as SubscriptionPlanSlug))
+    ? slug === "pro"
+      ? "pro-monthly"
+      : slug === "business"
+        ? "business-monthly"
+        : (slug as SubscriptionPlanSlug)
     : "free";
-  return { planSlug: normalizedSlug };
+  return { planSlug: normalizedSlug, endDate: data?.end_date ?? null };
 };
 
 export const useCurrentSubscription = (userId: string | undefined) => {

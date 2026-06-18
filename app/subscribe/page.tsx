@@ -16,12 +16,20 @@ import {
   type SubscriptionPlanWithFeatures,
 } from "@/hooks/use-subscription-plans";
 import { useSetSubscription } from "@/hooks/use-set-subscription";
-import { getNextPlanSlug, getPlanLimitReachedMessage } from "@/lib/subscription-limits";
+import {
+  canCheckoutPlan,
+  getNextPlanSlug,
+  getPlanLimitReachedMessage,
+  isBillingIntervalChange,
+  isExactSamePlan,
+  isPlanDowngrade,
+} from "@/lib/subscription-limits";
+import { getBillingIntervalChangeNote, SUBSCRIBE_SCREEN } from "@/constants/subscribe";
 import { PlanFeaturesList } from "@/components/shared/plan-features-list";
 import { formatPlanCurrency } from "@/lib/format-plan-currency";
 import { useTranslation } from "@/hooks/use-translation";
-import { Loader2, ArrowRight, ArrowLeft, Mail, Users, Cloud, Zap } from "lucide-react";
-import { SUPPORT_EMAIL } from "@/constants/values";
+import { Loader2, ArrowRight, ArrowLeft, Users, Cloud, Zap } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { ToastAlert } from "@/config/toast";
 
 const PLAN_TIER_ICONS: Record<ReturnType<typeof getPlanTier>, typeof Users> = {
@@ -92,6 +100,10 @@ const SubscribeContent = () => {
     }
     if (fromOnboarding) {
       setSelectedSlug((prev) => (prev === null ? "pro-monthly" : prev));
+      return;
+    }
+    if (subscription?.planSlug) {
+      setSelectedSlug((prev) => (prev === null ? subscription.planSlug : prev));
     }
   }, [planParam, limitParam, subscription?.planSlug, fromOnboarding]);
 
@@ -109,25 +121,19 @@ const SubscribeContent = () => {
     }
   }, [user, authLoading, router, planParam, limitParam, fromOnboarding]);
 
+  const currentPlanSlug = (subscription?.planSlug ?? "free") as SubscriptionPlanSlug;
+  const currentPlanEndDate = subscription?.endDate ?? null;
+
   const selectedPlan = plans?.find((p) => p.slug === selectedSlug);
   const isFree = selectedPlan?.slug === "free";
-  const isContactSales = selectedPlan?.is_contact_sales ?? false;
-
-  const handleContinueWithFree = () => {
-    if (!user || !selectedPlan) return;
-    setSubscription.mutate(
-      { planSlug: "free", userId: user.id },
-      {
-        onSuccess: () => {
-          ToastAlert.success("You're on the Free plan.");
-          router.push("/dashboard");
-        },
-        onError: (e) => {
-          ToastAlert.error(e instanceof Error ? e.message : "Failed to set plan");
-        },
-      },
-    );
-  };
+  const isCurrentSelection =
+    selectedSlug != null && isExactSamePlan(currentPlanSlug, selectedSlug);
+  const isBillingChangeSelection =
+    selectedSlug != null && isBillingIntervalChange(currentPlanSlug, selectedSlug);
+  const canCheckoutSelection =
+    selectedSlug != null && canCheckoutPlan(currentPlanSlug, selectedSlug);
+  const isDowngradeSelection =
+    selectedSlug != null && isPlanDowngrade(currentPlanSlug, selectedSlug);
 
   const handleSkip = () => {
     if (!user) {
@@ -212,21 +218,20 @@ const SubscribeContent = () => {
                 isSelected: boolean,
                 onSelect: () => void,
               ) => {
-                const slug = plan.slug as SubscriptionPlanSlug;
                 const Icon = PLAN_TIER_ICONS[tier];
                 const popular = tier === "pro";
-                const contact = plan.is_contact_sales;
                 const priceStr = formatPlanCurrency(plan.price_amount, plan.price_currency);
                 const period = getPeriodSuffix(plan.billing_interval);
                 return (
                   <Card
                     role="button"
                     tabIndex={0}
-                    className={`relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border-2 transition-all ${
+                    className={cn(
+                      "relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border-2 transition-all",
                       isSelected
                         ? "border-primary ring-primary/20 ring-2"
-                        : "bg-card hover:border-primary/30 shadow-xs"
-                    }`}
+                        : "bg-card hover:border-primary/30 shadow-xs",
+                    )}
                     onClick={onSelect}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
@@ -252,18 +257,12 @@ const SubscribeContent = () => {
                       <p className="text-muted-foreground text-sm">
                         {plan.description ?? t(`landing.pricing.${tier}.description`)}
                       </p>
-                      {!contact ? (
-                        <div className="flex items-baseline gap-1 pt-2">
-                          <span className="text-foreground text-3xl font-bold md:text-4xl">
-                            {priceStr ?? t(`landing.pricing.${tier}.price`)}
-                          </span>
-                          <span className="text-muted-foreground">{period}</span>
-                        </div>
-                      ) : (
-                        <p className="text-foreground pt-2 text-lg font-semibold">
-                          {t("landing.pricing.contactUs")}
-                        </p>
-                      )}
+                      <div className="flex items-baseline gap-1 pt-2">
+                        <span className="text-foreground text-3xl font-bold md:text-4xl">
+                          {priceStr ?? t(`landing.pricing.${tier}.price`)}
+                        </span>
+                        <span className="text-muted-foreground">{period}</span>
+                      </div>
                     </CardHeader>
                     <CardContent className="flex flex-1 flex-col pt-0">
                       <PlanFeaturesList features={plan.features} tier={tier} />
@@ -278,31 +277,39 @@ const SubscribeContent = () => {
                 tierLabel: string,
               ) => {
                 if (tierPlans.length === 0) return null;
+
+                const isCurrentTier = getPlanTier(currentPlanSlug) === tier;
+                const currentTierSlug =
+                  isCurrentTier && tierPlans.some((p) => p.slug === currentPlanSlug)
+                    ? currentPlanSlug
+                    : null;
+
                 const activeSlug =
                   selectedSlug && tierPlans.some((p) => p.slug === selectedSlug)
                     ? selectedSlug
-                    : (tierPlans[0]?.slug as SubscriptionPlanSlug);
+                    : currentTierSlug ?? (tierPlans[0]?.slug as SubscriptionPlanSlug);
                 const activePlan = tierPlans.find((p) => p.slug === activeSlug) ?? tierPlans[0]!;
                 const Icon = PLAN_TIER_ICONS[tier];
                 const popular = tier === "pro";
                 const isTierSelected = selectedSlug != null && getPlanTier(selectedSlug) === tier;
-                const selectTierMonthly = () =>
-                  setSelectedSlug(getDefaultPlanSlugForTier(tierPlans));
+                const selectTier = () =>
+                  setSelectedSlug(currentTierSlug ?? getDefaultPlanSlugForTier(tierPlans));
                 return (
                   <Card
                     key={tier}
                     role="button"
                     tabIndex={0}
-                    className={`relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border-2 transition-all ${
+                    className={cn(
+                      "relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border-2 transition-all",
                       isTierSelected
                         ? "border-primary ring-primary/20 ring-2"
-                        : "bg-card hover:border-primary/30 shadow-xs"
-                    }`}
-                    onClick={selectTierMonthly}
+                        : "bg-card hover:border-primary/30 shadow-xs",
+                    )}
+                    onClick={selectTier}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
-                        selectTierMonthly();
+                        selectTier();
                       }
                     }}
                   >
@@ -332,7 +339,11 @@ const SubscribeContent = () => {
                       >
                         <TabsList className="grid w-full grid-cols-3">
                           {tierPlans.map((p) => (
-                            <TabsTrigger key={p.id} value={p.slug} className="text-xs sm:text-sm">
+                            <TabsTrigger
+                              key={p.id}
+                              value={p.slug}
+                              className="text-xs sm:text-sm"
+                            >
                               {getIntervalLabel(p.billing_interval)}
                             </TabsTrigger>
                           ))}
@@ -343,21 +354,15 @@ const SubscribeContent = () => {
                             value={p.slug}
                             className="mt-3 focus-visible:outline-none"
                           >
-                            {p.is_contact_sales ? (
-                              <p className="text-foreground text-lg font-semibold">
-                                {t("landing.pricing.contactUs")}
-                              </p>
-                            ) : (
-                              <div className="flex items-baseline gap-1">
-                                <span className="text-foreground text-2xl font-bold md:text-3xl">
-                                  {formatPlanCurrency(p.price_amount, p.price_currency) ??
-                                    t(`landing.pricing.${tier}.price`)}
-                                </span>
-                                <span className="text-muted-foreground">
-                                  {getPeriodSuffix(p.billing_interval)}
-                                </span>
-                              </div>
-                            )}
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-foreground text-2xl font-bold md:text-3xl">
+                                {formatPlanCurrency(p.price_amount, p.price_currency) ??
+                                  t(`landing.pricing.${tier}.price`)}
+                              </span>
+                              <span className="text-muted-foreground">
+                                {getPeriodSuffix(p.billing_interval)}
+                              </span>
+                            </div>
                           </TabsContent>
                         ))}
                       </Tabs>
@@ -373,8 +378,11 @@ const SubscribeContent = () => {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
                   {grouped.free && (
                     <div key="free">
-                      {renderPlanCard(grouped.free, "free", selectedSlug === "free", () =>
-                        setSelectedSlug("free"),
+                      {renderPlanCard(
+                        grouped.free,
+                        "free",
+                        selectedSlug === "free",
+                        () => setSelectedSlug("free"),
                       )}
                     </div>
                   )}
@@ -397,41 +405,33 @@ const SubscribeContent = () => {
 
           {selectedPlan && (
             <div className="mt-6 flex flex-col gap-3">
-              {isContactSales ? (
-                (() => {
-                  const intervalLabel =
-                    selectedPlan?.billing_interval === "monthly"
-                      ? " (Monthly)"
-                      : selectedPlan?.billing_interval === "6_month"
-                        ? " (6 months)"
-                        : selectedPlan?.billing_interval === "yearly"
-                          ? " (Yearly)"
-                          : "";
-                  const subject = `Business plan inquiry${intervalLabel}`.trim();
-                  return (
-                    <Button asChild size="lg" className="w-full">
-                      <a
-                        href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}`}
-                        className="inline-flex items-center justify-center gap-2"
-                      >
-                        <Mail className="h-4 w-4" />
-                        Contact us for Business plan{intervalLabel}
-                      </a>
-                    </Button>
-                  );
-                })()
-              ) : isFree ? (
+              {isCurrentSelection ? (
                 <div className="border-muted bg-muted/30 rounded-lg border px-4 py-3 text-center">
                   <p className="text-muted-foreground text-sm">
-                    You’re on the Free plan. Upgrade above when you need more.
+                    {isFree ? SUBSCRIBE_SCREEN.freePlanNote : SUBSCRIBE_SCREEN.currentPlanNote}
                   </p>
                 </div>
-              ) : (
-                <Button size="lg" className="w-full" onClick={handleContinueToPayment}>
-                  Continue to payment
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              )}
+              ) : isDowngradeSelection ? (
+                <div className="border-muted bg-muted/30 rounded-lg border px-4 py-3 text-center">
+                  <p className="text-muted-foreground text-sm">
+                    {SUBSCRIBE_SCREEN.downgradePlanNote}
+                  </p>
+                </div>
+              ) : canCheckoutSelection ? (
+                <>
+                  {isBillingChangeSelection ? (
+                    <div className="border-muted bg-muted/30 rounded-lg border px-4 py-3 text-center">
+                      <p className="text-muted-foreground text-sm">
+                        {getBillingIntervalChangeNote(currentPlanEndDate)}
+                      </p>
+                    </div>
+                  ) : null}
+                  <Button size="lg" className="w-full" onClick={handleContinueToPayment}>
+                    Continue to payment
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </>
+              ) : null}
 
               {fromOnboarding && (
                 <Button

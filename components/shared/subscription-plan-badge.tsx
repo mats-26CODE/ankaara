@@ -51,16 +51,26 @@ const BusinessVipBadge = ({ label, className }: { label: string; className?: str
 const ProBadge = ({ label, className }: { label: string; className?: string }) => (
   <span
     className={cn(
-      "inline-flex shrink-0 items-center gap-1.5 rounded-full border border-violet-400/40 px-4 py-1.5 text-sm font-semibold text-white capitalize",
-      "via-primary bg-linear-to-r from-violet-600 to-violet-700",
-      "shadow-[0_4px_14px_rgba(124,58,237,0.35)]",
-      "dark:via-primary dark:border-violet-300/30 dark:from-violet-700 dark:to-violet-800",
+      "relative inline-flex shrink-0 items-center gap-2 overflow-hidden rounded-full border border-dashed border-background px-4 py-1.5 text-sm font-semibold text-white capitalize",
+      "bg-green-600 dark:bg-green-700",
       className,
     )}
     aria-label={`${label} subscription`}
   >
-    <Zap className="size-4 shrink-0 fill-yellow-300/90 text-yellow-200" strokeWidth={2.25} />
-    <span>{label}</span>
+    {FLOATING_STARS.map((star, i) => (
+      <Star
+        key={i}
+        className={cn(
+          "pointer-events-none absolute fill-yellow-300/80 text-yellow-200",
+          star.className,
+        )}
+        aria-hidden
+      />
+    ))}
+    <span className="relative z-10 flex items-center gap-1.5">
+      <Zap className="size-4 shrink-0 fill-yellow-300/90 text-yellow-200" strokeWidth={2.25} />
+      <span>{label}</span>
+    </span>
   </span>
 );
 

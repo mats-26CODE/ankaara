@@ -5,7 +5,73 @@
  * Errors may be Error instances or Postgres-style objects { code, message, details }.
  */
 
+import {
+  getPlanTier,
+  type PlanTier,
+  type SubscriptionPlanSlug,
+} from "@/hooks/use-subscription-plans";
+
 export const SUBSCRIBE_PATH = "/subscribe";
+
+const PLAN_TIER_RANK: Record<PlanTier, number> = {
+  free: 0,
+  pro: 1,
+  business: 2,
+};
+
+export const getPlanTierRank = (
+  slug: SubscriptionPlanSlug | string | null | undefined,
+): number => PLAN_TIER_RANK[getPlanTier(slug)];
+
+export const isSamePlanTier = (
+  currentSlug: SubscriptionPlanSlug | string | null | undefined,
+  targetSlug: SubscriptionPlanSlug | string | null | undefined,
+): boolean => getPlanTier(currentSlug) === getPlanTier(targetSlug);
+
+/** Exact plan slug match (tier + billing interval). */
+export const isExactSamePlan = (
+  currentSlug: SubscriptionPlanSlug | string | null | undefined,
+  targetSlug: SubscriptionPlanSlug | string | null | undefined,
+): boolean => {
+  if (!targetSlug) return false;
+  if (!currentSlug || currentSlug === "free") return targetSlug === "free";
+  return currentSlug === targetSlug;
+};
+
+/** Same paid tier, different billing interval (e.g. pro-monthly → pro-yearly). */
+export const isBillingIntervalChange = (
+  currentSlug: SubscriptionPlanSlug | string | null | undefined,
+  targetSlug: SubscriptionPlanSlug | string | null | undefined,
+): boolean => {
+  if (!currentSlug || !targetSlug || currentSlug === "free" || targetSlug === "free") {
+    return false;
+  }
+  if (currentSlug === targetSlug) return false;
+  return isSamePlanTier(currentSlug, targetSlug);
+};
+
+export const canUpgradeToPlan = (
+  currentSlug: SubscriptionPlanSlug | string | null | undefined,
+  targetSlug: SubscriptionPlanSlug | string | null | undefined,
+): boolean => getPlanTierRank(targetSlug) > getPlanTierRank(currentSlug);
+
+export const isPlanDowngrade = (
+  currentSlug: SubscriptionPlanSlug | string | null | undefined,
+  targetSlug: SubscriptionPlanSlug | string | null | undefined,
+): boolean => getPlanTierRank(targetSlug) < getPlanTierRank(currentSlug);
+
+/** Paid checkout: higher tier or same-tier billing interval change. */
+export const canCheckoutPlan = (
+  currentSlug: SubscriptionPlanSlug | string | null | undefined,
+  targetSlug: SubscriptionPlanSlug | string | null | undefined,
+): boolean => {
+  if (!targetSlug || isExactSamePlan(currentSlug, targetSlug)) return false;
+  if (isPlanDowngrade(currentSlug, targetSlug)) return false;
+  return (
+    canUpgradeToPlan(currentSlug, targetSlug) ||
+    isBillingIntervalChange(currentSlug, targetSlug)
+  );
+};
 
 const PLAN_LIMIT_PREFIX = "PLAN_LIMIT:";
 

@@ -90,6 +90,7 @@ const DashboardPage = () => {
   const currentPlan = plans?.find((p) => p.slug === currentPlanSlug);
   const isFreePlan = currentPlanSlug === "free";
   const upgradeHref = "/subscribe?plan=pro-monthly";
+  const changePlanHref = "/subscribe";
 
   const activeBusiness =
     businesses.find((b) => b.id === currentBusinessId) ?? businesses[0] ?? null;
@@ -137,17 +138,21 @@ const DashboardPage = () => {
           )}
         </div>
 
-        {/* Current subscription plan badge; upgrade CTA when on free */}
+        {/* Current subscription plan badge; upgrade / change plan CTA */}
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           {!subscriptionLoading && (
             <>
               <SubscriptionPlanBadge planSlug={currentPlanSlug} planName={currentPlan?.name} />
-              {isFreePlan && (
+              {isFreePlan ? (
                 <Button asChild size="sm" variant="default" className="gap-1.5">
                   <Link href={upgradeHref}>
                     <Zap className="size-3.5" />
                     Upgrade
                   </Link>
+                </Button>
+              ) : (
+                <Button asChild size="sm" variant="outline">
+                  <Link href={changePlanHref}>Change plan</Link>
                 </Button>
               )}
             </>
