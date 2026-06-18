@@ -247,17 +247,18 @@ const ProductSalesReportPage = () => {
 
       <Card>
         <CardHeader className="space-y-4">
-          <div className="flex flex-col justify-between gap-3 xl:flex-row xl:items-center">
+          <div className="flex flex-col justify-between gap-3">
             <div>
               <CardTitle>Performance Summary</CardTitle>
               <CardDescription>Totals for the selected timeline.</CardDescription>
             </div>
-            <div className="flex w-full flex-col gap-3 xl:w-auto">
+            <div className="flex w-full flex-col flex-wrap gap-3 lg:w-auto lg:flex-row lg:items-center">
               <div className="flex flex-wrap gap-2">
                 {PERIOD_OPTIONS.map((option) => (
                   <Button
                     key={option.id}
                     size="sm"
+                    className="h-9"
                     variant={periodPreset === option.id ? "default" : "outline"}
                     onClick={() => handlePresetChange(option.id)}
                   >
@@ -265,19 +266,19 @@ const ProductSalesReportPage = () => {
                   </Button>
                 ))}
               </div>
-              <div className="flex w-full items-center gap-3 xl:w-auto">
+              <div className="flex w-full items-center gap-3 lg:w-auto">
                 <DatePicker
                   value={fromDate}
                   onChange={handleFromDateChange}
                   placeholder="From date"
-                  className="min-w-0 flex-1 xl:w-fit xl:flex-none"
+                  className="min-w-0 flex-1 lg:w-fit lg:flex-none"
                   disableFuture
                 />
                 <DatePicker
                   value={toDate}
                   onChange={handleToDateChange}
                   placeholder="To date"
-                  className="min-w-0 flex-1 xl:w-fit xl:flex-none"
+                  className="min-w-0 flex-1 lg:w-fit lg:flex-none"
                   disableFuture
                 />
                 {(fromDate || toDate || periodPreset === "custom") && (
