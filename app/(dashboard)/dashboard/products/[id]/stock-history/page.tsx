@@ -4,8 +4,15 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
-import { useProduct, useInventoryMovements, useAdjustProductStock } from "@/hooks/use-products";
+import {
+  useProduct,
+  useInventoryMovements,
+  useAdjustProductStock,
+  useDeleteProduct,
+} from "@/hooks/use-products";
+import { useBusinesses } from "@/hooks/use-businesses";
 import { useRouteUuidParam } from "@/hooks/use-route-uuid-param";
+import { ProductEditDialog } from "@/components/inventory/product-edit-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,13 +21,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 
 type StockFormState = {
   quantity_delta: string;
@@ -39,6 +54,9 @@ const ProductStockHistoryPage = () => {
   const id = useRouteUuidParam("id");
   const router = useRouter();
   const [movementPage, setMovementPage] = useState(1);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const { businesses } = useBusinesses();
   const { product, loading: productLoading, refetch: refetchProduct } = useProduct(id);
   const {
     movements,
@@ -47,6 +65,7 @@ const ProductStockHistoryPage = () => {
     totalCount: movementTotalCount,
   } = useInventoryMovements(id, movementPage, MOVEMENTS_PAGE_SIZE);
   const adjustProductStock = useAdjustProductStock();
+  const deleteProduct = useDeleteProduct();
   const [stockForm, setStockForm] = useState<StockFormState>(emptyStockForm);
 
   useEffect(() => {
@@ -77,6 +96,16 @@ const ProductStockHistoryPage = () => {
         },
       },
     );
+  };
+
+  const handleDelete = () => {
+    if (!product) return;
+    deleteProduct.mutate(product.id, {
+      onSuccess: () => {
+        setDeleteDialogOpen(false);
+        router.replace("/dashboard/products");
+      },
+    });
   };
 
   if (!id) {
@@ -114,27 +143,45 @@ const ProductStockHistoryPage = () => {
   const hasNextMovementPage = movementPage < totalMovementPages;
   const movementStart = totalMovements === 0 ? 0 : (movementPage - 1) * MOVEMENTS_PAGE_SIZE + 1;
   const movementEnd = Math.min(movementPage * MOVEMENTS_PAGE_SIZE, totalMovements);
+  const businessName =
+    businesses.find((business) => business.id === product.business_id)?.name ?? null;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-3">
+        <div className="min-w-0 flex-1 space-y-3">
           <Button variant="outline" size="icon" onClick={() => router.back()}>
             <ArrowLeft className="size-4" />
           </Button>
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight">{product.name}</h1>
-            <Badge variant={isProduct ? "default" : "secondary"}>
-              {isProduct ? "Product" : "Service"}
-            </Badge>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight wrap-break-word">{product.name}</h1>
+              <Badge variant={isProduct ? "default" : "secondary"}>
+                {isProduct ? "Product" : "Service"}
+              </Badge>
+            </div>
+            <p className="text-muted-foreground text-sm">
+              Stock movements and adjustments for this inventory item.
+            </p>
           </div>
-          <p className="text-muted-foreground text-sm">
-            Stock movements and adjustments for this inventory item.
-          </p>
         </div>
-        <Button variant="outline" asChild>
-          <Link href="/dashboard/products">See All Products or Services</Link>
-        </Button>
+        <div className="flex w-full shrink-0 flex-wrap items-center gap-2 sm:ml-auto sm:w-auto sm:justify-end">
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/dashboard/products">See All Products or Services</Link>
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
+            <Pencil className="mr-1 size-4" />
+            Edit
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setDeleteDialogOpen(true)}
+            className="text-destructive hover:text-destructive"
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -358,6 +405,42 @@ const ProductStockHistoryPage = () => {
           </div>
         </CardContent>
       </Card>
+
+      <ProductEditDialog
+        product={product}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSuccess={refetchProduct}
+        businessName={businessName}
+      />
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete product?</DialogTitle>
+            <DialogDescription>
+              This will remove &ldquo;{product.name}&rdquo; from your list. Existing invoices are
+              not changed.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={deleteProduct.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              isLoading={deleteProduct.isPending}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
