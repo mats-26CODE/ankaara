@@ -7,18 +7,18 @@ import { cn } from "@/lib/utils";
 
 export const landingEase = [0.22, 1, 0.36, 1] as const;
 
-/** Default scroll trigger — fires a bit before the section fully enters view. */
+/** Default scroll trigger — element must enter the viewport before animating. */
 export const landingViewport = {
   once: true,
-  amount: 0.12,
-  margin: "0px 0px 80px 0px",
+  amount: 0.22,
+  margin: "0px 0px -72px 0px",
 } as const;
 
-/** Sections directly under the hero — reveal earlier to avoid empty gaps while scrolling. */
+/** Sections directly under the hero — reveal slightly earlier, but still on scroll. */
 export const landingViewportEager = {
   once: true,
-  amount: 0.05,
-  margin: "0px 0px 40% 0px",
+  amount: 0.18,
+  margin: "0px 0px -48px 0px",
 } as const;
 
 export const landingStaggerParent: Variants = {
@@ -42,20 +42,20 @@ export const landingStaggerLoose: Variants = {
 };
 
 export const landingFadeUp: Variants = {
-  hidden: { opacity: 0, y: 16 },
+  hidden: { opacity: 0, y: 22 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.38, ease: landingEase },
+    transition: { duration: 0.42, ease: landingEase },
   },
 };
 
 export const landingFadeUpTight: Variants = {
-  hidden: { opacity: 0, y: 10 },
+  hidden: { opacity: 0, y: 14 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.32, ease: landingEase },
+    transition: { duration: 0.36, ease: landingEase },
   },
 };
 
@@ -109,8 +109,8 @@ export const ScrollReveal = ({
   as = "div",
   delay = 0,
   direction = "up",
-  distance = 20,
-  duration = 0.38,
+  distance = 26,
+  duration = 0.42,
   eager = false,
   instant = false,
 }: ScrollRevealProps) => {
