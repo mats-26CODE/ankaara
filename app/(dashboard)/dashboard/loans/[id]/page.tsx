@@ -8,6 +8,7 @@ import { useLoan, useRecordLoanPayment, useCreateInvoiceFromLoan } from "@/hooks
 import { formatAmount as formatCurrencyAmount } from "@/hooks/use-format-amount";
 import { findCurrency, useCurrencies } from "@/hooks/use-currencies";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "@/hooks/use-translation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -46,6 +47,7 @@ const parseAmountInput = (raw: string): string => {
 
 const LoanDetailPage = () => {
   const router = useRouter();
+  const { t } = useTranslation();
   const id = useRouteUuidParam("id");
   const { currencies } = useCurrencies();
   const { loan, items, payments, loading, refetch } = useLoan(id);
@@ -91,9 +93,9 @@ const LoanDetailPage = () => {
   if (!loan) {
     return (
       <div className="space-y-3 py-8 text-center">
-        <p className="text-muted-foreground">Loan not found.</p>
+        <p className="text-muted-foreground">{t("dashboard.loans.detail.notFound")}</p>
         <Button asChild variant="outline">
-          <Link href="/dashboard/loans">Back to loans</Link>
+          <Link href="/dashboard/loans">{t("dashboard.common.backToLoans")}</Link>
         </Button>
       </div>
     );
@@ -119,22 +121,23 @@ const LoanDetailPage = () => {
           <div>
             <h1 className="text-2xl font-bold tracking-tight">{loan.loan_number}</h1>
             <p className="text-muted-foreground text-sm">
-              {loan.client?.name ?? "Client"} • {dayjs(loan.loan_date).format("MMM D, YYYY")}
+              {loan.client?.name ?? t("dashboard.loans.detail.fallbackClient")} •{" "}
+              {dayjs(loan.loan_date).format("MMM D, YYYY")}
             </p>
             {loan.sale_id ? (
               <p className="text-muted-foreground mt-1 text-xs">
-                Auto-converted to sale after final payment.
+                {t("dashboard.loans.detail.autoConvertedHint")}
               </p>
             ) : null}
           </div>
         </div>
         <div className="flex gap-2">
           <Badge variant={loan.status === "paid" ? "default" : "secondary"}>
-            {loan.status.replace("_", " ")}
+            {t(`dashboard.status.${loan.status}`)}
           </Badge>
           {loan.sale_id ? (
             <Button asChild variant="outline">
-              <Link href={`/dashboard/sales/${loan.sale_id}`}>View sale</Link>
+              <Link href={`/dashboard/sales/${loan.sale_id}`}>{t("dashboard.common.viewSale")}</Link>
             </Button>
           ) : null}
         </div>
@@ -142,13 +145,13 @@ const LoanDetailPage = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Loan Stats</CardTitle>
+          <CardTitle>{t("dashboard.loans.detail.statsTitle")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="rounded-lg border p-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">Loan total</p>
+                <p className="text-sm font-medium">{t("dashboard.loans.detail.loanTotal")}</p>
               </div>
               <p className="mt-2 text-2xl font-bold tabular-nums">
                 {formatLoanAmount(Number(loan.total))}
@@ -156,7 +159,7 @@ const LoanDetailPage = () => {
             </div>
             <div className="rounded-lg border p-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">Outstanding</p>
+                <p className="text-sm font-medium">{t("dashboard.common.outstanding")}</p>
               </div>
               <p className="mt-2 text-2xl font-bold tabular-nums">
                 {formatLoanAmount(Number(loan.outstanding_balance))}
@@ -169,7 +172,7 @@ const LoanDetailPage = () => {
               )}
             >
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">Payments received</p>
+                <p className="text-sm font-medium">{t("dashboard.loans.detail.paymentsReceived")}</p>
               </div>
               <p className="mt-2 text-2xl font-bold tabular-nums">
                 {formatLoanAmount(paymentsReceived)}
@@ -181,17 +184,17 @@ const LoanDetailPage = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Loan items</CardTitle>
+          <CardTitle>{t("dashboard.loans.detail.itemsTitle")}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Description</TableHead>
-                <TableHead className="text-right">Qty</TableHead>
-                <TableHead className="text-right">Unit</TableHead>
-                <TableHead className="text-right">Discount</TableHead>
-                <TableHead className="text-right">Total</TableHead>
+                <TableHead>{t("dashboard.common.description")}</TableHead>
+                <TableHead className="text-right">{t("dashboard.common.quantity")}</TableHead>
+                <TableHead className="text-right">{t("dashboard.common.unit")}</TableHead>
+                <TableHead className="text-right">{t("dashboard.common.discount")}</TableHead>
+                <TableHead className="text-right">{t("dashboard.common.total")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -219,48 +222,48 @@ const LoanDetailPage = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Record payment</CardTitle>
+          <CardTitle>{t("dashboard.loans.detail.paymentTitle")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-2">
-              <Label>Amount</Label>
+              <Label>{t("dashboard.common.amount")}</Label>
               <Input
                 inputMode="decimal"
                 value={formatAmountDisplay(amount)}
                 onChange={(e) => setAmount(parseAmountInput(e.target.value))}
-                placeholder="0.00"
+                placeholder={t("dashboard.loans.detail.amountPlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <Label>Payment date</Label>
+              <Label>{t("dashboard.loans.detail.paymentDate")}</Label>
               <DatePicker
                 value={paymentDate}
                 onChange={setPaymentDate}
-                placeholder="Payment date"
+                placeholder={t("dashboard.loans.detail.paymentDatePlaceholder")}
                 disableFuture
               />
             </div>
             <div className="space-y-2">
-              <Label>Method</Label>
+              <Label>{t("dashboard.common.method")}</Label>
               <Input value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Reference (optional)</Label>
+              <Label>{t("dashboard.loans.detail.referenceOptional")}</Label>
               <Input value={reference} onChange={(e) => setReference(e.target.value)} />
             </div>
           </div>
           <div className="rounded-md border p-3">
-            <p className="text-muted-foreground text-xs">Payment impact</p>
+            <p className="text-muted-foreground text-xs">{t("dashboard.loans.detail.impactLabel")}</p>
             <p className="mt-1 text-sm">
-              Remaining balance after this payment:{" "}
+              {t("dashboard.loans.detail.remainingBalance")}{" "}
               <span className="font-semibold tabular-nums">
                 {formatLoanAmount(Math.max(outstandingBalance - paymentAmount, 0))}
               </span>
             </p>
             {exceedsOutstanding ? (
               <p className="text-destructive mt-2 text-xs">
-                Payment amount cannot exceed outstanding balance (
+                {t("dashboard.loans.detail.exceedsBalance")}
                 {formatLoanAmount(outstandingBalance)}).
               </p>
             ) : null}
@@ -272,7 +275,7 @@ const LoanDetailPage = () => {
                 isLoading={recordPayment.isPending}
                 disabled={paymentAmount <= 0 || loan.status === "paid" || exceedsOutstanding}
               >
-                Save payment
+                {t("dashboard.common.savePayment")}
               </Button>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -287,11 +290,15 @@ const LoanDetailPage = () => {
                 isLoading={createInvoiceFromLoan.isPending}
                 disabled={!!loan.invoice_id || exceedsOutstanding}
               >
-                {loan.invoice_id ? "Invoice created" : "Create invoice"}
+                {loan.invoice_id
+                  ? t("dashboard.loans.detail.invoiceCreated")
+                  : t("dashboard.loans.detail.invoiceCreate")}
               </Button>
               {loan.invoice_id ? (
                 <Button asChild variant="outline">
-                  <Link href={`/dashboard/invoices/${loan.invoice_id}`}>View invoice</Link>
+                  <Link href={`/dashboard/invoices/${loan.invoice_id}`}>
+                    {t("dashboard.common.viewInvoice")}
+                  </Link>
                 </Button>
               ) : null}
             </div>
@@ -301,19 +308,19 @@ const LoanDetailPage = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Payment history</CardTitle>
+          <CardTitle>{t("dashboard.loans.detail.historyTitle")}</CardTitle>
         </CardHeader>
         <CardContent>
           {payments.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No payments yet.</p>
+            <p className="text-muted-foreground text-sm">{t("dashboard.loans.detail.historyEmpty")}</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Method</TableHead>
-                  <TableHead>Reference</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>{t("dashboard.common.date")}</TableHead>
+                  <TableHead>{t("dashboard.common.method")}</TableHead>
+                  <TableHead>{t("dashboard.common.reference")}</TableHead>
+                  <TableHead className="text-right">{t("dashboard.common.amount")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

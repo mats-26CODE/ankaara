@@ -121,7 +121,7 @@ const SignUpContent = () => {
   };
 
   const testimonial = {
-    quote: `${APP_NAME} makes invoicing and getting paid so much simpler. I create invoices in minutes, share a link, and get paid via mobile money. Perfect for freelancers and small businesses.`,
+    quote: t("auth.common.testimonialQuote", { appName: APP_NAME }),
     author: `@${APP_NAME.toLowerCase()}_user`,
   };
 

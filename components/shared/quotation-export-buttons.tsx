@@ -6,23 +6,25 @@ import { FileDown, FileImage } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { ToastAlert } from "@/config/toast";
 import { captureElementAsCanvas, downloadAsPng, downloadAsPdf } from "@/lib/capture-invoice";
+import { useTranslation } from "@/hooks/use-translation";
 
 export const QUOTATION_ELEMENT_ID = "quotation-to-export";
 
 export const QuotationExportButtons = ({ quotationNumber }: { quotationNumber: string }) => {
+  const { t } = useTranslation();
   const [exporting, setExporting] = useState<"pdf" | "image" | null>(null);
 
   const captureCanvas = async () => {
     if (typeof document === "undefined") return null;
     const el = document.getElementById(QUOTATION_ELEMENT_ID);
     if (!el) {
-      ToastAlert.error("Quotation not found. Please refresh the page.");
+      ToastAlert.error(t("dashboard.quotations.share.notFoundRefresh"));
       return null;
     }
     try {
       return await captureElementAsCanvas(el);
     } catch {
-      ToastAlert.error("Export failed");
+      ToastAlert.error(t("dashboard.quotations.share.captureFailed"));
       return null;
     }
   };
@@ -45,11 +47,15 @@ export const QuotationExportButtons = ({ quotationNumber }: { quotationNumber: s
     <div className="flex gap-2">
       <Button variant="outline" size="sm" onClick={handleExportImage} disabled={!!exporting}>
         <FileImage className="mr-2 size-4" />
-        {exporting === "image" ? "Exporting..." : "Download as PNG"}
+        {exporting === "image"
+          ? t("dashboard.quotations.share.exporting")
+          : t("dashboard.quotations.share.exportImage")}
       </Button>
       <Button variant="outline" size="sm" onClick={handleExportPdf} disabled={!!exporting}>
         <FileDown className="mr-2 size-4" />
-        {exporting === "pdf" ? "Exporting..." : "Download as PDF"}
+        {exporting === "pdf"
+          ? t("dashboard.quotations.share.exporting")
+          : t("dashboard.quotations.share.exportPdf")}
       </Button>
     </div>
   );

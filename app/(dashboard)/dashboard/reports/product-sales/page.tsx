@@ -20,6 +20,7 @@ import { useUser } from "@/hooks/use-user";
 import { getPlanTier } from "@/hooks/use-subscription-plans";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useCurrentBusinessId } from "@/lib/stores/business-store";
+import { useTranslation } from "@/hooks/use-translation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -35,11 +36,7 @@ import {
 } from "@/components/ui/table";
 import { ProductSalesSummaryStats } from "@/components/reports/product-sales-summary-stats";
 import { ReportsIcon } from "@/components/icons/reports-icon";
-import {
-  PRODUCT_SALES_REPORT,
-  REPORTS_EMPTY_NO_BUSINESS,
-  REPORTS_UPGRADE_REQUIRED,
-} from "@/constants/reports";
+import { REPORTS_EMPTY_NO_BUSINESS } from "@/constants/reports";
 import { resolveReportPeriodRange, type ReportPeriodPreset } from "@/lib/dates/report-period";
 import {
   filterProductSalesRows,
@@ -51,13 +48,8 @@ import { getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
 
 const SORT_OPTIONS: ProductSalesSortKey[] = ["units", "revenue", "profit"];
 
-const PERIOD_OPTIONS: { id: ReportPeriodPreset; label: string }[] = [
-  { id: "weekly", label: PRODUCT_SALES_REPORT.period.last7Days },
-  { id: "monthly", label: PRODUCT_SALES_REPORT.period.thisMonth },
-  { id: "all_time", label: PRODUCT_SALES_REPORT.period.allTime },
-];
-
 const ProductSalesReportPage = () => {
+  const { t } = useTranslation();
   const { user } = useUser();
   const { format: formatAmount } = useFormatAmount();
   const { businesses, loading: businessesLoading } = useBusinesses();
@@ -76,6 +68,16 @@ const ProductSalesReportPage = () => {
 
   const activeBusiness =
     businesses.find((business) => business.id === currentBusinessId) ?? businesses[0] ?? null;
+
+  const periodOptions = useMemo(
+    () =>
+      [
+        { id: "weekly" as const, label: t("dashboard.reports.productSales.period.last7Days") },
+        { id: "monthly" as const, label: t("dashboard.reports.productSales.period.thisMonth") },
+        { id: "all_time" as const, label: t("dashboard.reports.productSales.period.allTime") },
+      ] satisfies { id: ReportPeriodPreset; label: string }[],
+    [t],
+  );
 
   const resolvedRange = useMemo(() => {
     if (periodPreset === "custom") {
@@ -102,35 +104,35 @@ const ProductSalesReportPage = () => {
     () => [
       {
         key: "revenue",
-        label: PRODUCT_SALES_REPORT.summary.totalRevenue,
+        label: t("dashboard.reports.productSales.summary.totalRevenue"),
         value: formatAmount(summary.totalRevenue, { decimalDigits: 0 }),
         icon: Wallet,
         iconClassName: "text-blue-600",
       },
       {
         key: "units",
-        label: PRODUCT_SALES_REPORT.summary.totalUnits,
+        label: t("dashboard.reports.productSales.summary.totalUnits"),
         value: summary.totalUnits.toLocaleString(),
         icon: ShoppingBag,
         iconClassName: "text-violet-600",
       },
       {
         key: "products",
-        label: PRODUCT_SALES_REPORT.summary.productsSold,
+        label: t("dashboard.reports.productSales.summary.productsSold"),
         value: summary.productCount.toLocaleString(),
         icon: Package,
         iconClassName: "text-amber-600",
       },
       {
         key: "top",
-        label: PRODUCT_SALES_REPORT.summary.topProduct,
+        label: t("dashboard.reports.productSales.summary.topProduct"),
         value: summary.topProductName ?? "—",
         icon: Trophy,
         iconClassName: "text-green-600",
         valueClassName: "truncate text-xl font-bold lg:text-2xl",
       },
     ],
-    [formatAmount, summary],
+    [formatAmount, summary, t],
   );
 
   useEffect(() => {
@@ -175,21 +177,25 @@ const ProductSalesReportPage = () => {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{PRODUCT_SALES_REPORT.title}</h1>
-          <p className="text-muted-foreground text-sm">{PRODUCT_SALES_REPORT.description}</p>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {t("dashboard.reports.productSales.title")}
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            {t("dashboard.reports.productSales.description")}
+          </p>
         </div>
         <Card>
           <CardContent className="flex min-h-[320px] flex-col items-center justify-center gap-4 py-12 text-center">
             <Building2 className="text-muted-foreground size-12" />
             <div className="space-y-1">
-              <p className="font-medium">{REPORTS_EMPTY_NO_BUSINESS.title}</p>
+              <p className="font-medium">{t("dashboard.common.noBusinessTitle")}</p>
               <p className="text-muted-foreground text-sm">
-                {REPORTS_EMPTY_NO_BUSINESS.description}
+                {t("dashboard.empty.noBusiness.reports")}
               </p>
             </div>
             <Button asChild>
               <Link href={REPORTS_EMPTY_NO_BUSINESS.actionHref}>
-                {REPORTS_EMPTY_NO_BUSINESS.actionLabel}
+                {t("dashboard.common.goToBusinesses")}
               </Link>
             </Button>
           </CardContent>
@@ -202,21 +208,25 @@ const ProductSalesReportPage = () => {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{PRODUCT_SALES_REPORT.title}</h1>
-          <p className="text-muted-foreground text-sm">{PRODUCT_SALES_REPORT.description}</p>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {t("dashboard.reports.productSales.title")}
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            {t("dashboard.reports.productSales.description")}
+          </p>
         </div>
         <Card>
           <CardContent className="flex min-h-[320px] flex-col items-center justify-center gap-4 py-12 text-center">
             <ReportsIcon className="text-muted-foreground size-12" />
             <div className="max-w-md space-y-1">
-              <p className="font-medium">{REPORTS_UPGRADE_REQUIRED.title}</p>
+              <p className="font-medium">{t("dashboard.reports.upgrade.title")}</p>
               <p className="text-muted-foreground text-sm">
-                {REPORTS_UPGRADE_REQUIRED.description}
+                {t("dashboard.reports.upgrade.description")}
               </p>
             </div>
             <Button asChild>
               <Link href={getSubscribeUrlForPlanLimit("PLAN_LIMIT:product_sales_reports")}>
-                {REPORTS_UPGRADE_REQUIRED.actionLabel}
+                {t("dashboard.common.viewPlans")}
               </Link>
             </Button>
           </CardContent>
@@ -230,16 +240,18 @@ const ProductSalesReportPage = () => {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1 space-y-3">
           <Button variant="outline" size="icon" asChild>
-            <Link href="/dashboard/reports" aria-label="Back to reports">
+            <Link href="/dashboard/reports" aria-label={t("dashboard.reports.productSales.backAriaLabel")}>
               <ArrowLeft className="size-4" />
             </Link>
           </Button>
           <div className="min-w-0">
-            <h1 className="text-2xl font-bold tracking-tight">{PRODUCT_SALES_REPORT.title}</h1>
+            <h1 className="text-2xl font-bold tracking-tight">
+              {t("dashboard.reports.productSales.title")}
+            </h1>
             <p className="text-muted-foreground text-sm">
               {activeBusiness
-                ? PRODUCT_SALES_REPORT.businessSubtitle(activeBusiness.name)
-                : PRODUCT_SALES_REPORT.description}
+                ? t("dashboard.reports.productSales.businessSubtitle", { name: activeBusiness.name })
+                : t("dashboard.reports.productSales.description")}
             </p>
           </div>
         </div>
@@ -249,12 +261,12 @@ const ProductSalesReportPage = () => {
         <CardHeader className="space-y-4">
           <div className="flex flex-col justify-between gap-3">
             <div>
-              <CardTitle>Performance Summary</CardTitle>
-              <CardDescription>Totals for the selected timeline.</CardDescription>
+              <CardTitle>{t("dashboard.reports.productSales.summaryTitle")}</CardTitle>
+              <CardDescription>{t("dashboard.reports.productSales.summaryDescription")}</CardDescription>
             </div>
             <div className="flex w-full flex-col flex-wrap gap-3 lg:w-auto lg:flex-row lg:items-center">
               <div className="flex flex-wrap gap-2">
-                {PERIOD_OPTIONS.map((option) => (
+                {periodOptions.map((option) => (
                   <Button
                     key={option.id}
                     size="sm"
@@ -270,21 +282,21 @@ const ProductSalesReportPage = () => {
                 <DatePicker
                   value={fromDate}
                   onChange={handleFromDateChange}
-                  placeholder="From date"
+                  placeholder={t("dashboard.common.fromDate")}
                   className="min-w-0 flex-1 lg:w-fit lg:flex-none"
                   disableFuture
                 />
                 <DatePicker
                   value={toDate}
                   onChange={handleToDateChange}
-                  placeholder="To date"
+                  placeholder={t("dashboard.common.toDate")}
                   className="min-w-0 flex-1 lg:w-fit lg:flex-none"
                   disableFuture
                 />
                 {(fromDate || toDate || periodPreset === "custom") && (
                   <Button variant="outline" onClick={handleClearDates} className="shrink-0">
                     <X className="size-4 text-red-400" />
-                    Clear
+                    {t("dashboard.common.clear")}
                   </Button>
                 )}
               </div>
@@ -299,8 +311,8 @@ const ProductSalesReportPage = () => {
       <Card>
         <CardHeader className="space-y-4">
           <div>
-            <CardTitle>Product Rankings</CardTitle>
-            <CardDescription>Products ranked by your selected sort order.</CardDescription>
+            <CardTitle>{t("dashboard.reports.productSales.rankingsTitle")}</CardTitle>
+            <CardDescription>{t("dashboard.reports.productSales.rankingsDescription")}</CardDescription>
           </div>
           <div className="flex flex-col justify-between gap-3 xl:flex-row xl:items-center">
             <div className="relative w-full max-w-sm flex-1">
@@ -308,13 +320,13 @@ const ProductSalesReportPage = () => {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder={PRODUCT_SALES_REPORT.searchPlaceholder}
+                placeholder={t("dashboard.reports.productSales.searchPlaceholder")}
                 className="pl-9"
               />
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-muted-foreground hidden text-sm font-medium md:block">
-                {PRODUCT_SALES_REPORT.sortByLabel}
+                {t("dashboard.reports.productSales.sortByLabel")}
               </p>
               {SORT_OPTIONS.map((key) => (
                 <Button
@@ -323,7 +335,7 @@ const ProductSalesReportPage = () => {
                   variant={sortBy === key ? "default" : "outline"}
                   onClick={() => setSortBy(key)}
                 >
-                  {PRODUCT_SALES_REPORT.sort[key]}
+                  {t(`dashboard.reports.productSales.sort.${key}`)}
                 </Button>
               ))}
             </div>
@@ -339,29 +351,27 @@ const ProductSalesReportPage = () => {
               <ReportsIcon className="text-muted-foreground size-10" />
               <p className="text-muted-foreground text-sm">
                 {debouncedSearch.trim()
-                  ? "No products match your search."
-                  : PRODUCT_SALES_REPORT.emptyDescription}
+                  ? t("dashboard.reports.productSales.noMatch")
+                  : t("dashboard.reports.productSales.emptyDescription")}
               </p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12">{PRODUCT_SALES_REPORT.columns.rank}</TableHead>
-                  <TableHead className="min-w-[120px]">
-                    {PRODUCT_SALES_REPORT.columns.product}
+                  <TableHead className="w-12">
+                    {t("dashboard.reports.productSales.columns.rank")}
                   </TableHead>
+                  <TableHead className="min-w-[120px]">{t("dashboard.common.product")}</TableHead>
                   <TableHead className="hidden text-right sm:table-cell">
-                    {PRODUCT_SALES_REPORT.columns.units}
+                    {t("dashboard.reports.productSales.columns.units")}
                   </TableHead>
-                  <TableHead className="text-right">
-                    {PRODUCT_SALES_REPORT.columns.revenue}
+                  <TableHead className="text-right">{t("dashboard.common.revenue")}</TableHead>
+                  <TableHead className="hidden text-right md:table-cell">
+                    {t("dashboard.common.profit")}
                   </TableHead>
                   <TableHead className="hidden text-right md:table-cell">
-                    {PRODUCT_SALES_REPORT.columns.profit}
-                  </TableHead>
-                  <TableHead className="hidden text-right md:table-cell">
-                    {PRODUCT_SALES_REPORT.columns.share}
+                    {t("dashboard.reports.productSales.columns.share")}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -376,7 +386,7 @@ const ProductSalesReportPage = () => {
                       ) : null}
                       {row.is_orphan_line ? (
                         <div className="text-muted-foreground text-xs">
-                          {PRODUCT_SALES_REPORT.deletedProductHint}
+                          {t("dashboard.reports.productSales.deletedProductHint")}
                         </div>
                       ) : null}
                     </TableCell>

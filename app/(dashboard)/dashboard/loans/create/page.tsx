@@ -9,6 +9,7 @@ import { useClients } from "@/hooks/use-clients";
 import { useProducts } from "@/hooks/use-products";
 import { useCreateLoan } from "@/hooks/use-loans";
 import { useFormatAmount } from "@/hooks/use-format-amount";
+import { useTranslation } from "@/hooks/use-translation";
 import { ClientPickerDialog } from "@/components/shared/client-picker-dialog";
 import {
   ProductPickerDialog,
@@ -39,6 +40,7 @@ const lineTotal = (line: LoanLine) =>
 
 const LoanCreatePage = () => {
   const router = useRouter();
+  const { t } = useTranslation();
   const { businesses } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
   const { format: formatAmount } = useFormatAmount();
@@ -133,8 +135,8 @@ const LoanCreatePage = () => {
             </Link>
           </Button>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Create Loan</h1>
-            <p className="text-muted-foreground text-sm">Record products taken on credit by a client.</p>
+            <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.loans.create.title")}</h1>
+            <p className="text-muted-foreground text-sm">{t("dashboard.loans.create.subtitle")}</p>
           </div>
         </div>
         <Button
@@ -142,7 +144,7 @@ const LoanCreatePage = () => {
           isLoading={createLoan.isPending}
           disabled={!canSubmit || createLoan.isPending}
         >
-          Save loan
+          {t("dashboard.common.saveLoan")}
         </Button>
       </div>
 
@@ -150,20 +152,20 @@ const LoanCreatePage = () => {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Loan Details</CardTitle>
+              <CardTitle className="text-base">{t("dashboard.loans.create.detailsTitle")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Loan date</Label>
+                <Label>{t("dashboard.loans.create.loanDate")}</Label>
                 <DatePicker
                   value={loanDate}
                   onChange={setLoanDate}
-                  placeholder="Loan date"
+                  placeholder={t("dashboard.loans.create.loanDatePlaceholder")}
                   disableFuture
                 />
               </div>
               <div className="space-y-2">
-                <Label>Client</Label>
+                <Label>{t("dashboard.common.client")}</Label>
                 <ClientPickerDialog
                   businessId={currentBusinessId}
                   value={clientId}
@@ -175,12 +177,12 @@ const LoanCreatePage = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Notes</Label>
+                <Label>{t("dashboard.common.notes")}</Label>
                 <Textarea
                   rows={2}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Optional notes for this loan"
+                  placeholder={t("dashboard.loans.create.notesPlaceholder")}
                 />
               </div>
             </CardContent>
@@ -188,16 +190,16 @@ const LoanCreatePage = () => {
 
           <Card>
             <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between">
-              <CardTitle className="text-base">Loan Items</CardTitle>
+              <CardTitle className="text-base">{t("dashboard.loans.create.itemsTitle")}</CardTitle>
               <Button variant="outline" size="sm" onClick={() => setProductPickerOpen(true)}>
                 <Plus className="mr-1 size-4" />
-                Add item
+                {t("dashboard.common.addItem")}
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
               {lines.length === 0 && (
                 <p className="text-muted-foreground py-4 text-center text-sm">
-                  Add products or services to this loan.
+                  {t("dashboard.loans.create.itemsEmpty")}
                 </p>
               )}
               {lines.map((line, index) => (
@@ -207,11 +209,14 @@ const LoanCreatePage = () => {
                       <p className="font-medium">{line.description}</p>
                       <div className="flex items-center gap-2">
                         <Badge variant={line.item_type === "service" ? "secondary" : "default"}>
-                          {line.item_type === "service" ? "Service" : "Product"}
+                          {line.item_type === "service"
+                            ? t("dashboard.common.service")
+                            : t("dashboard.common.product")}
                         </Badge>
                         {line.item_type === "product" && (
                           <span className="text-muted-foreground text-xs">
-                            Stock: {Number(line.stock_quantity).toLocaleString()}
+                            {t("dashboard.sales.create.stockLabel")}{" "}
+                            {Number(line.stock_quantity).toLocaleString()}
                           </span>
                         )}
                       </div>
@@ -229,7 +234,7 @@ const LoanCreatePage = () => {
 
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     <div className="space-y-2">
-                      <Label>Qty *</Label>
+                      <Label>{t("dashboard.common.qtyRequired")}</Label>
                       <Input
                         inputMode="decimal"
                         value={line.quantity}
@@ -245,7 +250,7 @@ const LoanCreatePage = () => {
                       />
                     </div>
                     <div className="space-y-2 sm:col-span-2 lg:col-span-1">
-                      <Label>Price *</Label>
+                      <Label>{t("dashboard.common.priceRequired")}</Label>
                       <Input
                         inputMode="decimal"
                         value={line.unit_price}
@@ -261,7 +266,7 @@ const LoanCreatePage = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Discount</Label>
+                      <Label>{t("dashboard.common.discount")}</Label>
                       <Input
                         inputMode="decimal"
                         value={line.discount}
@@ -278,7 +283,7 @@ const LoanCreatePage = () => {
                     </div>
                   </div>
                   <div className="rounded-md border bg-muted/30 px-3 py-2">
-                    <p className="text-muted-foreground text-xs">Line total</p>
+                    <p className="text-muted-foreground text-xs">{t("dashboard.common.lineTotal")}</p>
                     <p className="font-medium">{formatAmount(lineTotal(line), { decimalDigits: 0 })}</p>
                   </div>
                 </div>
@@ -299,19 +304,19 @@ const LoanCreatePage = () => {
 
         <Card className="h-fit">
           <CardHeader>
-            <CardTitle className="text-base">Summary</CardTitle>
+            <CardTitle className="text-base">{t("dashboard.common.summary")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-sm">Items</span>
+              <span className="text-muted-foreground text-sm">{t("dashboard.common.items")}</span>
               <span className="font-medium">{lines.filter((line) => line.product_id).length}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-sm">Estimated total</span>
+              <span className="text-muted-foreground text-sm">{t("dashboard.common.estimatedTotal")}</span>
               <span className="font-medium">{formatAmount(subtotal, { decimalDigits: 0 })}</span>
             </div>
             <div className="flex items-center justify-between border-t pt-3">
-              <span className="font-medium">Outstanding</span>
+              <span className="font-medium">{t("dashboard.common.outstanding")}</span>
               <span className="text-lg font-bold">
                 {formatAmount(subtotal, { decimalDigits: 0 })}
               </span>

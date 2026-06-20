@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { useProfile, useUpdateProfile } from "@/hooks/use-profile";
 import { useUser } from "@/hooks/use-user";
+import { createClient } from "@/lib/supabase/client";
 import { useCurrencies } from "@/hooks/use-currencies";
 import { useTheme, useLanguage } from "@/lib/stores/preferences-store";
 import { useSendOtpForPhoneChange, useVerifyPhoneChange } from "@/hooks/use-auth";
@@ -37,8 +38,10 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useTranslation } from "@/hooks/use-translation";
 
 const ProfileSettingsPage = () => {
+  const { t } = useTranslation();
   const { user } = useUser();
   const { profile, loading: profileLoading, refetch } = useProfile();
   const { currencies, loading: currenciesLoading } = useCurrencies();
@@ -76,6 +79,21 @@ const ProfileSettingsPage = () => {
     });
     setPrefilled(true);
   }, [profile, prefilled, user?.phone]);
+
+  const handleLanguageChange = (value: string) => {
+    const lang = value === "en" ? "en" : "sw";
+    setLanguage(lang);
+    if (!user?.id) return;
+    const supabase = createClient();
+    void supabase
+      .from("profiles")
+      .update({ preferred_language: lang })
+      .eq("id", user.id)
+      .then(({ error }) => {
+        if (error) console.error("[profile] preferred_language sync failed", error);
+        else void refetch();
+      });
+  };
 
   const phoneChanged = () => {
     const newPhone = addCountryCode(form.phone.trim());
@@ -137,7 +155,7 @@ const ProfileSettingsPage = () => {
       },
       {
         onError: (err) => {
-          setOtpError(err.message || "Verification failed");
+          setOtpError(err.message || t("dashboard.settings.profile.otpVerificationFailed"));
         },
       },
     );
@@ -171,42 +189,42 @@ const ProfileSettingsPage = () => {
       {/* Profile Info */}
       <Card>
         <CardHeader>
-          <CardTitle>Profile</CardTitle>
-          <CardDescription>Your personal information.</CardDescription>
+          <CardTitle>{t("dashboard.settings.profile.sectionTitle")}</CardTitle>
+          <CardDescription>{t("dashboard.settings.profile.sectionDescription")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
             <Avatar className="size-16">
-              <AvatarImage src={form.avatar_url || undefined} alt="Avatar" />
+              <AvatarImage src={form.avatar_url || undefined} alt={t("dashboard.settings.profile.avatarAlt")} />
               <AvatarFallback className="text-lg">{initials}</AvatarFallback>
             </Avatar>
             <div className="flex-1 space-y-1">
-              <Label htmlFor="avatar_url">Avatar URL</Label>
+              <Label htmlFor="avatar_url">{t("dashboard.settings.profile.avatarUrlLabel")}</Label>
               <Input
                 id="avatar_url"
                 value={form.avatar_url}
                 onChange={(e) => setForm((p) => ({ ...p, avatar_url: e.target.value }))}
-                placeholder="https://example.com/avatar.png"
+                placeholder={t("dashboard.settings.profile.avatarUrlPlaceholder")}
               />
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="full_name">Full Name</Label>
+              <Label htmlFor="full_name">{t("dashboard.settings.profile.fullNameLabel")}</Label>
               <Input
                 id="full_name"
                 value={form.full_name}
                 onChange={(e) => setForm((p) => ({ ...p, full_name: e.target.value }))}
-                placeholder="Your name"
+                placeholder={t("dashboard.settings.profile.fullNamePlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("dashboard.common.email")}</Label>
               <Input id="email" value={user?.email || ""} disabled className="bg-muted" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone">{t("dashboard.common.phone")}</Label>
               <Input
                 id="phone"
                 type="tel"
@@ -217,16 +235,16 @@ const ProfileSettingsPage = () => {
                     phone: clampPhoneDigitInput(e.target.value),
                   }))
                 }
-                placeholder="07XXXXXXXX"
+                placeholder={t("dashboard.settings.profile.phonePlaceholder")}
               />
               {phoneChanged() && (
                 <p className="text-xs text-amber-600 dark:text-amber-400">
-                  Changing your phone will require confirmation and verification when you save.
+                  {t("dashboard.settings.profile.phoneChangeWarning")}
                 </p>
               )}
             </div>
             <div className="space-y-2">
-              <Label>Preferred Currency</Label>
+              <Label>{t("dashboard.settings.profile.preferredCurrencyLabel")}</Label>
               <Select
                 value={form.preferred_currency}
                 onValueChange={(v) => setForm((p) => ({ ...p, preferred_currency: v }))}
@@ -247,41 +265,40 @@ const ProfileSettingsPage = () => {
 
           <div className="flex justify-end">
             <Button onClick={handleSave} isLoading={isSaving}>
-              Save Changes
+              {t("dashboard.common.saveChanges")}
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Preferences */}
       <Card>
         <CardHeader>
-          <CardTitle>Preferences</CardTitle>
-          <CardDescription>Appearance and language settings.</CardDescription>
+          <CardTitle>{t("dashboard.settings.profile.preferencesTitle")}</CardTitle>
+          <CardDescription>{t("dashboard.settings.profile.preferencesDescription")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Theme</Label>
+              <Label>{t("dashboard.settings.profile.themeLabel")}</Label>
               <Select value={theme} onValueChange={(v) => setTheme(v as "light" | "dark")}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="light">Light</SelectItem>
-                  <SelectItem value="dark">Dark</SelectItem>
+                  <SelectItem value="light">{t("dashboard.settings.profile.themeLight")}</SelectItem>
+                  <SelectItem value="dark">{t("dashboard.settings.profile.themeDark")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Language</Label>
-              <Select value={language} onValueChange={(v) => setLanguage(v as "en" | "sw")}>
+              <Label>{t("dashboard.settings.profile.languageLabel")}</Label>
+              <Select value={language} onValueChange={handleLanguageChange}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="sw">Kiswahili</SelectItem>
+                  <SelectItem value="en">{t("dashboard.settings.profile.languageEn")}</SelectItem>
+                  <SelectItem value="sw">{t("dashboard.settings.profile.languageSw")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -290,21 +307,19 @@ const ProfileSettingsPage = () => {
           <Separator />
 
           <div className="text-muted-foreground text-xs">
-            Theme and language are saved to your browser automatically.
+            {t("dashboard.settings.profile.preferencesFootnote")}
           </div>
         </CardContent>
       </Card>
 
-      {/* Phone change confirmation */}
       <Dialog open={phoneConfirmDialogOpen} onOpenChange={setPhoneConfirmDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Change phone number?</DialogTitle>
+            <DialogTitle>{t("dashboard.settings.profile.phoneConfirmTitle")}</DialogTitle>
             <DialogDescription>
-              You are about to change your login phone number to{" "}
-              <strong>{formatPhoneForDisplay(pendingPhone)}</strong>. We will send a verification
-              code to that number. After you verify it, you will be signed out and must sign in
-              again with your new number.
+              {t("dashboard.settings.profile.phoneConfirmDescription", {
+                phone: formatPhoneForDisplay(pendingPhone),
+              })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -313,23 +328,23 @@ const ProfileSettingsPage = () => {
               onClick={() => setPhoneConfirmDialogOpen(false)}
               disabled={sendOtp.isPending}
             >
-              Cancel
+              {t("dashboard.common.cancel")}
             </Button>
             <Button onClick={handleConfirmPhoneChange} isLoading={sendOtp.isPending}>
-              Continue
+              {t("dashboard.common.continue")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* OTP verification */}
       <Dialog open={otpDialogOpen} onOpenChange={setOtpDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Verify Phone Number</DialogTitle>
+            <DialogTitle>{t("dashboard.settings.profile.otpTitle")}</DialogTitle>
             <DialogDescription>
-              Enter the 6-digit code we sent to{" "}
-              <strong>{formatPhoneForDisplay(pendingPhone)}</strong>.
+              {t("dashboard.settings.profile.otpDescription", {
+                phone: formatPhoneForDisplay(pendingPhone),
+              })}
             </DialogDescription>
           </DialogHeader>
 
@@ -364,10 +379,14 @@ const ProfileSettingsPage = () => {
                   disabled={sendOtp.isPending}
                   className="text-primary font-medium hover:underline disabled:opacity-50"
                 >
-                  {sendOtp.isPending ? "Sending..." : "Resend code"}
+                  {sendOtp.isPending
+                    ? t("dashboard.settings.profile.otpSending")
+                    : t("dashboard.settings.profile.otpResendCode")}
                 </button>
               ) : (
-                <span>Resend in {countdown}s</span>
+                <span>
+                  {t("dashboard.settings.profile.otpResendCountdown", { countdown: String(countdown) })}
+                </span>
               )}
             </p>
           </div>
@@ -378,14 +397,14 @@ const ProfileSettingsPage = () => {
               onClick={() => setOtpDialogOpen(false)}
               disabled={verifyPhoneChange.isPending}
             >
-              Cancel
+              {t("dashboard.common.cancel")}
             </Button>
             <Button
               onClick={handleVerifyOtp}
               disabled={otpCode.length < 6}
               isLoading={verifyPhoneChange.isPending}
             >
-              Verify
+              {t("dashboard.settings.profile.otpVerify")}
             </Button>
           </DialogFooter>
         </DialogContent>

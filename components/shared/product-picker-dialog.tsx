@@ -25,6 +25,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
 import { Search, Plus, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/hooks/use-translation";
 
 const PAGE_SIZE = 20;
 
@@ -84,6 +85,7 @@ const ProductPickerDialog = ({
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
 }: ProductPickerDialogProps) => {
+  const { t } = useTranslation();
   const createProduct = useCreateProduct();
 
   const [internalOpen, setInternalOpen] = useState(false);
@@ -196,6 +198,11 @@ const ProductPickerDialog = ({
     });
   };
 
+  const productCountLabel =
+    filtered.length === 1
+      ? t("dashboard.pickers.product.count", { count: filtered.length })
+      : t("dashboard.pickers.product.countPlural", { count: filtered.length });
+
   return (
     <>
       {!isControlled && (
@@ -207,7 +214,7 @@ const ProductPickerDialog = ({
             className="basis-4/6 justify-start font-normal"
           >
             <Package className="text-muted-foreground mr-2 size-4 shrink-0" />
-            <span className="text-muted-foreground">Add from product...</span>
+            <span className="text-muted-foreground">{t("dashboard.pickers.product.addFrom")}</span>
           </Button>
           <Button
             type="button"
@@ -217,11 +224,11 @@ const ProductPickerDialog = ({
               resetAddForm();
               setAddOpen(true);
             }}
-            title="Add new product or service"
+            title={t("dashboard.pickers.product.addNewTitle")}
             className="basis-auto"
           >
             <Plus className="size-4" />
-            Add product
+            {t("dashboard.pickers.product.addNew")}
           </Button>
         </div>
       )}
@@ -230,10 +237,8 @@ const ProductPickerDialog = ({
       <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
         <DialogContent className="flex max-h-[80vh] flex-col sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Add from product</DialogTitle>
-            <DialogDescription>
-              Search and pick a product or service to add as a line item.
-            </DialogDescription>
+            <DialogTitle>{t("dashboard.pickers.product.title")}</DialogTitle>
+            <DialogDescription>{t("dashboard.pickers.product.description")}</DialogDescription>
           </DialogHeader>
 
           <div className="relative">
@@ -241,7 +246,7 @@ const ProductPickerDialog = ({
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name or description..."
+              placeholder={t("dashboard.pickers.product.searchPlaceholder")}
               className="pl-9"
               autoFocus
             />
@@ -255,7 +260,9 @@ const ProductPickerDialog = ({
             {filtered.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-10 text-center">
                 <p className="text-muted-foreground text-sm">
-                  {search ? "No products match your search." : "No products yet."}
+                  {search
+                    ? t("dashboard.pickers.product.emptySearch")
+                    : t("dashboard.pickers.product.emptyNoData")}
                 </p>
                 <Button
                   variant="outline"
@@ -269,7 +276,7 @@ const ProductPickerDialog = ({
                   }}
                 >
                   <Plus className="mr-1 size-4" />
-                  Add product
+                  {t("dashboard.pickers.product.addNew")}
                 </Button>
               </div>
             ) : (
@@ -281,9 +288,7 @@ const ProductPickerDialog = ({
                       key={product.id}
                       type="button"
                       disabled={disabled}
-                      title={
-                        disabled ? "This product is out of stock (quantity is 0)." : undefined
-                      }
+                      title={disabled ? t("dashboard.pickers.product.outOfStock") : undefined}
                       onClick={() => handleSelect(product)}
                       className={cn(
                         "flex w-full items-center gap-3 rounded-md px-1 py-3 text-left transition-colors",
@@ -299,8 +304,10 @@ const ProductPickerDialog = ({
                         <p className="truncate text-sm font-medium">{product.name}</p>
                         <p className="text-muted-foreground truncate text-xs">
                           {[
-                            product.item_type === "service" ? "Service" : "Product",
-                            `Qty: ${formatPickerStockQtyLabel(product)}`,
+                            product.item_type === "service"
+                              ? t("dashboard.common.service")
+                              : t("dashboard.common.product"),
+                            `${t("dashboard.pickers.product.qtyLabel")} ${formatPickerStockQtyLabel(product)}`,
                             product.description,
                             product.unit,
                           ]
@@ -324,9 +331,7 @@ const ProductPickerDialog = ({
           </div>
 
           <div className="flex items-center justify-between border-t pt-2">
-            <p className="text-muted-foreground text-xs">
-              {filtered.length} product{filtered.length !== 1 ? "s" : ""}
-            </p>
+            <p className="text-muted-foreground text-xs">{productCountLabel}</p>
             <Button
               variant="ghost"
               size="sm"
@@ -336,7 +341,7 @@ const ProductPickerDialog = ({
               }}
             >
               <Plus className="mr-1 size-4" />
-              New product
+              {t("dashboard.pickers.product.newProduct")}
             </Button>
           </div>
         </DialogContent>
@@ -346,12 +351,12 @@ const ProductPickerDialog = ({
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Add product or service</DialogTitle>
+            <DialogTitle>{t("dashboard.pickers.product.addTitle")}</DialogTitle>
             <DialogDescription className="flex flex-col gap-2">
-              Create a new item and add it as a line to this invoice.
+              {t("dashboard.pickers.product.addDescription")}
               {businessId && (
                 <span className="flex items-center gap-2">
-                  Business:{" "}
+                  {t("dashboard.pickers.product.businessLabel")}{" "}
                   <Badge variant="secondary" className="font-normal">
                     {businessName ?? "—"}
                   </Badge>
@@ -362,7 +367,7 @@ const ProductPickerDialog = ({
 
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
-              <Label>Item type *</Label>
+              <Label>{t("dashboard.pickers.product.itemType")}</Label>
               <Select
                 value={addForm.item_type}
                 onValueChange={(value) => setAddForm((p) => ({ ...p, item_type: value }))}
@@ -371,34 +376,34 @@ const ProductPickerDialog = ({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="product">Product</SelectItem>
-                  <SelectItem value="service">Service</SelectItem>
+                  <SelectItem value="product">{t("dashboard.common.product")}</SelectItem>
+                  <SelectItem value="service">{t("dashboard.common.service")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="new-product-name">Name *</Label>
+              <Label htmlFor="new-product-name">{t("dashboard.common.name")} *</Label>
               <Input
                 id="new-product-name"
                 value={addForm.name}
                 onChange={(e) => setAddForm((p) => ({ ...p, name: e.target.value }))}
-                placeholder="e.g. Web Development"
+                placeholder={t("dashboard.pickers.product.namePlaceholder")}
                 autoFocus
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="new-product-desc">Description</Label>
+              <Label htmlFor="new-product-desc">{t("dashboard.common.description")}</Label>
               <Textarea
                 id="new-product-desc"
                 value={addForm.description}
                 onChange={(e) => setAddForm((p) => ({ ...p, description: e.target.value }))}
-                placeholder="Optional"
+                placeholder={t("dashboard.pickers.product.descriptionOptional")}
                 rows={2}
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="new-product-base-price">Base price *</Label>
+                <Label htmlFor="new-product-base-price">{t("dashboard.pickers.product.basePrice")}</Label>
                 <Input
                   id="new-product-base-price"
                   inputMode="decimal"
@@ -413,7 +418,9 @@ const ProductPickerDialog = ({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="new-product-selling-price">Selling price *</Label>
+                <Label htmlFor="new-product-selling-price">
+                  {t("dashboard.pickers.product.sellingPrice")}
+                </Label>
                 <Input
                   id="new-product-selling-price"
                   inputMode="decimal"
@@ -430,17 +437,19 @@ const ProductPickerDialog = ({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="new-product-unit">Unit</Label>
+                <Label htmlFor="new-product-unit">{t("dashboard.common.unit")}</Label>
                 <Input
                   id="new-product-unit"
                   value={addForm.unit}
                   onChange={(e) => setAddForm((p) => ({ ...p, unit: e.target.value }))}
-                  placeholder="e.g. kg, piece, item, etc."
+                  placeholder={t("dashboard.pickers.product.unitPlaceholder")}
                 />
               </div>
               {addForm.item_type === "product" && (
                 <div className="space-y-1.5">
-                  <Label htmlFor="new-product-stock">Initial stock</Label>
+                  <Label htmlFor="new-product-stock">
+                    {t("dashboard.pickers.product.initialStock")}
+                  </Label>
                   <Input
                     id="new-product-stock"
                     inputMode="decimal"
@@ -458,7 +467,7 @@ const ProductPickerDialog = ({
             </div>
             {Number(addForm.selling_price || 0) < Number(addForm.base_price || 0) && (
               <p className="text-destructive text-xs">
-                Selling price must be equal to or above the base price.
+                {t("dashboard.pickers.product.priceBelowBase")}
               </p>
             )}
           </div>
@@ -469,7 +478,7 @@ const ProductPickerDialog = ({
               onClick={() => setAddOpen(false)}
               disabled={createProduct.isPending}
             >
-              Cancel
+              {t("dashboard.common.cancel")}
             </Button>
             <Button
               onClick={handleAddProduct}
@@ -480,7 +489,7 @@ const ProductPickerDialog = ({
               }
               isLoading={createProduct.isPending}
             >
-              Add & Use Item
+              {t("dashboard.pickers.product.addAndUse")}
             </Button>
           </DialogFooter>
         </DialogContent>

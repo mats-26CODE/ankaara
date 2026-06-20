@@ -26,7 +26,7 @@ import { useUser } from "@/hooks/use-user";
 import { useTranslation } from "@/hooks/use-translation";
 import { useBusinesses } from "@/hooks/use-businesses";
 import { useCurrentBusinessId } from "@/lib/stores/business-store";
-import { getCasualGreeting } from "@/helpers/helpers";
+import { getGreetingKey } from "@/lib/i18n/greeting";
 import { useFormatAmount } from "@/hooks/use-format-amount";
 import { useDashboardStats } from "@/hooks/use-dashboard-stats";
 import { useCurrentSubscription } from "@/hooks/use-current-subscription";
@@ -123,13 +123,13 @@ const DashboardPage = () => {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold tracking-tight sm:text-4xl">
-            {getCasualGreeting()}
+            {t(getGreetingKey())}
             {profile?.full_name?.trim() ? ` ${profile.full_name.trim().split(/\s+/)[0]}` : ""}
           </h1>
           <p className="text-muted-foreground">{t("dashboard.home.greetingSubtitle")}</p>
           {activeBusiness && (
             <div className="flex flex-wrap items-center gap-2 pt-1">
-              <span className="text-muted-foreground text-sm">Viewing:</span>
+              <span className="text-muted-foreground text-sm">{t("dashboard.common.viewing")}</span>
               <Badge variant="secondary" className="font-medium">
                 <Building2 className="mr-1 size-3.5" />
                 {activeBusiness.name}
@@ -147,12 +147,12 @@ const DashboardPage = () => {
                 <Button asChild size="sm" variant="default" className="gap-1.5">
                   <Link href={upgradeHref}>
                     <Zap className="size-3.5" />
-                    Upgrade
+                    {t("dashboard.common.upgrade")}
                   </Link>
                 </Button>
               ) : (
                 <Button asChild size="sm" variant="outline">
-                  <Link href={changePlanHref}>Change plan</Link>
+                  <Link href={changePlanHref}>{t("dashboard.common.changePlan")}</Link>
                 </Button>
               )}
             </>
@@ -202,7 +202,7 @@ const DashboardPage = () => {
               />
               <div className="min-w-0 space-y-1">
                 <CardTitle className="text-xl wrap-break-word sm:text-2xl">
-                  {profile?.full_name || profile?.email || "Your Account"}
+                  {profile?.full_name || profile?.email || t("dashboard.common.yourAccount")}
                 </CardTitle>
                 <div className="text-muted-foreground flex items-center gap-x-2 gap-y-1 text-sm">
                   {profile?.email && <span>{profile.email}</span>}
@@ -240,7 +240,7 @@ const DashboardPage = () => {
                       <span className="flex min-w-0 items-center gap-2 truncate">
                         <Building2 className="size-4 shrink-0" />
                         <span className="truncate">
-                          {activeBusiness?.name ?? "Select business"}
+                          {activeBusiness?.name ?? t("dashboard.common.selectBusiness")}
                         </span>
                       </span>
                       <ChevronDown className="size-4 shrink-0 opacity-50" />
@@ -266,7 +266,7 @@ const DashboardPage = () => {
               <Button asChild variant="outline" size="sm" className="w-full shrink-0 lg:w-auto">
                 <Link href="/dashboard/settings">
                   <Settings className="mr-2 size-4" />
-                  Settings
+                  {t("dashboard.common.settings")}
                 </Link>
               </Button>
             </div>
@@ -275,7 +275,7 @@ const DashboardPage = () => {
         <CardContent>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6">
             <div className="min-w-0 space-y-1">
-              <p className="text-muted-foreground text-sm">Total Sales</p>
+              <p className="text-muted-foreground text-sm">{t("dashboard.common.totalSales")}</p>
               <p className="text-lg font-bold wrap-break-word tabular-nums">
                 {statsLoading
                   ? "—"
@@ -285,27 +285,27 @@ const DashboardPage = () => {
               </p>
             </div>
             <div className="min-w-0 space-y-1">
-              <p className="text-muted-foreground text-sm">Total Profit</p>
+              <p className="text-muted-foreground text-sm">{t("dashboard.common.totalProfit")}</p>
               <p className="text-lg font-bold wrap-break-word tabular-nums">
                 {statsLoading ? "—" : formatAmount(salesStats.totalProfit, { decimalDigits: 0 })}
               </p>
             </div>
             <div className="min-w-0 space-y-1">
-              <p className="text-muted-foreground text-sm">Total Products</p>
+              <p className="text-muted-foreground text-sm">{t("dashboard.common.totalProducts")}</p>
               <p className="text-lg font-bold tabular-nums">{statsLoading ? "—" : productCount}</p>
             </div>
             <div className="min-w-0 space-y-1">
-              <p className="text-muted-foreground text-sm">Total Clients</p>
+              <p className="text-muted-foreground text-sm">{t("dashboard.common.totalClients")}</p>
               <p className="text-lg font-bold tabular-nums">{statsLoading ? "—" : clientCount}</p>
             </div>
             <div className="min-w-0 space-y-1">
-              <p className="text-muted-foreground text-sm">Total Invoices</p>
+              <p className="text-muted-foreground text-sm">{t("dashboard.common.totalInvoices")}</p>
               <p className="text-lg font-bold tabular-nums">
                 {statsLoading ? "—" : invoiceStats.total}
               </p>
             </div>
             <div className="min-w-0 space-y-1">
-              <p className="text-muted-foreground text-sm">Total Quotations</p>
+              <p className="text-muted-foreground text-sm">{t("dashboard.common.totalQuotations")}</p>
               <p className="text-lg font-bold tabular-nums">
                 {statsLoading ? "—" : quotationCount}
               </p>
@@ -318,61 +318,61 @@ const DashboardPage = () => {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-medium">Today's Sales</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("dashboard.common.todaysSales")}</CardTitle>
             <ShoppingCart className="size-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <div className="text-xl font-bold">
               {statsLoading ? "—" : formatAmount(salesStats.todaySales, { decimalDigits: 0 })}
             </div>
-            <p className="text-muted-foreground mt-1 text-xs">Sales dated today</p>
+            <p className="text-muted-foreground mt-1 text-xs">{t("dashboard.common.salesDatedToday")}</p>
           </CardContent>
           <CardFooter>
             <Button variant="outline" size="sm" asChild className="w-full">
-              <Link href="/dashboard/sales">View sales</Link>
+              <Link href="/dashboard/sales">{t("dashboard.common.viewSales")}</Link>
             </Button>
           </CardFooter>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-medium">Today's Profit</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("dashboard.common.todaysProfit")}</CardTitle>
             <TrendingUp className="size-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-xl font-bold">
               {statsLoading ? "—" : formatAmount(salesStats.todayProfit, { decimalDigits: 0 })}
             </div>
-            <p className="text-muted-foreground mt-1 text-xs">Profit dated today</p>
+            <p className="text-muted-foreground mt-1 text-xs">{t("dashboard.common.profitDatedToday")}</p>
           </CardContent>
           <CardFooter>
             <Button variant="outline" size="sm" asChild className="w-full">
-              <Link href="/dashboard/profits">View profit</Link>
+              <Link href="/dashboard/profits">{t("dashboard.common.viewProfit")}</Link>
             </Button>
           </CardFooter>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-medium">Today's Expenses</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("dashboard.common.todaysExpenses")}</CardTitle>
             <Wallet className="size-4 text-amber-600" />
           </CardHeader>
           <CardContent>
             <div className="text-xl font-bold">
               {statsLoading ? "—" : formatAmount(salesStats.todayExpenses, { decimalDigits: 0 })}
             </div>
-            <p className="text-muted-foreground mt-1 text-xs">Expenses dated today</p>
+            <p className="text-muted-foreground mt-1 text-xs">{t("dashboard.common.expensesDatedToday")}</p>
           </CardContent>
           <CardFooter>
             <Button variant="outline" size="sm" asChild className="w-full">
-              <Link href="/dashboard/expenses">View expenses</Link>
+              <Link href="/dashboard/expenses">{t("dashboard.common.viewExpenses")}</Link>
             </Button>
           </CardFooter>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-medium">Inventory Value</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("dashboard.common.inventoryValue")}</CardTitle>
             <Package className="size-4 text-violet-600" />
           </CardHeader>
           <CardContent>
@@ -381,11 +381,11 @@ const DashboardPage = () => {
                 ? "—"
                 : formatAmount(inventoryStats.inventoryValue, { decimalDigits: 0 })}
             </div>
-            <p className="text-muted-foreground mt-1 text-xs">Stock at base price</p>
+            <p className="text-muted-foreground mt-1 text-xs">{t("dashboard.common.stockAtBasePrice")}</p>
           </CardContent>
           <CardFooter>
             <Button variant="outline" size="sm" asChild className="w-full">
-              <Link href="/dashboard/products">Manage inventory</Link>
+              <Link href="/dashboard/products">{t("dashboard.common.manageInventory")}</Link>
             </Button>
           </CardFooter>
         </Card>
@@ -393,42 +393,42 @@ const DashboardPage = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Invoice Stats</CardTitle>
-          <CardDescription>Invoice status overview for the active business.</CardDescription>
+          <CardTitle>{t("dashboard.common.invoiceStats")}</CardTitle>
+          <CardDescription>{t("dashboard.common.invoiceStatsDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
             <Link href="/dashboard/invoices?status=paid" className="rounded-lg border p-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">Paid</p>
+                <p className="text-sm font-medium">{t("dashboard.status.paid")}</p>
                 <CheckCircle2 className="size-4 text-green-600" />
               </div>
               <p className="mt-2 text-2xl font-bold">{statsLoading ? "—" : invoiceStats.paid}</p>
             </Link>
             <Link href="/dashboard/invoices?status=sent" className="rounded-lg border p-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">Sent</p>
+                <p className="text-sm font-medium">{t("dashboard.status.sent")}</p>
                 <Send className="size-4 text-blue-600" />
               </div>
               <p className="mt-2 text-2xl font-bold">{statsLoading ? "—" : invoiceStats.sent}</p>
             </Link>
             <Link href="/dashboard/invoices?status=overdue" className="rounded-lg border p-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">Overdue</p>
+                <p className="text-sm font-medium">{t("dashboard.status.overdue")}</p>
                 <AlertTriangle className="text-destructive size-4" />
               </div>
               <p className="mt-2 text-2xl font-bold">{statsLoading ? "—" : invoiceStats.overdue}</p>
             </Link>
             <Link href="/dashboard/invoices?status=draft" className="rounded-lg border p-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">Drafts</p>
+                <p className="text-sm font-medium">{t("dashboard.common.drafts")}</p>
                 <Clock className="size-4 text-yellow-600" />
               </div>
               <p className="mt-2 text-2xl font-bold">{statsLoading ? "—" : invoiceStats.draft}</p>
             </Link>
             <Link href="/dashboard/invoices" className="rounded-lg border p-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">Total</p>
+                <p className="text-sm font-medium">{t("dashboard.common.total")}</p>
                 <FileText className="text-muted-foreground size-4" />
               </div>
               <p className="mt-2 text-2xl font-bold">{statsLoading ? "—" : invoiceStats.total}</p>
@@ -441,51 +441,51 @@ const DashboardPage = () => {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common tasks and shortcuts</CardDescription>
+            <CardTitle>{t("dashboard.common.quickActions")}</CardTitle>
+            <CardDescription>{t("dashboard.common.commonTasks")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             <Button variant="outline" className="w-full justify-start" asChild>
               <Link href="/dashboard/sales/create">
                 <ShoppingCart className="mr-2 size-4" />
-                Record Sale
+                {t("dashboard.common.recordSale")}
               </Link>
             </Button>
             <Button variant="outline" className="w-full justify-start" asChild>
               <Link href="/dashboard/invoices/create">
                 <Plus className="mr-2 size-4" />
-                Create Invoice
+                {t("dashboard.common.createInvoice")}
               </Link>
             </Button>
             <Button variant="outline" className="w-full justify-start" asChild>
               <Link href="/dashboard/clients">
                 <Users className="mr-2 size-4" />
-                Manage Clients
+                {t("dashboard.common.manageClients")}
               </Link>
             </Button>
             <Button variant="outline" className="w-full justify-start" asChild>
               <Link href="/dashboard/loans">
                 <Users className="mr-2 size-4" />
-                Manage Loans
+                {t("dashboard.common.manageLoans")}
               </Link>
             </Button>
             <Button variant="outline" className="w-full justify-start" asChild>
               <Link href="/dashboard/invoices">
                 <FileText className="mr-2 size-4" />
-                All Invoices
+                {t("dashboard.common.allInvoices")}
               </Link>
             </Button>
             <Button variant="outline" className="w-full justify-start" asChild>
               <Link href="/dashboard/quotations">
                 <Quote className="mr-2 size-4" />
-                Quotations
+                {t("dashboard.common.quotations")}
               </Link>
             </Button>
             <Separator className="my-2" />
             <Button variant="outline" className="w-full justify-start" asChild>
               <Link href="/dashboard/settings">
                 <Settings className="mr-2 size-4" />
-                Settings
+                {t("dashboard.common.settings")}
               </Link>
             </Button>
           </CardContent>
@@ -493,42 +493,42 @@ const DashboardPage = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Account Summary</CardTitle>
-            <CardDescription>Your account overview</CardDescription>
+            <CardTitle>{t("dashboard.common.accountSummary")}</CardTitle>
+            <CardDescription>{t("dashboard.common.accountOverview")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-sm">Phone Verified</span>
+              <span className="text-muted-foreground text-sm">{t("dashboard.common.phoneVerified")}</span>
               <span className="text-sm font-medium">
                 {profile?.phone ? (
                   <span className="flex items-center gap-1 text-green-600">
-                    <CheckCircle2 className="size-3.5" /> Yes
+                    <CheckCircle2 className="size-3.5" /> {t("dashboard.common.yesVerified")}
                   </span>
                 ) : (
                   <span className="flex items-center gap-1 text-yellow-600">
-                    <Clock className="size-3.5" /> Not yet
+                    <Clock className="size-3.5" /> {t("dashboard.common.notYet")}
                   </span>
                 )}
               </span>
             </div>
             <Separator />
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-sm">Profile Complete</span>
+              <span className="text-muted-foreground text-sm">{t("dashboard.common.profileComplete")}</span>
               <span className="text-sm font-medium">
                 {isProfileComplete ? (
                   <span className="flex items-center gap-1 text-green-600">
-                    <CheckCircle2 className="size-3.5" /> Yes
+                    <CheckCircle2 className="size-3.5" /> {t("dashboard.common.yesVerified")}
                   </span>
                 ) : (
                   <span className="flex items-center gap-1 text-yellow-600">
-                    <Clock className="size-3.5" /> Incomplete
+                    <Clock className="size-3.5" /> {t("dashboard.common.incomplete")}
                   </span>
                 )}
               </span>
             </div>
             <Separator />
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-sm">Member Since</span>
+              <span className="text-muted-foreground text-sm">{t("dashboard.common.memberSince")}</span>
               <span className="text-sm font-medium">
                 {profile?.created_at
                   ? new Date(profile.created_at).toLocaleDateString("en-US", {

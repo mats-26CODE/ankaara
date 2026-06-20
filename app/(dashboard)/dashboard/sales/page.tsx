@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import { useBusinesses } from "@/hooks/use-businesses";
 import { useSales } from "@/hooks/use-sales";
+import { useTranslation } from "@/hooks/use-translation";
 import { useCurrentBusinessId } from "@/lib/stores/business-store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -36,6 +37,7 @@ import {
 const PAGE_SIZE = 10;
 
 const SalesPage = () => {
+  const { t } = useTranslation();
   const router = useRouter();
   const { businesses, loading: businessesLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
@@ -87,13 +89,13 @@ const SalesPage = () => {
         <CardContent className="flex flex-col items-center gap-4 py-12">
           <Building2 className="text-muted-foreground size-12" />
           <div className="space-y-1 text-center">
-            <p className="font-medium">No business yet</p>
+            <p className="font-medium">{t("dashboard.common.noBusinessTitle")}</p>
             <p className="text-muted-foreground text-sm">
-              Create a business first to record sales.
+              {t("dashboard.empty.noBusiness.sales")}
             </p>
           </div>
           <Button asChild>
-            <Link href="/dashboard/settings/businesses">Go to Businesses</Link>
+            <Link href="/dashboard/settings/businesses">{t("dashboard.common.goToBusinesses")}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -104,16 +106,19 @@ const SalesPage = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Sales</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.sales.title")}</h1>
           <p className="text-muted-foreground text-sm">
-            Product, service, and paid-invoice sales for{" "}
-            <span className="font-medium">{activeBusiness?.name ?? "your business"}</span>.
+            {t("dashboard.sales.subtitlePrefix")}{" "}
+            <span className="font-medium">
+              {activeBusiness?.name ?? t("dashboard.common.yourBusiness")}
+            </span>
+            .
           </p>
         </div>
         <Button size="sm" asChild>
           <Link href="/dashboard/sales/create">
             <Plus className="mr-1 size-4" />
-            Record Sale
+            {t("dashboard.common.recordSale")}
           </Link>
         </Button>
       </div>
@@ -126,7 +131,7 @@ const SalesPage = () => {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by  product, sale number, client, invoice..."
+                placeholder={t("dashboard.sales.searchPlaceholder")}
                 className="pl-9"
               />
             </div>
@@ -134,14 +139,14 @@ const SalesPage = () => {
               <DatePicker
                 value={fromDate}
                 onChange={setFromDate}
-                placeholder="From date"
+                placeholder={t("dashboard.common.fromDate")}
                 className="min-w-0 flex-1 lg:w-fit lg:flex-none"
                 disableFuture
               />
               <DatePicker
                 value={toDate}
                 onChange={setToDate}
-                placeholder="To date"
+                placeholder={t("dashboard.common.toDate")}
                 className="min-w-0 flex-1 lg:w-fit lg:flex-none"
                 disableFuture
               />
@@ -155,7 +160,7 @@ const SalesPage = () => {
                   className="shrink-0"
                 >
                   <X className="size-4 text-red-400" />
-                  Clear
+                  {t("dashboard.common.clear")}
                 </Button>
               )}
             </div>
@@ -171,14 +176,14 @@ const SalesPage = () => {
               <ShoppingCart className="text-muted-foreground size-10" />
               <p className="text-muted-foreground text-sm">
                 {debouncedSearch.trim() || fromDate || toDate
-                  ? "No sales match your search or filters."
-                  : "No sales recorded yet. Record your first sale."}
+                  ? t("dashboard.sales.emptyNoMatch")
+                  : t("dashboard.sales.emptyNoData")}
               </p>
               {!debouncedSearch.trim() && !fromDate && !toDate && (
                 <Button size="sm" variant="outline" asChild>
                   <Link href="/dashboard/sales/create">
                     <Plus className="mr-1 size-4" />
-                    Record Sale
+                    {t("dashboard.common.recordSale")}
                   </Link>
                 </Button>
               )}
@@ -187,12 +192,12 @@ const SalesPage = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Sale</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Source</TableHead>
-                  <TableHead className="hidden md:table-cell">Client</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead className="hidden md:table-cell">Profit</TableHead>
+                  <TableHead>{t("dashboard.sales.table.sale")}</TableHead>
+                  <TableHead>{t("dashboard.common.date")}</TableHead>
+                  <TableHead>{t("dashboard.common.source")}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t("dashboard.common.client")}</TableHead>
+                  <TableHead>{t("dashboard.common.total")}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t("dashboard.common.profit")}</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
@@ -216,14 +221,14 @@ const SalesPage = () => {
                         }
                       >
                         {sale.source === "invoice"
-                          ? "Invoice"
+                          ? t("dashboard.sales.source.invoice")
                           : sale.source === "loan"
-                            ? "Loan"
-                            : "Direct"}
+                            ? t("dashboard.sales.source.loan")
+                            : t("dashboard.sales.source.direct")}
                       </Badge>
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
-                      {sale.client?.name ?? "Walk-in"}
+                      {sale.client?.name ?? t("dashboard.common.walkIn")}
                     </TableCell>
                     <TableCell>{Number(sale.total).toLocaleString()}</TableCell>
                     <TableCell className="hidden md:table-cell">
@@ -244,7 +249,7 @@ const SalesPage = () => {
           {total > 0 && (
             <div className="mt-4 flex flex-col gap-2 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-muted-foreground text-sm">
-                Showing {from}-{to} of {total}
+                {t("dashboard.common.showingRange", { from, to, total })}
               </p>
               <div className="flex items-center gap-2">
                 <Button
@@ -254,7 +259,7 @@ const SalesPage = () => {
                   disabled={page <= 1 || loading}
                 >
                   <ChevronLeft className="mr-1 size-4" />
-                  Previous
+                  {t("dashboard.common.previous")}
                 </Button>
                 <Button
                   variant="outline"
@@ -262,7 +267,7 @@ const SalesPage = () => {
                   onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
                   disabled={page >= lastPage || loading}
                 >
-                  Next
+                  {t("dashboard.common.next")}
                   <ChevronRight className="ml-1 size-4" />
                 </Button>
               </div>

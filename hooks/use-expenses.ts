@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { buildOrIlikeClause, sanitizeSearchTerm } from "@/lib/supabase/table-search";
 import { ToastAlert } from "@/config/toast";
 import { toastMutationSuccess } from "@/lib/mutation-toast";
+import { usePreferencesStore } from "@/lib/stores/preferences-store";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import type { Tables, TablesInsert, TablesUpdate } from "@/database.types";
 
@@ -101,7 +102,7 @@ export const useCreateExpense = () => {
     },
     onSuccess: (_data, _variables, _onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
-      toastMutationSuccess(context, "Expense recorded successfully");
+      toastMutationSuccess(context, usePreferencesStore.getState().t("dashboard.toast.expenseRecorded"));
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to record expense");
@@ -128,7 +129,7 @@ export const useUpdateExpense = () => {
       return data;
     },
     onSuccess: (_data, _variables, _onMutateResult, context) => {
-      toastMutationSuccess(context, "Expense updated");
+      toastMutationSuccess(context, usePreferencesStore.getState().t("dashboard.toast.expenseUpdated"));
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to update expense");
@@ -144,7 +145,7 @@ export const useDeleteExpense = () => {
       if (error) throw error;
     },
     onSuccess: (_data, _variables, _onMutateResult, context) => {
-      toastMutationSuccess(context, "Expense deleted");
+      toastMutationSuccess(context, usePreferencesStore.getState().t("dashboard.toast.expenseDeleted"));
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to delete expense");

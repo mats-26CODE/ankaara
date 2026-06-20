@@ -28,24 +28,26 @@ import { QuotationExportButtons } from "@/components/shared/quotation-export-but
 import { ArrowLeft, Pencil, Trash2, Share2, FileText, XCircle } from "lucide-react";
 import dayjs from "dayjs";
 import { useRouteUuidParam } from "@/hooks/use-route-uuid-param";
+import { useTranslation } from "@/hooks/use-translation";
 
-const STATUS_CONFIG: Record<
+const STATUS_VARIANT: Record<
   QuotationStatus,
-  { label: string; variant: "default" | "secondary" | "outline" | "destructive" }
+  "default" | "secondary" | "outline" | "destructive"
 > = {
-  draft: { label: "Draft", variant: "secondary" },
-  sent: { label: "Sent", variant: "default" },
-  viewed: { label: "Viewed", variant: "outline" },
-  accepted: { label: "Accepted", variant: "default" },
-  expired: { label: "Expired", variant: "destructive" },
-  cancelled: { label: "Cancelled", variant: "secondary" },
+  draft: "secondary",
+  sent: "default",
+  viewed: "outline",
+  accepted: "default",
+  expired: "destructive",
+  cancelled: "secondary",
 };
 
 const StatusBadge = ({ status }: { status: QuotationStatus }) => {
-  const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.draft;
+  const { t } = useTranslation();
+  const variant = STATUS_VARIANT[status] ?? STATUS_VARIANT.draft;
   return (
     <Badge
-      variant={config.variant}
+      variant={variant}
       className={
         status === "accepted"
           ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400"
@@ -54,12 +56,13 @@ const StatusBadge = ({ status }: { status: QuotationStatus }) => {
             : ""
       }
     >
-      {config.label}
+      {t(`dashboard.status.${status}`)}
     </Badge>
   );
 };
 
 const QuotationDetailPage = () => {
+  const { t } = useTranslation();
   const id = useRouteUuidParam("id");
   const router = useRouter();
   const { quotation, loading, refetch } = useQuotation(id);
@@ -89,9 +92,9 @@ const QuotationDetailPage = () => {
   if (!quotation) {
     return (
       <div className="flex flex-col items-center gap-4 py-12">
-        <p className="text-muted-foreground">Quotation not found.</p>
+        <p className="text-muted-foreground">{t("dashboard.quotations.detail.notFound")}</p>
         <Button variant="outline" asChild>
-          <Link href="/dashboard/quotations">Back to Quotations</Link>
+          <Link href="/dashboard/quotations">{t("dashboard.common.backToQuotations")}</Link>
         </Button>
       </div>
     );
@@ -150,7 +153,8 @@ const QuotationDetailPage = () => {
               <StatusBadge status={quotation.status} />
             </div>
             <p className="text-muted-foreground text-sm">
-              Created {dayjs(quotation.created_at).format("MMM D, YYYY")}
+              {t("dashboard.quotations.detail.createdPrefix")}{" "}
+              {dayjs(quotation.created_at).format("MMM D, YYYY")}
             </p>
           </div>
         </div>
@@ -159,14 +163,14 @@ const QuotationDetailPage = () => {
             <Button variant="outline" size="sm" asChild>
               <Link href={`/dashboard/quotations/${quotation.id}/edit`}>
                 <Pencil className="mr-1 size-4" />
-                Edit
+                {t("dashboard.common.edit")}
               </Link>
             </Button>
           )}
           <Button variant="outline" size="sm" asChild>
             <Link href={`/dashboard/invoices/create?quotation=${quotation.id}`}>
               <FileText className="mr-1 size-4" />
-              Create Invoice
+              {t("dashboard.common.createInvoice")}
             </Link>
           </Button>
           <QuotationExportButtons quotationNumber={quotation.quotation_number} />
@@ -177,12 +181,12 @@ const QuotationDetailPage = () => {
             variant={!canShare ? "outline" : "default"}
             title={
               !canShare && isDraft
-                ? "Complete client, dates, currency, and line items to share"
+                ? t("dashboard.quotations.share.incompleteDraft")
                 : undefined
             }
           >
             <Share2 className="mr-1 size-4" />
-            Share
+            {t("dashboard.common.share")}
           </Button>
           {canCancel && (
             <Button
@@ -192,7 +196,7 @@ const QuotationDetailPage = () => {
               className="border-amber-200 text-amber-600 hover:bg-amber-50 hover:text-amber-700"
             >
               <XCircle className="mr-1 size-4" />
-              Cancel
+              {t("dashboard.quotations.detail.cancelAction")}
             </Button>
           )}
           <Button
@@ -246,7 +250,7 @@ const QuotationDetailPage = () => {
         open={shareDialogOpen}
         onOpenChange={setShareDialogOpen}
         quotationNumber={quotation.quotation_number}
-        clientName={quotation.client?.name ?? "Client"}
+        clientName={quotation.client?.name ?? t("dashboard.quotations.share.clientFallback")}
         total={Number(quotation.total).toLocaleString()}
         currency={quotation.currency}
         shareUrl={shareUrl}
@@ -258,11 +262,8 @@ const QuotationDetailPage = () => {
       <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Cancel Quotation</DialogTitle>
-            <DialogDescription>
-              Cancel this quotation? It will no longer be valid. The client will not be able to
-              accept it. You can still view and export it.
-            </DialogDescription>
+            <DialogTitle>{t("dashboard.quotations.cancel.title")}</DialogTitle>
+            <DialogDescription>{t("dashboard.quotations.cancel.description")}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button
@@ -270,14 +271,14 @@ const QuotationDetailPage = () => {
               onClick={() => setCancelDialogOpen(false)}
               disabled={cancelQuotation.isPending}
             >
-              Keep
+              {t("dashboard.common.keep")}
             </Button>
             <Button
               variant="destructive"
               onClick={handleCancel}
               isLoading={cancelQuotation.isPending}
             >
-              Cancel Quotation
+              {t("dashboard.quotations.cancel.confirm")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -286,11 +287,11 @@ const QuotationDetailPage = () => {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Delete Quotation</DialogTitle>
+            <DialogTitle>{t("dashboard.quotations.delete.title")}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete{" "}
-              <span className="font-medium">{quotation.quotation_number}</span>? This cannot be
-              undone.
+              {t("dashboard.quotations.delete.description", {
+                number: quotation.quotation_number,
+              })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -299,14 +300,14 @@ const QuotationDetailPage = () => {
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteQuotation.isPending}
             >
-              Cancel
+              {t("dashboard.common.cancel")}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
               isLoading={deleteQuotation.isPending}
             >
-              Delete
+              {t("dashboard.common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

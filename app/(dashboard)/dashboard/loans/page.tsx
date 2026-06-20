@@ -9,6 +9,7 @@ import { useBusinesses } from "@/hooks/use-businesses";
 import { useCurrentBusinessId } from "@/lib/stores/business-store";
 import { useLoans } from "@/hooks/use-loans";
 import { useFormatAmount } from "@/hooks/use-format-amount";
+import { useTranslation } from "@/hooks/use-translation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -38,6 +39,7 @@ const PAGE_SIZE = 10;
 
 const LoansPage = () => {
   const router = useRouter();
+  const { t } = useTranslation();
   const { format: formatAmount } = useFormatAmount();
   const { businesses, loading: businessesLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
@@ -89,13 +91,13 @@ const LoansPage = () => {
         <CardContent className="flex flex-col items-center gap-4 py-12">
           <Building2 className="text-muted-foreground size-12" />
           <div className="space-y-1 text-center">
-            <p className="font-medium">No business yet</p>
+            <p className="font-medium">{t("dashboard.common.noBusinessTitle")}</p>
             <p className="text-muted-foreground text-sm">
-              Create a business first to record loans.
+              {t("dashboard.empty.noBusiness.loans")}
             </p>
           </div>
           <Button asChild>
-            <Link href="/dashboard/settings/businesses">Go to Businesses</Link>
+            <Link href="/dashboard/settings/businesses">{t("dashboard.common.goToBusinesses")}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -106,16 +108,19 @@ const LoansPage = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Loans</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.loans.title")}</h1>
           <p className="text-muted-foreground text-sm">
-            Client loans and repayments for{" "}
-            <span className="font-medium">{activeBusiness?.name ?? "your business"}</span>.
+            {t("dashboard.loans.subtitlePrefix")}{" "}
+            <span className="font-medium">
+              {activeBusiness?.name ?? t("dashboard.common.yourBusiness")}
+            </span>
+            .
           </p>
         </div>
         <Button size="sm" asChild>
           <Link href="/dashboard/loans/create">
             <Plus className="mr-1 size-4" />
-            New Loan
+            {t("dashboard.common.newLoan")}
           </Link>
         </Button>
       </div>
@@ -128,7 +133,7 @@ const LoansPage = () => {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by client name or loan number..."
+                placeholder={t("dashboard.loans.searchPlaceholder")}
                 className="pl-9"
               />
             </div>
@@ -136,14 +141,14 @@ const LoansPage = () => {
               <DatePicker
                 value={fromDate}
                 onChange={setFromDate}
-                placeholder="From date"
+                placeholder={t("dashboard.common.fromDate")}
                 className="min-w-0 flex-1 lg:w-fit lg:flex-none"
                 disableFuture
               />
               <DatePicker
                 value={toDate}
                 onChange={setToDate}
-                placeholder="To date"
+                placeholder={t("dashboard.common.toDate")}
                 className="min-w-0 flex-1 lg:w-fit lg:flex-none"
                 disableFuture
               />
@@ -157,7 +162,7 @@ const LoansPage = () => {
                   className="shrink-0"
                 >
                   <X className="size-4 text-red-400" />
-                  Clear
+                  {t("dashboard.common.clear")}
                 </Button>
               )}
             </div>
@@ -173,14 +178,14 @@ const LoansPage = () => {
               <HandCoins className="text-muted-foreground size-10" />
               <p className="text-muted-foreground text-sm">
                 {debouncedSearch.trim() || fromDate || toDate
-                  ? "No loans match your search or filters."
-                  : "No loans recorded yet. Record your first loan."}
+                  ? t("dashboard.loans.emptyNoMatch")
+                  : t("dashboard.loans.emptyNoData")}
               </p>
               {!debouncedSearch.trim() && !fromDate && !toDate && (
                 <Button size="sm" variant="outline" asChild>
                   <Link href="/dashboard/loans/create">
                     <Plus className="mr-1 size-4" />
-                    New Loan
+                    {t("dashboard.common.newLoan")}
                   </Link>
                 </Button>
               )}
@@ -189,12 +194,12 @@ const LoansPage = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Loan</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="hidden md:table-cell">Client</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead className="text-right">Outstanding</TableHead>
+                  <TableHead>{t("dashboard.loans.table.loan")}</TableHead>
+                  <TableHead>{t("dashboard.common.date")}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t("dashboard.common.client")}</TableHead>
+                  <TableHead>{t("dashboard.common.status")}</TableHead>
+                  <TableHead className="text-right">{t("dashboard.common.total")}</TableHead>
+                  <TableHead className="text-right">{t("dashboard.common.outstanding")}</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
@@ -212,7 +217,7 @@ const LoansPage = () => {
                     </TableCell>
                     <TableCell>
                       <Badge variant={loan.status === "paid" ? "default" : "secondary"}>
-                        {loan.status.replace("_", " ")}
+                        {t(`dashboard.status.${loan.status}`)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
@@ -236,7 +241,7 @@ const LoansPage = () => {
           {total > 0 && (
             <div className="mt-4 flex flex-col gap-2 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-muted-foreground text-sm">
-                Showing {from}-{to} of {total}
+                {t("dashboard.common.showingRange", { from, to, total })}
               </p>
               <div className="flex items-center gap-2">
                 <Button
@@ -246,7 +251,7 @@ const LoansPage = () => {
                   disabled={page <= 1 || loading}
                 >
                   <ChevronLeft className="mr-1 size-4" />
-                  Previous
+                  {t("dashboard.common.previous")}
                 </Button>
                 <Button
                   variant="outline"
@@ -254,7 +259,7 @@ const LoansPage = () => {
                   onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
                   disabled={page >= lastPage || loading}
                 >
-                  Next
+                  {t("dashboard.common.next")}
                   <ChevronRight className="ml-1 size-4" />
                 </Button>
               </div>

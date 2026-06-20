@@ -67,25 +67,27 @@ import dayjs from "dayjs";
 import { ShareInvoiceDialog } from "@/components/shared/share-invoice-dialog";
 import { canConvertInvoiceToSale } from "@/lib/invoice-sale-conversion";
 import { canShareInvoice } from "@/lib/invoices/can-share-invoice";
-import { canDeleteInvoice, INVOICE_DELETE_PAID_BLOCKED } from "@/lib/invoices/can-delete-invoice";
+import { canDeleteInvoice } from "@/lib/invoices/can-delete-invoice";
+import { useTranslation } from "@/hooks/use-translation";
 
-const STATUS_CONFIG: Record<
+const STATUS_VARIANT: Record<
   InvoiceStatus,
-  { label: string; variant: "default" | "secondary" | "outline" | "destructive" }
+  "default" | "secondary" | "outline" | "destructive"
 > = {
-  draft: { label: "Draft", variant: "secondary" },
-  sent: { label: "Sent", variant: "default" },
-  viewed: { label: "Viewed", variant: "outline" },
-  paid: { label: "Paid", variant: "default" },
-  overdue: { label: "Overdue", variant: "destructive" },
-  cancelled: { label: "Cancelled", variant: "secondary" },
+  draft: "secondary",
+  sent: "default",
+  viewed: "outline",
+  paid: "default",
+  overdue: "destructive",
+  cancelled: "secondary",
 };
 
 const StatusBadge = ({ status }: { status: InvoiceStatus }) => {
-  const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.draft;
+  const { t } = useTranslation();
+  const variant = STATUS_VARIANT[status] ?? STATUS_VARIANT.draft;
   return (
     <Badge
-      variant={config.variant}
+      variant={variant}
       className={
         status === "paid"
           ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400"
@@ -96,12 +98,13 @@ const StatusBadge = ({ status }: { status: InvoiceStatus }) => {
               : ""
       }
     >
-      {config.label}
+      {t(`dashboard.status.${status}`)}
     </Badge>
   );
 };
 
 const InvoicesContent = () => {
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -187,13 +190,13 @@ const InvoicesContent = () => {
         <CardContent className="flex flex-col items-center gap-4 py-12">
           <Building2 className="text-muted-foreground size-12" />
           <div className="space-y-1 text-center">
-            <p className="font-medium">No business yet</p>
+            <p className="font-medium">{t("dashboard.common.noBusinessTitle")}</p>
             <p className="text-muted-foreground text-sm">
-              Create a business first to start creating invoices.
+              {t("dashboard.settings.businesses.create.description")}
             </p>
           </div>
           <Button asChild>
-            <Link href="/dashboard/settings/businesses">Go to Businesses</Link>
+            <Link href="/dashboard/settings/businesses">{t("dashboard.common.goToBusinesses")}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -204,11 +207,12 @@ const InvoicesContent = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Invoices</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.nav.invoices")}</h1>
           <p className="text-muted-foreground text-sm">
-            Manage invoices for{" "}
+            {t("dashboard.invoices.list.subtitlePrefix")}{" "}
             <span className="font-medium">
-              {businesses.find((b) => b.id === currentBusinessId)?.name ?? "your business"}
+              {businesses.find((b) => b.id === currentBusinessId)?.name ??
+                t("dashboard.common.yourBusiness")}
             </span>
             .
           </p>
@@ -216,7 +220,7 @@ const InvoicesContent = () => {
         <Button size="sm" asChild>
           <Link href="/dashboard/invoices/create">
             <Plus className="mr-1 size-4" />
-            New Invoice
+            {t("dashboard.common.newInvoice")}
           </Link>
         </Button>
       </div>
@@ -229,7 +233,7 @@ const InvoicesContent = () => {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by number, client..."
+                placeholder={t("dashboard.invoices.list.searchPlaceholder")}
                 className="pl-9"
               />
             </div>
@@ -248,16 +252,16 @@ const InvoicesContent = () => {
               }}
             >
               <SelectTrigger className="w-full sm:w-[160px]">
-                <SelectValue placeholder="All statuses" />
+                <SelectValue placeholder={t("dashboard.common.allStatuses")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="sent">Sent</SelectItem>
-                <SelectItem value="viewed">Viewed</SelectItem>
-                <SelectItem value="paid">Paid</SelectItem>
-                <SelectItem value="overdue">Overdue</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="all">{t("dashboard.common.allStatuses")}</SelectItem>
+                <SelectItem value="draft">{t("dashboard.status.draft")}</SelectItem>
+                <SelectItem value="sent">{t("dashboard.status.sent")}</SelectItem>
+                <SelectItem value="viewed">{t("dashboard.status.viewed")}</SelectItem>
+                <SelectItem value="paid">{t("dashboard.status.paid")}</SelectItem>
+                <SelectItem value="overdue">{t("dashboard.status.overdue")}</SelectItem>
+                <SelectItem value="cancelled">{t("dashboard.status.cancelled")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -272,14 +276,14 @@ const InvoicesContent = () => {
               <FileText className="text-muted-foreground size-10" />
               <p className="text-muted-foreground text-sm">
                 {debouncedSearch.trim()
-                  ? "No invoices match your search."
-                  : "No invoices yet. Create your first one."}
+                  ? t("dashboard.invoices.list.emptyNoMatch")
+                  : t("dashboard.invoices.list.emptyNoData")}
               </p>
               {!debouncedSearch.trim() && (
                 <Button size="sm" variant="outline" asChild>
                   <Link href="/dashboard/invoices/create">
                     <Plus className="mr-1 size-4" />
-                    Create Invoice
+                    {t("dashboard.common.createInvoice")}
                   </Link>
                 </Button>
               )}
@@ -288,12 +292,12 @@ const InvoicesContent = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Invoice</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead className="hidden sm:table-cell">Status</TableHead>
-                  <TableHead className="hidden md:table-cell">Date</TableHead>
-                  <TableHead className="hidden md:table-cell">Due</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>{t("dashboard.invoices.list.columnInvoice")}</TableHead>
+                  <TableHead>{t("dashboard.common.client")}</TableHead>
+                  <TableHead className="hidden sm:table-cell">{t("dashboard.common.status")}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t("dashboard.common.date")}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t("dashboard.invoices.list.columnDue")}</TableHead>
+                  <TableHead className="text-right">{t("dashboard.common.amount")}</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
@@ -336,14 +340,14 @@ const InvoicesContent = () => {
                           <DropdownMenuItem asChild>
                             <Link href={`/dashboard/invoices/${inv.id}`}>
                               <Eye className="mr-2 size-4" />
-                              View
+                              {t("dashboard.common.view")}
                             </Link>
                           </DropdownMenuItem>
                           {inv.status === "draft" && (
                             <DropdownMenuItem asChild>
                               <Link href={`/dashboard/invoices/${inv.id}/edit`}>
                                 <Pencil className="mr-2 size-4" />
-                                Edit
+                                {t("dashboard.common.edit")}
                               </Link>
                             </DropdownMenuItem>
                           )}
@@ -352,18 +356,18 @@ const InvoicesContent = () => {
                             disabled={!canShareInvoice(inv)}
                             title={
                               !canShareInvoice(inv) && inv.status === "draft"
-                                ? "Complete client, dates, currency, and line items to share"
+                                ? t("dashboard.invoices.share.incompleteDraft")
                                 : undefined
                             }
                           >
                             <Share2 className="mr-2 size-4" />
-                            Share
+                            {t("dashboard.common.share")}
                           </DropdownMenuItem>
                           {canConvertInvoiceToSale(inv.status, !!inv.linked_sale_id) && (
                             <DropdownMenuItem asChild>
                               <Link href={`/dashboard/invoices/${inv.id}?convert=1`}>
                                 <ShoppingCart className="mr-2 size-4" />
-                                Convert to sale
+                                {t("dashboard.common.convertToSale")}
                               </Link>
                             </DropdownMenuItem>
                           )}
@@ -373,11 +377,13 @@ const InvoicesContent = () => {
                             disabled={!canDeleteInvoice(inv.status)}
                             className="text-destructive focus:text-destructive"
                             title={
-                              !canDeleteInvoice(inv.status) ? INVOICE_DELETE_PAID_BLOCKED : undefined
+                              !canDeleteInvoice(inv.status)
+                                ? t("dashboard.invoices.list.paidDeleteBlocked")
+                                : undefined
                             }
                           >
                             <Trash2 className="mr-2 size-4" />
-                            Delete
+                            {t("dashboard.common.delete")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -391,7 +397,7 @@ const InvoicesContent = () => {
           {!loading && total > 0 && (
             <div className="mt-4 flex flex-col items-center justify-between gap-3 border-t pt-4 sm:flex-row">
               <p className="text-muted-foreground text-sm">
-                Showing {from}–{to} of {total}
+                {t("dashboard.common.showingRange", { from, to, total })}
               </p>
               <div className="flex items-center gap-2">
                 <Button
@@ -401,7 +407,7 @@ const InvoicesContent = () => {
                   disabled={!hasPrev}
                 >
                   <ChevronLeft className="size-4" />
-                  Previous
+                  {t("dashboard.common.previous")}
                 </Button>
                 <Button
                   variant="outline"
@@ -409,7 +415,7 @@ const InvoicesContent = () => {
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={!hasNext}
                 >
-                  Next
+                  {t("dashboard.common.next")}
                   <ChevronRight className="size-4" />
                 </Button>
               </div>
@@ -424,7 +430,7 @@ const InvoicesContent = () => {
           open={shareDialogOpen}
           onOpenChange={setShareDialogOpen}
           invoiceNumber={sharingInvoice.invoice_number}
-          clientName={sharingInvoice.client?.name ?? "Client"}
+          clientName={sharingInvoice.client?.name ?? t("dashboard.invoices.share.clientFallback")}
           total={Number(sharingInvoice.total).toLocaleString()}
           currency={sharingInvoice.currency}
           shareUrl={`${typeof window !== "undefined" ? window.location.origin : ""}/invoice/${sharingInvoice.id}`}
@@ -441,11 +447,11 @@ const InvoicesContent = () => {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Delete Invoice</DialogTitle>
+            <DialogTitle>{t("dashboard.invoices.delete.title")}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete{" "}
-              <span className="font-medium">{deletingInvoice?.invoice_number}</span>? This cannot be
-              undone.
+              {t("dashboard.invoices.delete.description", {
+                number: deletingInvoice?.invoice_number ?? "",
+              })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -454,14 +460,14 @@ const InvoicesContent = () => {
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteInvoice.isPending}
             >
-              Cancel
+              {t("dashboard.common.cancel")}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
               isLoading={deleteInvoice.isPending}
             >
-              Delete
+              {t("dashboard.common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

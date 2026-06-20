@@ -8,6 +8,7 @@ import { runSupabaseDetailQueryWithRetry } from "@/lib/supabase/detail-fetch-ret
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
 import { toastMutationSuccess } from "@/lib/mutation-toast";
+import { usePreferencesStore } from "@/lib/stores/preferences-store";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
 import { buildOrIlikeClause, sanitizeSearchTerm, toIlikePattern } from "@/lib/supabase/table-search";
 import type { Json, Tables } from "@/database.types";
@@ -360,7 +361,7 @@ export const useCreateDirectSale = () => {
     onSuccess: (_data, _variables, _onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: SALES_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
-      toastMutationSuccess(context, "Sale recorded");
+      toastMutationSuccess(context, usePreferencesStore.getState().t("dashboard.toast.saleRecorded"));
     },
     onError: (error: Error) => {
       if (isPlanLimitError(error)) {
@@ -395,7 +396,7 @@ export const useConvertInvoiceToSale = () => {
     onSuccess: (_data, _variables, _onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: SALES_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
-      toastMutationSuccess(context, "Invoice converted to sale");
+      toastMutationSuccess(context, usePreferencesStore.getState().t("dashboard.toast.invoiceConverted"));
     },
     onError: (error: Error) => {
       if (isPlanLimitError(error)) {

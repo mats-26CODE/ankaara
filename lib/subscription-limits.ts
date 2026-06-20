@@ -124,26 +124,5 @@ export const getNextPlanSlug = (
   return "pro-monthly";
 };
 
-const PLAN_LIMIT_REACHED_MESSAGES: Record<string, string> = {
-  sales_per_month:
-    "You've reached your limit of 10 sales per month on the Free plan. Upgrade to Pro for unlimited sales.",
-  invoices_per_month:
-    "You've reached your monthly invoice limit. Upgrade to create more invoices.",
-  clients_per_business:
-    "You've reached your client limit for this business. Upgrade to add more clients.",
-  products_per_business:
-    "You've reached your product or service limit for this business. Upgrade to add more.",
-  businesses_count: "You've reached your business limit. Upgrade to add more businesses.",
-  quotations_count:
-    "You've reached your monthly quotation limit. Upgrade to create more quotations.",
-  product_sales_reports:
-    "Product sales reports are available on Pro and Business plans. Upgrade to unlock reports.",
-};
-
 /** User-facing copy when redirected to subscribe after hitting a plan limit. */
-export const getPlanLimitReachedMessage = (featureKey: string | null): string => {
-  if (featureKey && PLAN_LIMIT_REACHED_MESSAGES[featureKey]) {
-    return PLAN_LIMIT_REACHED_MESSAGES[featureKey];
-  }
-  return "You've reached your plan limit. Upgrade to a higher plan to continue.";
-};
+export { getPlanLimitReachedMessage } from "@/lib/i18n/subscribe-helpers";

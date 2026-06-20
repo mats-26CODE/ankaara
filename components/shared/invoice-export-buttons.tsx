@@ -6,23 +6,25 @@ import { FileDown, FileImage } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { ToastAlert } from "@/config/toast";
 import { captureElementAsCanvas, downloadAsPng, downloadAsPdf } from "@/lib/capture-invoice";
+import { useTranslation } from "@/hooks/use-translation";
 
 const INVOICE_ELEMENT_ID = "invoice-to-export";
 
 export const InvoiceExportButtons = ({ invoiceNumber }: { invoiceNumber: string }) => {
+  const { t } = useTranslation();
   const [exporting, setExporting] = useState<"pdf" | "image" | null>(null);
 
   const captureCanvas = async () => {
     if (typeof document === "undefined") return null;
     const el = document.getElementById(INVOICE_ELEMENT_ID);
     if (!el) {
-      ToastAlert.error("Invoice not found. Please refresh the page.");
+      ToastAlert.error(t("dashboard.invoices.share.notFoundRefresh"));
       return null;
     }
     try {
       return await captureElementAsCanvas(el);
     } catch {
-      ToastAlert.error("Could not capture invoice. Try again.");
+      ToastAlert.error(t("dashboard.invoices.share.captureFailed"));
       return null;
     }
   };
@@ -34,7 +36,7 @@ export const InvoiceExportButtons = ({ invoiceNumber }: { invoiceNumber: string 
       if (!canvas) return;
       downloadAsPng(canvas, invoiceNumber);
     } catch {
-      ToastAlert.error("Export failed");
+      ToastAlert.error(t("dashboard.invoices.share.exportFailed"));
     } finally {
       setExporting(null);
     }
@@ -47,7 +49,7 @@ export const InvoiceExportButtons = ({ invoiceNumber }: { invoiceNumber: string 
       if (!canvas) return;
       downloadAsPdf(canvas, invoiceNumber, jsPDF);
     } catch {
-      ToastAlert.error("Export failed");
+      ToastAlert.error(t("dashboard.invoices.share.exportFailed"));
     } finally {
       setExporting(null);
     }
@@ -57,11 +59,15 @@ export const InvoiceExportButtons = ({ invoiceNumber }: { invoiceNumber: string 
     <div className="flex flex-wrap gap-2">
       <Button variant="outline" size="sm" onClick={handleExportImage} disabled={!!exporting}>
         <FileImage className="mr-2 size-4" />
-        {exporting === "image" ? "Downloading..." : "Download as PNG"}
+        {exporting === "image"
+          ? t("dashboard.invoices.share.downloading")
+          : t("dashboard.invoices.share.downloadPng")}
       </Button>
       <Button variant="outline" size="sm" onClick={handleExportPdf} disabled={!!exporting}>
         <FileDown className="mr-2 size-4" />
-        {exporting === "pdf" ? "Downloading..." : "Download as PDF"}
+        {exporting === "pdf"
+          ? t("dashboard.invoices.share.downloading")
+          : t("dashboard.invoices.share.downloadPdf")}
       </Button>
     </div>
   );

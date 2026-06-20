@@ -7,6 +7,7 @@ import { runSupabaseDetailQueryWithRetry } from "@/lib/supabase/detail-fetch-ret
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
 import { toastMutationSuccess } from "@/lib/mutation-toast";
+import { usePreferencesStore } from "@/lib/stores/preferences-store";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
 import { buildOrIlikeClause } from "@/lib/supabase/table-search";
 import type { Tables, TablesInsert, TablesUpdate } from "@/database.types";
@@ -170,16 +171,16 @@ export const useCreateProduct = () => {
     },
     onSuccess: (_data, _variables, _onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
-      toastMutationSuccess(context, "Product added successfully");
+      toastMutationSuccess(context, usePreferencesStore.getState().t("dashboard.toast.productAdded"));
     },
     onError: (error: Error) => {
       if (isPlanLimitError(error)) {
-        ToastAlert.error("Plan limit reached. Upgrade to add more products.");
+        ToastAlert.error(usePreferencesStore.getState().t("dashboard.toast.planLimitProducts"));
         if (typeof window !== "undefined")
           window.location.assign(getSubscribeUrlForPlanLimit(error));
         return;
       }
-      ToastAlert.error(error.message || "Failed to add product");
+      ToastAlert.error(error.message || usePreferencesStore.getState().t("dashboard.toast.failedAddProduct"));
     },
   });
 };
@@ -213,10 +214,10 @@ export const useUpdateProduct = () => {
       return data;
     },
     onSuccess: (_data, _variables, _onMutateResult, context) => {
-      toastMutationSuccess(context, "Product updated successfully");
+      toastMutationSuccess(context, usePreferencesStore.getState().t("dashboard.toast.productUpdated"));
     },
     onError: (error: Error) => {
-      ToastAlert.error(error.message || "Failed to update product");
+      ToastAlert.error(error.message || usePreferencesStore.getState().t("dashboard.toast.failedUpdateProduct"));
     },
   });
 };
@@ -295,10 +296,10 @@ export const useAdjustProductStock = () => {
     },
     onSuccess: (_data, _variables, _onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
-      toastMutationSuccess(context, "Stock updated successfully");
+      toastMutationSuccess(context, usePreferencesStore.getState().t("dashboard.toast.stockUpdated"));
     },
     onError: (error: Error) => {
-      ToastAlert.error(error.message || "Failed to update stock");
+      ToastAlert.error(error.message || usePreferencesStore.getState().t("dashboard.toast.failedUpdateStock"));
     },
   });
 };
@@ -311,10 +312,10 @@ export const useDeleteProduct = () => {
       if (error) throw error;
     },
     onSuccess: (_data, _variables, _onMutateResult, context) => {
-      toastMutationSuccess(context, "Product deleted");
+      toastMutationSuccess(context, usePreferencesStore.getState().t("dashboard.toast.productDeleted"));
     },
     onError: (error: Error) => {
-      ToastAlert.error(error.message || "Failed to delete product");
+      ToastAlert.error(error.message || usePreferencesStore.getState().t("dashboard.toast.failedDeleteProduct"));
     },
   });
 };

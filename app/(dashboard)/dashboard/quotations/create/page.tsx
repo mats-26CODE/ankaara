@@ -31,8 +31,10 @@ import dayjs from "dayjs";
 import { QuotationTemplate } from "@/lib/quotation-templates/registry";
 import { TemplateFullscreenPreviewDialog } from "@/components/shared/template-fullscreen-preview-dialog";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "@/hooks/use-translation";
 
 const CreateQuotationPage = () => {
+  const { t } = useTranslation();
   const router = useRouter();
   const { businesses, loading: bizLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
@@ -294,9 +296,9 @@ const CreateQuotationPage = () => {
           <ArrowLeft className="size-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">New Quotation</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.quotations.create.title")}</h1>
           <p className="text-muted-foreground text-sm">
-            Create a quotation for your business{" "}
+            {t("dashboard.quotations.create.subtitlePrefix")}{" "}
             <Badge variant="secondary" className="font-normal">
               {currentBusiness?.name ?? "—"}
             </Badge>
@@ -308,9 +310,9 @@ const CreateQuotationPage = () => {
       <Card className="border-primary/80 gap-2 border shadow-xs">
         <CardHeader className="flex flex-col items-start gap-3 pb-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <CardTitle className="text-base">Template</CardTitle>
+            <CardTitle className="text-base">{t("dashboard.common.template")}</CardTitle>
             <p className="text-muted-foreground text-sm">
-              Choose a template. The preview updates as you fill the form.
+              {t("dashboard.invoices.form.templateDescription")}
             </p>
           </div>
 
@@ -323,7 +325,7 @@ const CreateQuotationPage = () => {
               onClick={() => setPreviewOpen(true)}
             >
               <Eye className="mr-2 size-4" />
-              See full preview
+              {t("dashboard.common.seeFullPreview")}
             </Button>
           </div>
         </CardHeader>
@@ -340,8 +342,8 @@ const CreateQuotationPage = () => {
                     : "bg-muted/50 hover:border-primary/30 border-transparent"
                 }`}
               >
-                <p className="text-sm font-medium">{tmpl.name}</p>
-                <p className="text-muted-foreground line-clamp-1 text-xs">{tmpl.description}</p>
+                <p className="text-sm font-medium">{t(`dashboard.quotations.templates.${tmpl.id}.name`)}</p>
+                <p className="text-muted-foreground line-clamp-1 text-xs">{t(`dashboard.quotations.templates.${tmpl.id}.description`)}</p>
               </button>
             ))}
           </div>
@@ -352,11 +354,11 @@ const CreateQuotationPage = () => {
         <div className="space-y-6 lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Details</CardTitle>
+              <CardTitle className="text-base">{t("dashboard.common.details")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Client *</Label>
+                <Label>{t("dashboard.invoices.form.clientRequired")}</Label>
                 <ClientPickerDialog
                   businessId={currentBusinessId}
                   value={clientId}
@@ -368,25 +370,25 @@ const CreateQuotationPage = () => {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Issue Date *</Label>
+                  <Label>{t("dashboard.invoices.form.issueDateRequired")}</Label>
                   <DatePicker
                     value={issueDate}
                     onChange={setIssueDate}
-                    placeholder="Select issue date"
+                    placeholder={t("dashboard.invoices.form.issueDatePlaceholder")}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Valid Until</Label>
+                  <Label>{t("dashboard.common.validUntil")}</Label>
                   <DatePicker
                     value={validUntil}
                     onChange={setValidUntil}
-                    placeholder="Optional expiry date"
+                    placeholder={t("dashboard.quotations.form.validUntilPlaceholder")}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Currency</Label>
+                <Label>{t("dashboard.common.currency")}</Label>
                 <Select value={currency} onValueChange={setCurrency}>
                   <SelectTrigger className="w-full">
                     <SelectValue />
@@ -402,11 +404,11 @@ const CreateQuotationPage = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Scope of Work</Label>
+                <Label>{t("dashboard.common.scopeOfWork")}</Label>
                 <Textarea
                   value={scopeOfWork}
                   onChange={(e) => setScopeOfWork(e.target.value)}
-                  placeholder="Describe deliverables, services, or project scope (optional)"
+                  placeholder={t("dashboard.quotations.form.scopePlaceholder")}
                   rows={3}
                   className="resize-none"
                 />
@@ -416,7 +418,7 @@ const CreateQuotationPage = () => {
 
           <Card>
             <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between">
-              <CardTitle className="text-base">Line Items</CardTitle>
+              <CardTitle className="text-base">{t("dashboard.common.lineItems")}</CardTitle>
               <Button
                 type="button"
                 variant="outline"
@@ -424,13 +426,13 @@ const CreateQuotationPage = () => {
                 onClick={() => setProductPickerOpen(true)}
               >
                 <Plus className="mr-1 size-4" />
-                Add item
+                {t("dashboard.common.addItem")}
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
               {items.length === 0 && (
                 <p className="text-muted-foreground py-4 text-center text-sm">
-                  Add at least one item from your products. Click &ldquo;Add item&rdquo; to select
+                  Add at least one item from your products. Click &ldquo;{t("dashboard.common.addItem")}&rdquo; to select
                   or create a product.
                 </p>
               )}
@@ -438,7 +440,7 @@ const CreateQuotationPage = () => {
                 <div key={idx} className="space-y-3 rounded-lg border p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 space-y-2">
-                      <Label>Description</Label>
+                      <Label>{t("dashboard.common.description")}</Label>
                       <Input readOnly value={item.description} className="bg-muted" />
                     </div>
                     <Button
@@ -446,14 +448,14 @@ const CreateQuotationPage = () => {
                       size="icon"
                       className="mt-5.5 shrink-0"
                       onClick={() => removeItem(idx)}
-                      title="Remove item"
+                      title={t("dashboard.common.removeItem")}
                     >
                       <Trash2 className="text-destructive size-4" />
                     </Button>
                   </div>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <div className="space-y-2">
-                      <Label>Qty *</Label>
+                      <Label>{t("dashboard.common.qtyRequired")}</Label>
                       <Input
                         type="number"
                         min={1}
@@ -464,7 +466,7 @@ const CreateQuotationPage = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Unit Price</Label>
+                      <Label>{t("dashboard.common.unitPrice")}</Label>
                       <Input
                         type="number"
                         min={item.base_price ?? 0}
@@ -474,7 +476,7 @@ const CreateQuotationPage = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Discount</Label>
+                      <Label>{t("dashboard.common.discount")}</Label>
                       <Input
                         type="number"
                         min={0}
@@ -485,7 +487,7 @@ const CreateQuotationPage = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Line Total</Label>
+                      <Label>{t("dashboard.common.lineTotal")}</Label>
                       <Input
                         readOnly
                         tabIndex={-1}
@@ -499,8 +501,8 @@ const CreateQuotationPage = () => {
                   </div>
                   {!itemMeetsMinimumPrice(item) && (
                     <p className="text-destructive text-sm">
-                      Price after discount cannot be below the base price of{" "}
-                      {Number(item.base_price ?? 0).toLocaleString()}.
+                      {t("dashboard.common.belowBasePriceError", { amount: 
+                      Number(item.base_price ?? 0).toLocaleString() })}
                     </p>
                   )}
                 </div>
@@ -520,15 +522,15 @@ const CreateQuotationPage = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Notes & Customization</CardTitle>
+              <CardTitle className="text-base">{t("dashboard.common.notesCustomization")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Notes</Label>
+                <Label>{t("dashboard.common.notes")}</Label>
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Additional notes or terms..."
+                  placeholder={t("dashboard.quotations.form.notesPlaceholder")}
                   rows={3}
                 />
               </div>
@@ -537,12 +539,12 @@ const CreateQuotationPage = () => {
                 <Textarea
                   value={footerNote}
                   onChange={(e) => setFooterNote(e.target.value)}
-                  placeholder="e.g. Thank you for your business!"
+                  placeholder={t("dashboard.quotations.form.footerNotePlaceholder")}
                   rows={2}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Accent Color</Label>
+                <Label>{t("dashboard.common.accentColor")}</Label>
                 <div className="flex items-center gap-3">
                   <input
                     type="color"
@@ -565,23 +567,23 @@ const CreateQuotationPage = () => {
         <div className="space-y-6">
           <Card className="sticky top-6">
             <CardHeader>
-              <CardTitle className="text-base">Summary</CardTitle>
+              <CardTitle className="text-base">{t("dashboard.common.summary")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {totalDiscount > 0 && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Total discount</span>
+                  <span className="text-muted-foreground">{t("dashboard.common.totalDiscount")}</span>
                   <span className="font-medium text-green-600 dark:text-green-400">
                     -{totalDiscount.toLocaleString()}
                   </span>
                 </div>
               )}
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Subtotal</span>
+                <span className="text-muted-foreground">{t("dashboard.common.subtotal")}</span>
                 <span className="font-medium">{subtotal.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="text-muted-foreground shrink-0">Tax (%)</span>
+                <span className="text-muted-foreground shrink-0">{t("dashboard.common.taxPercent")}</span>
                 <div className="relative w-28">
                   <Input
                     type="number"
@@ -600,13 +602,13 @@ const CreateQuotationPage = () => {
               </div>
               {taxAmount > 0 && (
                 <div className="text-muted-foreground flex justify-between text-xs">
-                  <span>Tax amount</span>
+                  <span>{t("dashboard.common.taxAmount")}</span>
                   <span>{taxAmount.toLocaleString()}</span>
                 </div>
               )}
               <Separator />
               <div className="flex justify-between text-lg font-semibold">
-                <span>Total</span>
+                <span>{t("dashboard.common.total")}</span>
                 <span>
                   {currency} {total.toLocaleString()}
                 </span>
@@ -620,7 +622,7 @@ const CreateQuotationPage = () => {
                   disabled={!canSaveDraft}
                   isLoading={createQuotation.isPending && savingMode === "draft"}
                 >
-                  Save as Draft
+                  {t("dashboard.common.saveAsDraft")}
                 </Button>
                 <Button
                   className="w-full"
@@ -628,10 +630,10 @@ const CreateQuotationPage = () => {
                   disabled={!canSubmit}
                   isLoading={createQuotation.isPending && savingMode === "submit"}
                 >
-                  Create Quotation
+                  {t("dashboard.quotations.create.submit")}
                 </Button>
                 <Button variant="outline" className="w-full" onClick={() => router.back()}>
-                  Cancel
+                  {t("dashboard.common.cancel")}
                 </Button>
               </div>
             </CardContent>
@@ -642,7 +644,7 @@ const CreateQuotationPage = () => {
       <TemplateFullscreenPreviewDialog
         open={previewOpen}
         onOpenChange={setPreviewOpen}
-        title="Quotation preview"
+        title={t("dashboard.quotations.form.previewDialogTitle")}
       >
         <QuotationTemplate {...previewProps} />
       </TemplateFullscreenPreviewDialog>

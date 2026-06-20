@@ -32,8 +32,10 @@ import dayjs from "dayjs";
 import { InvoiceTemplate } from "@/lib/invoice-templates/registry";
 import { TemplateFullscreenPreviewDialog } from "@/components/shared/template-fullscreen-preview-dialog";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "@/hooks/use-translation";
 
 const CreateInvoicePage = () => {
+  const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const quotationIdParam = searchParams.get("quotation");
@@ -344,9 +346,9 @@ const CreateInvoicePage = () => {
           <ArrowLeft className="size-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">New Invoice</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.invoices.create.title")}</h1>
           <p className="text-muted-foreground text-sm">
-            Create an invoice for your business{" "}
+            {t("dashboard.invoices.create.subtitlePrefix")}{" "}
             <Badge variant="secondary" className="font-normal">
               {currentBusiness?.name ?? "—"}
             </Badge>
@@ -354,7 +356,9 @@ const CreateInvoicePage = () => {
               <>
                 {" "}
                 <Badge variant="outline" className="font-normal">
-                  From {linkedQuotation.quotation_number}
+                  {t("dashboard.invoices.create.fromQuotationBadge", {
+                    quotationNumber: linkedQuotation.quotation_number,
+                  })}
                 </Badge>
               </>
             )}
@@ -366,9 +370,9 @@ const CreateInvoicePage = () => {
       <Card className="border-primary/80 gap-2 border shadow-xs">
         <CardHeader className="flex flex-col items-start gap-3 pb-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <CardTitle className="text-base">Template</CardTitle>
+            <CardTitle className="text-base">{t("dashboard.common.template")}</CardTitle>
             <p className="text-muted-foreground text-sm">
-              Choose a template. The preview updates as you fill the form.
+              {t("dashboard.invoices.form.templateDescription")}
             </p>
           </div>
 
@@ -381,7 +385,7 @@ const CreateInvoicePage = () => {
               onClick={() => setPreviewOpen(true)}
             >
               <Eye className="mr-2 size-4" />
-              See full preview
+              {t("dashboard.common.seeFullPreview")}
             </Button>
           </div>
         </CardHeader>
@@ -398,8 +402,12 @@ const CreateInvoicePage = () => {
                     : "bg-muted/50 hover:border-primary/30 border-transparent"
                 }`}
               >
-                <p className="text-sm font-medium">{tmpl.name}</p>
-                <p className="text-muted-foreground line-clamp-1 text-xs">{tmpl.description}</p>
+                <p className="text-sm font-medium">
+                  {t(`dashboard.invoices.templates.${tmpl.id}.name`)}
+                </p>
+                <p className="text-muted-foreground line-clamp-1 text-xs">
+                  {t(`dashboard.invoices.templates.${tmpl.id}.description`)}
+                </p>
               </button>
             ))}
           </div>
@@ -412,11 +420,11 @@ const CreateInvoicePage = () => {
           {/* Client & Dates */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Details</CardTitle>
+              <CardTitle className="text-base">{t("dashboard.common.details")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Client *</Label>
+                <Label>{t("dashboard.invoices.form.clientRequired")}</Label>
                 <ClientPickerDialog
                   businessId={currentBusinessId}
                   value={clientId}
@@ -428,30 +436,34 @@ const CreateInvoicePage = () => {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Issue Date *</Label>
+                  <Label>{t("dashboard.invoices.form.issueDateRequired")}</Label>
                   <DatePicker
                     value={issueDate}
                     onChange={setIssueDate}
-                    placeholder="Select issue date"
+                    placeholder={t("dashboard.invoices.form.issueDatePlaceholder")}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Due Date *</Label>
-                  <DatePicker value={dueDate} onChange={setDueDate} placeholder="Select due date" />
+                  <Label>{t("dashboard.invoices.form.dueDateRequired")}</Label>
+                  <DatePicker
+                    value={dueDate}
+                    onChange={setDueDate}
+                    placeholder={t("dashboard.invoices.form.dueDatePlaceholder")}
+                  />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Link to Quotation (optional)</Label>
+                <Label>{t("dashboard.invoices.form.linkQuotation")}</Label>
                 <Select
                   value={selectedQuotationId ?? "none"}
                   onValueChange={(v) => setSelectedQuotationId(v === "none" ? null : v)}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="None" />
+                    <SelectValue placeholder={t("dashboard.common.none")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="none">{t("dashboard.common.none")}</SelectItem>
                     {quotations.map((q) => (
                       <SelectItem key={q.id} value={q.id}>
                         {q.quotation_number} — {q.client?.name ?? "—"}
@@ -460,12 +472,12 @@ const CreateInvoicePage = () => {
                   </SelectContent>
                 </Select>
                 <p className="text-muted-foreground text-xs">
-                  Optionally link this invoice to a quotation
+                  {t("dashboard.invoices.form.linkQuotationHint")}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label>Currency</Label>
+                <Label>{t("dashboard.common.currency")}</Label>
                 <Select value={currency} onValueChange={setCurrency}>
                   <SelectTrigger className="w-full">
                     <SelectValue />
@@ -485,7 +497,7 @@ const CreateInvoicePage = () => {
           {/* Line Items */}
           <Card>
             <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between">
-              <CardTitle className="text-base">Line Items</CardTitle>
+              <CardTitle className="text-base">{t("dashboard.common.lineItems")}</CardTitle>
               <Button
                 type="button"
                 variant="outline"
@@ -493,21 +505,20 @@ const CreateInvoicePage = () => {
                 onClick={() => setProductPickerOpen(true)}
               >
                 <Plus className="mr-1 size-4" />
-                Add item
+                {t("dashboard.common.addItem")}
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
               {items.length === 0 && (
                 <p className="text-muted-foreground py-4 text-center text-sm">
-                  Add at least one item from your products. Click &ldquo;Add item&rdquo; to select
-                  or create a product.
+                  {t("dashboard.invoices.form.lineItemsEmpty")}
                 </p>
               )}
               {items.map((item, idx) => (
                 <div key={idx} className="space-y-3 rounded-lg border p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 space-y-2">
-                      <Label>Description</Label>
+                      <Label>{t("dashboard.common.description")}</Label>
                       <Input readOnly value={item.description} className="bg-muted" />
                     </div>
                     <Button
@@ -515,14 +526,14 @@ const CreateInvoicePage = () => {
                       size="icon"
                       className="mt-5.5 shrink-0"
                       onClick={() => removeItem(idx)}
-                      title="Remove item"
+                      title={t("dashboard.common.removeItem")}
                     >
                       <Trash2 className="text-destructive size-4" />
                     </Button>
                   </div>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <div className="space-y-2">
-                      <Label>Qty *</Label>
+                      <Label>{t("dashboard.common.qtyRequired")}</Label>
                       <Input
                         type="number"
                         min={1}
@@ -533,7 +544,7 @@ const CreateInvoicePage = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Unit Price</Label>
+                      <Label>{t("dashboard.common.unitPrice")}</Label>
                       <Input
                         type="number"
                         min={item.base_price ?? 0}
@@ -543,7 +554,7 @@ const CreateInvoicePage = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Discount</Label>
+                      <Label>{t("dashboard.common.discount")}</Label>
                       <Input
                         type="number"
                         min={0}
@@ -554,7 +565,7 @@ const CreateInvoicePage = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Line Total</Label>
+                      <Label>{t("dashboard.common.lineTotal")}</Label>
                       <Input
                         readOnly
                         tabIndex={-1}
@@ -568,8 +579,9 @@ const CreateInvoicePage = () => {
                   </div>
                   {!itemMeetsMinimumPrice(item) && (
                     <p className="text-destructive text-sm">
-                      Price after discount cannot be below the base price of{" "}
-                      {Number(item.base_price ?? 0).toLocaleString()}.
+                      {t("dashboard.common.belowBasePriceError", {
+                        amount: Number(item.base_price ?? 0).toLocaleString(),
+                      })}
                     </p>
                   )}
                 </div>
@@ -590,29 +602,29 @@ const CreateInvoicePage = () => {
           {/* Notes & Customization */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Notes & Customization</CardTitle>
+              <CardTitle className="text-base">{t("dashboard.common.notesCustomization")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Notes</Label>
+                <Label>{t("dashboard.common.notes")}</Label>
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Additional notes or payment instructions..."
+                  placeholder={t("dashboard.invoices.form.notesPlaceholder")}
                   rows={3}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Invoice Footer Note</Label>
+                <Label>{t("dashboard.common.footerNote")}</Label>
                 <Textarea
                   value={footerNote}
                   onChange={(e) => setFooterNote(e.target.value)}
-                  placeholder="e.g. Thank you for your business!"
+                  placeholder={t("dashboard.invoices.form.footerNotePlaceholder")}
                   rows={2}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Accent Color</Label>
+                <Label>{t("dashboard.common.accentColor")}</Label>
                 <div className="flex items-center gap-3">
                   <input
                     type="color"
@@ -628,7 +640,7 @@ const CreateInvoicePage = () => {
                   />
                 </div>
                 <p className="text-muted-foreground text-xs">
-                  Overrides the business brand color for this invoice
+                  {t("dashboard.invoices.form.accentColorHint")}
                 </p>
               </div>
             </CardContent>
@@ -639,23 +651,23 @@ const CreateInvoicePage = () => {
         <div className="space-y-6">
           <Card className="sticky top-6">
             <CardHeader>
-              <CardTitle className="text-base">Summary</CardTitle>
+              <CardTitle className="text-base">{t("dashboard.common.summary")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {totalDiscount > 0 && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Total discount</span>
+                  <span className="text-muted-foreground">{t("dashboard.common.totalDiscount")}</span>
                   <span className="font-medium text-green-600 dark:text-green-400">
                     -{totalDiscount.toLocaleString()}
                   </span>
                 </div>
               )}
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Subtotal</span>
+                <span className="text-muted-foreground">{t("dashboard.common.subtotal")}</span>
                 <span className="font-medium">{subtotal.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="text-muted-foreground shrink-0">Tax (%)</span>
+                <span className="text-muted-foreground shrink-0">{t("dashboard.common.taxPercent")}</span>
                 <div className="relative w-28">
                   <Input
                     type="number"
@@ -674,13 +686,13 @@ const CreateInvoicePage = () => {
               </div>
               {taxAmount > 0 && (
                 <div className="text-muted-foreground flex justify-between text-xs">
-                  <span>Tax amount</span>
+                  <span>{t("dashboard.common.taxAmount")}</span>
                   <span>{taxAmount.toLocaleString()}</span>
                 </div>
               )}
               <Separator />
               <div className="flex justify-between text-lg font-semibold">
-                <span>Total</span>
+                <span>{t("dashboard.common.total")}</span>
                 <span>
                   {currency} {total.toLocaleString()}
                 </span>
@@ -694,7 +706,7 @@ const CreateInvoicePage = () => {
                   disabled={!canSaveDraft}
                   isLoading={createInvoice.isPending && savingMode === "draft"}
                 >
-                  Save as Draft
+                  {t("dashboard.common.saveAsDraft")}
                 </Button>
                 <Button
                   className="w-full"
@@ -702,10 +714,10 @@ const CreateInvoicePage = () => {
                   disabled={!canSubmit}
                   isLoading={createInvoice.isPending && savingMode === "submit"}
                 >
-                  Create Invoice
+                  {t("dashboard.invoices.create.submit")}
                 </Button>
                 <Button variant="outline" className="w-full" onClick={() => router.back()}>
-                  Cancel
+                  {t("dashboard.common.cancel")}
                 </Button>
               </div>
             </CardContent>
@@ -716,7 +728,7 @@ const CreateInvoicePage = () => {
       <TemplateFullscreenPreviewDialog
         open={previewOpen}
         onOpenChange={setPreviewOpen}
-        title="Invoice preview"
+        title={t("dashboard.invoices.form.previewDialogTitle")}
       >
         <InvoiceTemplate {...previewProps} />
       </TemplateFullscreenPreviewDialog>

@@ -24,7 +24,11 @@ import {
   isExactSamePlan,
   isPlanDowngrade,
 } from "@/lib/subscription-limits";
-import { getBillingIntervalChangeNote, SUBSCRIBE_SCREEN } from "@/constants/subscribe";
+import {
+  getBillingIntervalChangeNote,
+  getSubscribeIntervalLabel,
+} from "@/constants/subscribe";
+import { getSubscribePeriodSuffix } from "@/lib/i18n/subscribe-helpers";
 import { ContactUsToUpgradeDialog } from "@/components/shared/contact-us-to-upgrade-dialog";
 import { PlanFeaturesList } from "@/components/shared/plan-features-list";
 import { formatPlanCurrency } from "@/lib/format-plan-currency";
@@ -37,20 +41,6 @@ const PLAN_TIER_ICONS: Record<ReturnType<typeof getPlanTier>, typeof Users> = {
   free: Users,
   pro: Zap,
   business: Cloud,
-};
-
-const getIntervalLabel = (interval: string | null) => {
-  if (interval === "monthly") return "Monthly";
-  if (interval === "6_month") return "6 Month";
-  if (interval === "yearly") return "Yearly";
-  return "";
-};
-
-const getPeriodSuffix = (interval: string | null) => {
-  if (interval === "monthly") return "/month";
-  if (interval === "6_month") return "/6 months";
-  if (interval === "yearly") return "/year";
-  return "";
 };
 
 const getDefaultPlanSlugForTier = (
@@ -146,7 +136,7 @@ const SubscribeContent = () => {
       { planSlug: "free", userId: user.id },
       {
         onSuccess: () => {
-          ToastAlert.success("You can upgrade anytime from settings.");
+          ToastAlert.success(t("dashboard.subscription.page.upgradeAnytime"));
           router.push("/dashboard");
         },
         onError: () => {
@@ -164,7 +154,7 @@ const SubscribeContent = () => {
     return (
       <div className="bg-muted/30 flex min-h-screen flex-col items-center justify-center p-8">
         <Loader2 className="text-primary h-8 w-8 animate-spin" />
-        <p className="text-muted-foreground mt-4">Loading...</p>
+        <p className="text-muted-foreground mt-4">{t("dashboard.subscription.page.loading")}</p>
       </div>
     );
   }
@@ -181,19 +171,19 @@ const SubscribeContent = () => {
             className="absolute left-0 rounded-full"
           >
             <ArrowLeft className="mr-1 size-4" />
-            Go Back
+            {t("dashboard.subscription.page.goBack")}
           </Button>
           <Logo size="sm" />
         </div>
 
         <div className="bg-background rounded-4xl border p-6 sm:p-8">
           <h1 className="text-foreground mb-1 text-center text-2xl font-semibold">
-            Choose your plan
+            {t("dashboard.subscription.page.title")}
           </h1>
           <p className="text-muted-foreground mb-6 text-center text-sm">
             {fromOnboarding
-              ? "Get started with the right plan for your business. You can change or skip for now."
-              : "Select a plan to continue. You can change it anytime."}
+              ? t("dashboard.subscription.page.onboardingSubtitle")
+              : t("dashboard.subscription.page.subtitle")}
           </p>
 
           {limitParam && (
@@ -218,7 +208,7 @@ const SubscribeContent = () => {
                 const Icon = PLAN_TIER_ICONS[tier];
                 const popular = tier === "pro";
                 const priceStr = formatPlanCurrency(plan.price_amount, plan.price_currency);
-                const period = getPeriodSuffix(plan.billing_interval);
+                const period = getSubscribePeriodSuffix(plan.billing_interval);
                 return (
                   <Card
                     role="button"
@@ -341,7 +331,7 @@ const SubscribeContent = () => {
                               value={p.slug}
                               className="text-xs sm:text-sm"
                             >
-                              {getIntervalLabel(p.billing_interval)}
+                              {getSubscribeIntervalLabel(p.billing_interval)}
                             </TabsTrigger>
                           ))}
                         </TabsList>
@@ -357,7 +347,7 @@ const SubscribeContent = () => {
                                   t(`landing.pricing.${tier}.price`)}
                               </span>
                               <span className="text-muted-foreground">
-                                {getPeriodSuffix(p.billing_interval)}
+                                {getSubscribePeriodSuffix(p.billing_interval)}
                               </span>
                             </div>
                           </TabsContent>
@@ -405,13 +395,15 @@ const SubscribeContent = () => {
               {isCurrentSelection ? (
                 <div className="border-muted bg-muted/30 rounded-lg border px-4 py-3 text-center">
                   <p className="text-muted-foreground text-sm">
-                    {isFree ? SUBSCRIBE_SCREEN.freePlanNote : SUBSCRIBE_SCREEN.currentPlanNote}
+                    {isFree
+                      ? t("dashboard.subscription.notes.freePlan")
+                      : t("dashboard.subscription.notes.currentPlan")}
                   </p>
                 </div>
               ) : isDowngradeSelection ? (
                 <div className="border-muted bg-muted/30 rounded-lg border px-4 py-3 text-center">
                   <p className="text-muted-foreground text-sm">
-                    {SUBSCRIBE_SCREEN.downgradePlanNote}
+                    {t("dashboard.subscription.notes.downgrade")}
                   </p>
                 </div>
               ) : canCheckoutSelection ? (
@@ -424,7 +416,7 @@ const SubscribeContent = () => {
                     </div>
                   ) : null}
                   <Button size="lg" className="w-full" onClick={handleContinueToPayment}>
-                    Continue to payment
+                    {t("dashboard.subscription.page.continuePayment")}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </>
@@ -437,7 +429,7 @@ const SubscribeContent = () => {
                   onClick={handleSkip}
                   disabled={setSubscription.isPending}
                 >
-                  Skip for now — start with Free
+                  {t("dashboard.subscription.page.skipFree")}
                 </Button>
               )}
             </div>
@@ -449,7 +441,7 @@ const SubscribeContent = () => {
         open={contactDialogOpen}
         onOpenChange={setContactDialogOpen}
         planName={selectedPlan?.name}
-        intervalLabel={getIntervalLabel(selectedPlan?.billing_interval ?? null)}
+        intervalLabel={getSubscribeIntervalLabel(selectedPlan?.billing_interval ?? null)}
       />
     </div>
   );

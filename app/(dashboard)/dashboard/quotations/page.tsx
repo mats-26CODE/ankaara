@@ -64,24 +64,26 @@ import {
 } from "lucide-react";
 import dayjs from "dayjs";
 import { ShareQuotationDialog } from "@/components/shared/share-quotation-dialog";
+import { useTranslation } from "@/hooks/use-translation";
 
-const STATUS_CONFIG: Record<
+const STATUS_VARIANT: Record<
   QuotationStatus,
-  { label: string; variant: "default" | "secondary" | "outline" | "destructive" }
+  "default" | "secondary" | "outline" | "destructive"
 > = {
-  draft: { label: "Draft", variant: "secondary" },
-  sent: { label: "Sent", variant: "default" },
-  viewed: { label: "Viewed", variant: "outline" },
-  accepted: { label: "Accepted", variant: "default" },
-  expired: { label: "Expired", variant: "destructive" },
-  cancelled: { label: "Cancelled", variant: "secondary" },
+  draft: "secondary",
+  sent: "default",
+  viewed: "outline",
+  accepted: "default",
+  expired: "destructive",
+  cancelled: "secondary",
 };
 
 const StatusBadge = ({ status }: { status: QuotationStatus }) => {
-  const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.draft;
+  const { t } = useTranslation();
+  const variant = STATUS_VARIANT[status] ?? STATUS_VARIANT.draft;
   return (
     <Badge
-      variant={config.variant}
+      variant={variant}
       className={
         status === "accepted"
           ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400"
@@ -92,12 +94,13 @@ const StatusBadge = ({ status }: { status: QuotationStatus }) => {
               : ""
       }
     >
-      {config.label}
+      {t(`dashboard.status.${status}`)}
     </Badge>
   );
 };
 
 const QuotationsContent = () => {
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -183,13 +186,13 @@ const QuotationsContent = () => {
         <CardContent className="flex flex-col items-center gap-4 py-12">
           <Building2 className="text-muted-foreground size-12" />
           <div className="space-y-1 text-center">
-            <p className="font-medium">No business yet</p>
+            <p className="font-medium">{t("dashboard.common.noBusinessTitle")}</p>
             <p className="text-muted-foreground text-sm">
-              Create a business first to start creating quotations.
+              {t("dashboard.settings.businesses.create.description")}
             </p>
           </div>
           <Button asChild>
-            <Link href="/dashboard/settings/businesses">Go to Businesses</Link>
+            <Link href="/dashboard/settings/businesses">{t("dashboard.common.goToBusinesses")}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -200,11 +203,12 @@ const QuotationsContent = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Quotations</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.nav.quotations")}</h1>
           <p className="text-muted-foreground text-sm">
-            Manage quotations for{" "}
+            {t("dashboard.quotations.list.subtitlePrefix")}{" "}
             <span className="font-medium">
-              {businesses.find((b) => b.id === currentBusinessId)?.name ?? "your business"}
+              {businesses.find((b) => b.id === currentBusinessId)?.name ??
+                t("dashboard.common.yourBusiness")}
             </span>
             .
           </p>
@@ -212,7 +216,7 @@ const QuotationsContent = () => {
         <Button size="sm" asChild>
           <Link href="/dashboard/quotations/create">
             <Plus className="mr-1 size-4" />
-            New Quotation
+            {t("dashboard.common.newQuotation")}
           </Link>
         </Button>
       </div>
@@ -225,7 +229,7 @@ const QuotationsContent = () => {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by number, client..."
+                placeholder={t("dashboard.quotations.list.searchPlaceholder")}
                 className="pl-9"
               />
             </div>
@@ -244,16 +248,16 @@ const QuotationsContent = () => {
               }}
             >
               <SelectTrigger className="w-full sm:w-[160px]">
-                <SelectValue placeholder="All statuses" />
+                <SelectValue placeholder={t("dashboard.common.allStatuses")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="sent">Sent</SelectItem>
-                <SelectItem value="viewed">Viewed</SelectItem>
-                <SelectItem value="accepted">Accepted</SelectItem>
-                <SelectItem value="expired">Expired</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="all">{t("dashboard.common.allStatuses")}</SelectItem>
+                <SelectItem value="draft">{t("dashboard.status.draft")}</SelectItem>
+                <SelectItem value="sent">{t("dashboard.status.sent")}</SelectItem>
+                <SelectItem value="viewed">{t("dashboard.status.viewed")}</SelectItem>
+                <SelectItem value="accepted">{t("dashboard.status.accepted")}</SelectItem>
+                <SelectItem value="expired">{t("dashboard.status.expired")}</SelectItem>
+                <SelectItem value="cancelled">{t("dashboard.status.cancelled")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -268,14 +272,14 @@ const QuotationsContent = () => {
               <FileText className="text-muted-foreground size-10" />
               <p className="text-muted-foreground text-sm">
                 {debouncedSearch.trim()
-                  ? "No quotations match your search."
-                  : "No quotations yet. Create your first one."}
+                  ? t("dashboard.quotations.list.emptyNoMatch")
+                  : t("dashboard.quotations.list.emptyNoData")}
               </p>
               {!debouncedSearch.trim() && (
                 <Button size="sm" variant="outline" asChild>
                   <Link href="/dashboard/quotations/create">
                     <Plus className="mr-1 size-4" />
-                    Create Quotation
+                    {t("dashboard.quotations.list.createQuotation")}
                   </Link>
                 </Button>
               )}
@@ -284,12 +288,12 @@ const QuotationsContent = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Quotation</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead className="hidden sm:table-cell">Status</TableHead>
-                  <TableHead className="hidden md:table-cell">Issue Date</TableHead>
-                  <TableHead className="hidden md:table-cell">Valid Until</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>{t("dashboard.quotations.list.columnQuotation")}</TableHead>
+                  <TableHead>{t("dashboard.common.client")}</TableHead>
+                  <TableHead className="hidden sm:table-cell">{t("dashboard.common.status")}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t("dashboard.common.issueDate")}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t("dashboard.common.validUntil")}</TableHead>
+                  <TableHead className="text-right">{t("dashboard.common.amount")}</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
@@ -332,21 +336,21 @@ const QuotationsContent = () => {
                           <DropdownMenuItem asChild>
                             <Link href={`/dashboard/quotations/${quo.id}`}>
                               <Eye className="mr-2 size-4" />
-                              View
+                              {t("dashboard.common.view")}
                             </Link>
                           </DropdownMenuItem>
                           {quo.status === "draft" && (
                             <DropdownMenuItem asChild>
                               <Link href={`/dashboard/quotations/${quo.id}/edit`}>
                                 <Pencil className="mr-2 size-4" />
-                                Edit
+                                {t("dashboard.common.edit")}
                               </Link>
                             </DropdownMenuItem>
                           )}
                           {quo.status !== "draft" && (
                             <DropdownMenuItem onClick={() => handleShare(quo)}>
                               <Share2 className="mr-2 size-4" />
-                              Share
+                              {t("dashboard.common.share")}
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuSeparator />
@@ -355,7 +359,7 @@ const QuotationsContent = () => {
                             className="text-destructive focus:text-destructive"
                           >
                             <Trash2 className="mr-2 size-4" />
-                            Delete
+                            {t("dashboard.common.delete")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -369,7 +373,7 @@ const QuotationsContent = () => {
           {!loading && total > 0 && (
             <div className="mt-4 flex flex-col items-center justify-between gap-3 border-t pt-4 sm:flex-row">
               <p className="text-muted-foreground text-sm">
-                Showing {from}–{to} of {total}
+                {t("dashboard.common.showingRange", { from, to, total })}
               </p>
               <div className="flex items-center gap-2">
                 <Button
@@ -379,7 +383,7 @@ const QuotationsContent = () => {
                   disabled={!hasPrev}
                 >
                   <ChevronLeft className="size-4" />
-                  Previous
+                  {t("dashboard.common.previous")}
                 </Button>
                 <Button
                   variant="outline"
@@ -387,7 +391,7 @@ const QuotationsContent = () => {
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={!hasNext}
                 >
-                  Next
+                  {t("dashboard.common.next")}
                   <ChevronRight className="size-4" />
                 </Button>
               </div>
@@ -401,7 +405,7 @@ const QuotationsContent = () => {
           open={shareDialogOpen}
           onOpenChange={setShareDialogOpen}
           quotationNumber={sharingQuotation.quotation_number}
-          clientName={sharingQuotation.client?.name ?? "Client"}
+          clientName={sharingQuotation.client?.name ?? t("dashboard.quotations.share.clientFallback")}
           total={Number(sharingQuotation.total).toLocaleString()}
           currency={sharingQuotation.currency}
           shareUrl={`${typeof window !== "undefined" ? window.location.origin : ""}/quotation/${sharingQuotation.id}`}
@@ -413,11 +417,11 @@ const QuotationsContent = () => {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Delete Quotation</DialogTitle>
+            <DialogTitle>{t("dashboard.quotations.delete.title")}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete{" "}
-              <span className="font-medium">{deletingQuotation?.quotation_number}</span>? This
-              cannot be undone.
+              {t("dashboard.quotations.delete.description", {
+                number: deletingQuotation?.quotation_number ?? "",
+              })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -426,14 +430,14 @@ const QuotationsContent = () => {
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteQuotation.isPending}
             >
-              Cancel
+              {t("dashboard.common.cancel")}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
               isLoading={deleteQuotation.isPending}
             >
-              Delete
+              {t("dashboard.common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

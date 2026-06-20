@@ -24,25 +24,15 @@ import {
   landingViewport,
   ScrollReveal,
 } from "@/components/shared/scroll-reveal";
+import {
+  getSubscribeIntervalLabel,
+  getSubscribePeriodSuffix,
+} from "@/lib/i18n/subscribe-helpers";
 
 const PLAN_TIER_ICONS: Record<ReturnType<typeof getPlanTier>, typeof Users> = {
   free: Users,
   pro: Zap,
   business: Cloud,
-};
-
-const getIntervalLabel = (interval: string | null) => {
-  if (interval === "monthly") return "Monthly";
-  if (interval === "6_month") return "6 Month";
-  if (interval === "yearly") return "Yearly";
-  return "";
-};
-
-const getPeriodSuffix = (interval: string | null) => {
-  if (interval === "monthly") return "/month";
-  if (interval === "6_month") return "/6 months";
-  if (interval === "yearly") return "/year";
-  return "";
 };
 
 const PricingSection = () => {
@@ -209,7 +199,7 @@ const PricingSection = () => {
                       <TabsList className="grid w-full grid-cols-3">
                         {tierPlans.map((p) => (
                           <TabsTrigger key={p.id} value={p.slug} className="text-xs sm:text-sm">
-                            {getIntervalLabel(p.billing_interval)}
+                            {getSubscribeIntervalLabel(p.billing_interval)}
                           </TabsTrigger>
                         ))}
                       </TabsList>
@@ -230,7 +220,7 @@ const PricingSection = () => {
                                   t(`landing.pricing.${tier}.price`)}
                               </span>
                               <span className="text-muted-foreground">
-                                {getPeriodSuffix(p.billing_interval)}
+                                {getSubscribePeriodSuffix(p.billing_interval)}
                               </span>
                             </div>
                           )}
@@ -249,7 +239,7 @@ const PricingSection = () => {
                       >
                         <a
                           href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
-                            `Business plan inquiry (${getIntervalLabel(activePlan.billing_interval)})`,
+                            `Business plan inquiry (${getSubscribeIntervalLabel(activePlan.billing_interval)})`,
                           )}`}
                           className="inline-flex items-center justify-center gap-2"
                         >

@@ -14,6 +14,7 @@ import {
   type Expense,
 } from "@/hooks/use-expenses";
 import { useExpenseCategories } from "@/hooks/use-expense-categories";
+import { useTranslation } from "@/hooks/use-translation";
 import { useFormatAmount } from "@/hooks/use-format-amount";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -88,6 +89,7 @@ const emptyForm = {
 };
 
 const ExpensesPage = () => {
+  const { t } = useTranslation();
   const { format: formatAmount } = useFormatAmount();
   const { businesses, loading: businessesLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
@@ -222,13 +224,13 @@ const ExpensesPage = () => {
         <CardContent className="flex flex-col items-center gap-4 py-12">
           <Building2 className="text-muted-foreground size-12" />
           <div className="space-y-1 text-center">
-            <p className="font-medium">No business yet</p>
+            <p className="font-medium">{t("dashboard.common.noBusinessTitle")}</p>
             <p className="text-muted-foreground text-sm">
-              Create a business first to record expenses.
+              {t("dashboard.empty.noBusiness.expenses")}
             </p>
           </div>
           <Button asChild>
-            <Link href="/dashboard/settings/businesses">Go to Businesses</Link>
+            <Link href="/dashboard/settings/businesses">{t("dashboard.common.goToBusinesses")}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -239,15 +241,18 @@ const ExpensesPage = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Expenses</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.expenses.title")}</h1>
           <p className="text-muted-foreground text-sm">
-            Daily business expenses for{" "}
-            <span className="font-medium">{activeBusiness?.name ?? "your business"}</span>.
+            {t("dashboard.expenses.subtitlePrefix")}{" "}
+            <span className="font-medium">
+              {activeBusiness?.name ?? t("dashboard.common.yourBusiness")}
+            </span>
+            .
           </p>
         </div>
         <Button size="sm" onClick={() => openExpenseDialog()}>
           <Plus className="mr-1 size-4" />
-          Add Expense
+          {t("dashboard.common.addExpense")}
         </Button>
       </div>
 
@@ -259,7 +264,7 @@ const ExpensesPage = () => {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search category, payment method, notes..."
+                placeholder={t("dashboard.expenses.searchPlaceholder")}
                 className="pl-9"
               />
             </div>
@@ -267,14 +272,14 @@ const ExpensesPage = () => {
               <DatePicker
                 value={fromDate}
                 onChange={setFromDate}
-                placeholder="From date"
+                placeholder={t("dashboard.common.fromDate")}
                 className="min-w-0 flex-1 lg:w-fit lg:flex-none"
                 disableFuture
               />
               <DatePicker
                 value={toDate}
                 onChange={setToDate}
-                placeholder="To date"
+                placeholder={t("dashboard.common.toDate")}
                 className="min-w-0 flex-1 lg:w-fit lg:flex-none"
                 disableFuture
               />
@@ -288,7 +293,7 @@ const ExpensesPage = () => {
                   className="shrink-0"
                 >
                   <X className="size-4 text-red-400" />
-                  Clear
+                  {t("dashboard.common.clear")}
                 </Button>
               )}
             </div>
@@ -304,13 +309,13 @@ const ExpensesPage = () => {
               <Wallet className="text-muted-foreground size-10" />
               <p className="text-muted-foreground text-sm">
                 {debouncedSearch.trim() || fromDate || toDate
-                  ? "No expenses match your search or filters."
-                  : "No expenses recorded yet. Add your first expense."}
+                  ? t("dashboard.expenses.emptyNoMatch")
+                  : t("dashboard.expenses.emptyNoData")}
               </p>
               {!debouncedSearch.trim() && !fromDate && !toDate && (
                 <Button size="sm" variant="outline" onClick={() => openExpenseDialog()}>
                   <Plus className="mr-1 size-4" />
-                  Add Expense
+                  {t("dashboard.common.addExpense")}
                 </Button>
               )}
             </div>
@@ -318,11 +323,13 @@ const ExpensesPage = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead className="hidden md:table-cell">Payment</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="hidden md:table-cell">Notes</TableHead>
+                  <TableHead>{t("dashboard.common.date")}</TableHead>
+                  <TableHead>{t("dashboard.expenses.table.category")}</TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    {t("dashboard.expenses.table.payment")}
+                  </TableHead>
+                  <TableHead className="text-right">{t("dashboard.common.amount")}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t("dashboard.common.notes")}</TableHead>
                   <TableHead className="w-20" />
                 </TableRow>
               </TableHeader>
@@ -373,7 +380,7 @@ const ExpensesPage = () => {
           {total > 0 && (
             <div className="mt-4 flex flex-col gap-2 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-muted-foreground text-sm">
-                Showing {from}-{to} of {total}
+                {t("dashboard.common.showingRange", { from, to, total })}
               </p>
               <div className="flex items-center gap-2">
                 <Button
@@ -383,7 +390,7 @@ const ExpensesPage = () => {
                   disabled={page <= 1 || loading}
                 >
                   <ChevronLeft className="mr-1 size-4" />
-                  Previous
+                  {t("dashboard.common.previous")}
                 </Button>
                 <Button
                   variant="outline"
@@ -391,7 +398,7 @@ const ExpensesPage = () => {
                   onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
                   disabled={page >= lastPage || loading}
                 >
-                  Next
+                  {t("dashboard.common.next")}
                   <ChevronRight className="ml-1 size-4" />
                 </Button>
               </div>
@@ -403,23 +410,23 @@ const ExpensesPage = () => {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editingId ? "Edit Expense" : "Add Expense"}</DialogTitle>
-            <DialogDescription>
-              Record a business expense for accounting and profit tracking.
-            </DialogDescription>
+            <DialogTitle>
+              {editingId ? t("dashboard.expenses.dialog.editTitle") : t("dashboard.expenses.dialog.addTitle")}
+            </DialogTitle>
+            <DialogDescription>{t("dashboard.expenses.dialog.description")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Date</Label>
+              <Label>{t("dashboard.common.date")}</Label>
               <DatePicker
                 value={form.expense_date}
                 onChange={(value) => setForm((prev) => ({ ...prev, expense_date: value }))}
-                placeholder="Expense date"
+                placeholder={t("dashboard.expenses.form.datePlaceholder")}
                 disableFuture
               />
             </div>
             <div className="space-y-2">
-              <Label>Category</Label>
+              <Label>{t("dashboard.expenses.table.category")}</Label>
               <Select
                 value={form.categoryId}
                 onValueChange={(value) =>
@@ -434,7 +441,7 @@ const ExpensesPage = () => {
                 disabled={categoriesLoading || categories.length === 0}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder={t("dashboard.expenses.form.categoryPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {selectableCategories.map((category) => (
@@ -453,41 +460,41 @@ const ExpensesPage = () => {
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, customCategory: e.target.value }))
                   }
-                  placeholder="Specify category"
+                  placeholder={t("dashboard.expenses.form.customCategoryPlaceholder")}
                 />
               ) : null}
             </div>
             <div className="space-y-2">
-              <Label>Amount</Label>
+              <Label>{t("dashboard.common.amount")}</Label>
               <Input
                 inputMode="decimal"
                 value={formatAmountDisplay(form.amount)}
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, amount: parseAmountInput(e.target.value) }))
                 }
-                placeholder="0.00"
+                placeholder={t("dashboard.expenses.form.amountPlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <Label>Payment method</Label>
+              <Label>{t("dashboard.expenses.form.paymentMethod")}</Label>
               <Input
                 value={form.payment_method}
                 onChange={(e) => setForm((prev) => ({ ...prev, payment_method: e.target.value }))}
-                placeholder="cash / bank / mobile money"
+                placeholder={t("dashboard.expenses.form.paymentMethodPlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <Label>Notes (optional)</Label>
+              <Label>{t("dashboard.expenses.form.notesOptional")}</Label>
               <Input
                 value={form.notes}
                 onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
-                placeholder="Optional note"
+                placeholder={t("dashboard.expenses.form.notesPlaceholder")}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancel
+              {t("dashboard.common.cancel")}
             </Button>
             <Button
               onClick={handleSave}
@@ -499,7 +506,7 @@ const ExpensesPage = () => {
                 categoriesLoading
               }
             >
-              Save Expense
+              {t("dashboard.common.saveExpense")}
             </Button>
           </DialogFooter>
         </DialogContent>

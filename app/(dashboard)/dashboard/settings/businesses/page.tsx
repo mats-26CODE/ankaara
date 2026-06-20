@@ -35,6 +35,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "@/hooks/use-translation";
 import { Spinner } from "@/components/ui/spinner";
 import { Separator } from "@/components/ui/separator";
 import { Plus, Pencil, Trash2, Check, ImageIcon, Type, Upload, X } from "lucide-react";
@@ -69,6 +70,7 @@ const emptyForm: FormState = {
 };
 
 const BusinessesSettingsPage = () => {
+  const { t } = useTranslation();
   const { businesses, loading, refetch } = useBusinesses();
   const { currencies, loading: currenciesLoading } = useCurrencies();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
@@ -157,7 +159,9 @@ const BusinessesSettingsPage = () => {
               logo_url: url,
             });
           } catch (err) {
-            ToastAlert.error(err instanceof Error ? err.message : "Logo upload failed");
+            ToastAlert.error(
+              err instanceof Error ? err.message : t("dashboard.toast.logoUploadFailed"),
+            );
           }
         }
         setDialogOpen(false);
@@ -218,20 +222,20 @@ const BusinessesSettingsPage = () => {
       <Card>
         <CardHeader className="flex flex-col items-start gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle>Your Businesses</CardTitle>
+            <CardTitle>{t("dashboard.settings.businesses.list.title")}</CardTitle>
             <CardDescription>
-              Manage your businesses. Clients and invoices are scoped to the active business.
+              {t("dashboard.settings.businesses.list.description")}
             </CardDescription>
           </div>
           <Button size="sm" onClick={openCreate} className="w-full sm:w-auto">
             <Plus className="mr-1 size-4" />
-            Add Business
+            {t("dashboard.settings.businesses.list.addBusiness")}
           </Button>
         </CardHeader>
         <CardContent>
           {businesses.length === 0 ? (
             <p className="text-muted-foreground py-8 text-center text-sm">
-              No businesses yet. Create one to get started.
+              {t("dashboard.settings.businesses.list.empty")}
             </p>
           ) : (
             <div className="space-y-3">
@@ -251,7 +255,7 @@ const BusinessesSettingsPage = () => {
                             ? "border-primary bg-primary text-primary-foreground"
                             : "border-muted-foreground/30 hover:border-primary/50"
                         }`}
-                        title={isActive ? "Active business" : "Set as active"}
+                        title={isActive ? t("dashboard.settings.businesses.list.activeTooltip") : t("dashboard.settings.businesses.list.setActiveTooltip")}
                       >
                         {isActive && <Check className="size-4" />}
                       </button>
@@ -274,7 +278,7 @@ const BusinessesSettingsPage = () => {
                           </div>
                         </div>
                         <p className="text-muted-foreground mt-1.5 text-xs wrap-break-word sm:mt-1 sm:truncate">
-                          {[biz.currency, biz.address].filter(Boolean).join(" · ") || "No details"}
+                          {[biz.currency, biz.address].filter(Boolean).join(" · ") || t("dashboard.settings.businesses.list.noDetails")}
                         </p>
                       </div>
                     </div>
@@ -285,12 +289,12 @@ const BusinessesSettingsPage = () => {
                           size="sm"
                           onClick={() => handleMakePrimary(biz)}
                           disabled={isMutating}
-                          title="Make primary business"
+                          title={t("dashboard.settings.businesses.list.makePrimaryTooltip")}
                         >
-                          Make primary
+                          {t("dashboard.settings.businesses.list.makePrimary")}
                         </Button>
                       )}
-                      <Button variant="ghost" size="icon" asChild title="Edit business">
+                      <Button variant="ghost" size="icon" asChild title={t("dashboard.settings.businesses.list.editTooltip")}>
                         <Link href={`/dashboard/settings/businesses/edit/${biz.id}`}>
                           <Pencil className="size-4" />
                         </Link>
@@ -302,8 +306,8 @@ const BusinessesSettingsPage = () => {
                         disabled={businesses.length <= 1}
                         title={
                           businesses.length <= 1
-                            ? "Cannot delete the only business"
-                            : "Delete business"
+                            ? t("dashboard.settings.businesses.list.deleteOnlyBusinessTooltip")
+                            : t("dashboard.settings.businesses.list.deleteTooltip")
                         }
                       >
                         <Trash2 className="size-4" />
@@ -320,39 +324,39 @@ const BusinessesSettingsPage = () => {
       {activeBusiness && (
         <Card>
           <CardHeader>
-            <CardTitle>Business details</CardTitle>
+            <CardTitle>{t("dashboard.settings.businesses.details.title")}</CardTitle>
             <CardDescription>
-              Full details for <span className="font-medium">{activeBusiness.name}</span>.
+              {t("dashboard.settings.businesses.details.description", { name: activeBusiness.name })}
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2 text-sm">
               <div>
-                <p className="text-muted-foreground text-xs font-semibold uppercase">Name</p>
+                <p className="text-muted-foreground text-xs font-semibold uppercase">{t("dashboard.common.name")}</p>
                 <p>{activeBusiness.name}</p>
               </div>
               <div>
-                <p className="text-muted-foreground text-xs font-semibold uppercase">Currency</p>
+                <p className="text-muted-foreground text-xs font-semibold uppercase">{t("dashboard.common.currency")}</p>
                 <p>{activeBusiness.currency}</p>
               </div>
               <div>
-                <p className="text-muted-foreground text-xs font-semibold uppercase">Primary</p>
-                <p>{activeBusiness.is_primary ? "Yes" : "No"}</p>
+                <p className="text-muted-foreground text-xs font-semibold uppercase">{t("dashboard.common.primary")}</p>
+                <p>{activeBusiness.is_primary ? t("dashboard.common.yesVerified") : t("dashboard.common.no")}</p>
               </div>
               <div>
-                <p className="text-muted-foreground text-xs font-semibold uppercase">Address</p>
-                <p>{activeBusiness.address || "Not set"}</p>
+                <p className="text-muted-foreground text-xs font-semibold uppercase">{t("dashboard.common.address")}</p>
+                <p>{activeBusiness.address || t("dashboard.common.notSet")}</p>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <p className="text-muted-foreground text-xs font-semibold uppercase">
                     Tax number
                   </p>
-                  <p>{activeBusiness.tax_number || "Not set"}</p>
+                  <p>{activeBusiness.tax_number || t("dashboard.common.notSet")}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs font-semibold uppercase">Capacity</p>
-                  <p>{activeBusiness.capacity || "Not set"}</p>
+                  <p className="text-muted-foreground text-xs font-semibold uppercase">{t("dashboard.settings.businesses.details.fieldCapacity")}</p>
+                  <p>{activeBusiness.capacity || t("dashboard.common.notSet")}</p>
                 </div>
               </div>
             </div>
@@ -360,7 +364,7 @@ const BusinessesSettingsPage = () => {
             <div className="space-y-4">
               <div className="space-y-3">
                 <p className="text-muted-foreground text-xs font-semibold uppercase">
-                  Logo preview
+                  {t("dashboard.settings.businesses.details.logoPreview")}
                 </p>
                 <div className="flex items-center gap-2">
                   {activeBusiness.logo_text && (
@@ -380,14 +384,14 @@ const BusinessesSettingsPage = () => {
                   )}
                   {!activeBusiness.logo_url && !activeBusiness.logo_text && (
                     <div className="bg-muted/30 flex h-20 items-center justify-center rounded-md border px-4">
-                      <span className="text-muted-foreground text-xs">No logo configured</span>
+                      <span className="text-muted-foreground text-xs">{t("dashboard.settings.businesses.details.noLogoConfigured")}</span>
                     </div>
                   )}
                 </div>
               </div>
 
               <div className="space-y-1">
-                <p className="text-muted-foreground text-xs font-semibold uppercase">Brand color</p>
+                <p className="text-muted-foreground text-xs font-semibold uppercase">{t("dashboard.settings.businesses.details.brandColor")}</p>
                 {activeBusiness.brand_color ? (
                   <div className="flex items-center gap-3">
                     <div
@@ -400,7 +404,7 @@ const BusinessesSettingsPage = () => {
                   <p className="text-muted-foreground text-xs">Not set</p>
                 )}
                 <p className="text-muted-foreground text-xs">
-                  Used as the accent color on Bold Brand template invoices.
+                  {t("dashboard.settings.businesses.details.brandColorHint")}
                 </p>
               </div>
             </div>
@@ -412,24 +416,24 @@ const BusinessesSettingsPage = () => {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Add Business</DialogTitle>
+            <DialogTitle>{t("dashboard.settings.businesses.create.title")}</DialogTitle>
             <DialogDescription>
-              Create a new business to manage clients and invoices.
+              {t("dashboard.settings.businesses.create.description")}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label htmlFor="biz-name">Business Name *</Label>
+              <Label htmlFor="biz-name">{t("dashboard.common.name")} *</Label>
               <Input
                 id="biz-name"
                 value={form.name}
                 onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                placeholder="My Business"
+                placeholder={t("dashboard.settings.businesses.form.namePlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <Label>Currency</Label>
+              <Label>{t("dashboard.common.currency")}</Label>
               <Select
                 value={form.currency}
                 onValueChange={(v) => setForm((p) => ({ ...p, currency: v }))}
@@ -448,9 +452,9 @@ const BusinessesSettingsPage = () => {
             </div>
             <div className="flex items-start justify-between gap-4 rounded-lg border p-3">
               <div className="space-y-1">
-                <Label htmlFor="biz-primary">Primary business</Label>
+                <Label htmlFor="biz-primary">{t("dashboard.settings.businesses.form.primaryLabel")}</Label>
                 <p className="text-muted-foreground text-xs">
-                  Used as the default when no business is selected on this device.
+                  {t("dashboard.settings.businesses.form.primaryHint")}
                 </p>
               </div>
               <Switch
@@ -460,31 +464,31 @@ const BusinessesSettingsPage = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="biz-address">Address</Label>
+              <Label htmlFor="biz-address">{t("dashboard.common.address")}</Label>
               <Input
                 id="biz-address"
                 value={form.address}
                 onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
-                placeholder="Business address"
+                placeholder={t("dashboard.settings.businesses.form.addressPlaceholder")}
               />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="biz-tax">Tax Number</Label>
+                <Label htmlFor="biz-tax">{t("dashboard.settings.businesses.details.fieldTaxNumber")}</Label>
                 <Input
                   id="biz-tax"
                   value={form.tax_number}
                   onChange={(e) => setForm((p) => ({ ...p, tax_number: e.target.value }))}
-                  placeholder="TIN / VAT"
+                  placeholder={t("dashboard.settings.businesses.form.taxNumberPlaceholder")}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="biz-capacity">Capacity</Label>
+                <Label htmlFor="biz-capacity">{t("dashboard.settings.businesses.details.fieldCapacity")}</Label>
                 <Input
                   id="biz-capacity"
                   value={form.capacity}
                   onChange={(e) => setForm((p) => ({ ...p, capacity: e.target.value }))}
-                  placeholder="e.g. 1-10 employees"
+                  placeholder={t("dashboard.settings.businesses.form.capacityPlaceholder")}
                 />
               </div>
             </div>
@@ -524,7 +528,7 @@ const BusinessesSettingsPage = () => {
                   <Input
                     value={form.logo_text}
                     onChange={(e) => setForm((p) => ({ ...p, logo_text: e.target.value }))}
-                    placeholder="e.g. Acme Corp"
+                    placeholder={t("dashboard.settings.businesses.form.logoTextPlaceholder")}
                   />
                   {form.logo_text && (
                     <div className="bg-muted/30 rounded-md border px-4 py-3">
@@ -542,7 +546,7 @@ const BusinessesSettingsPage = () => {
                     onChange={handleLogoFileChange}
                   />
                   <p className="text-muted-foreground text-xs">
-                    JPEG, PNG, WebP or GIF. Max 1MB. Stored in your secure Supabase storage.
+                    {t("dashboard.settings.businesses.form.logoUploadHint")}
                   </p>
                   <div className="flex flex-wrap items-center gap-2">
                     <Button
@@ -552,7 +556,7 @@ const BusinessesSettingsPage = () => {
                       onClick={() => fileInputRef.current?.click()}
                     >
                       <Upload className="mr-1.5 size-3.5" />
-                      Choose image
+                      {t("dashboard.settings.businesses.form.chooseImage")}
                     </Button>
                     {(logoFile || logoPreviewUrl) && (
                       <Button
@@ -563,7 +567,7 @@ const BusinessesSettingsPage = () => {
                         className="text-muted-foreground"
                       >
                         <X className="mr-1.5 size-3.5" />
-                        Remove
+                        {t("dashboard.settings.businesses.form.remove")}
                       </Button>
                     )}
                   </div>
@@ -573,7 +577,7 @@ const BusinessesSettingsPage = () => {
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={logoPreviewUrl}
-                        alt="Logo preview"
+                        alt={t("dashboard.settings.businesses.form.logoPreviewAlt")}
                         className="h-10 w-auto max-w-[200px] object-contain"
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = "none";
@@ -585,9 +589,9 @@ const BusinessesSettingsPage = () => {
               )}
             </div>
 
-            {/* Brand Color */}
+            {/* {t("dashboard.common.accentColor")} */}
             <div className="space-y-2">
-              <Label htmlFor="biz-brand-color">Brand Color</Label>
+              <Label htmlFor="biz-brand-color">{t("dashboard.common.accentColor")}</Label>
               <div className="flex items-center gap-3">
                 <input
                   type="color"
@@ -604,7 +608,7 @@ const BusinessesSettingsPage = () => {
                 />
               </div>
               <p className="text-muted-foreground text-xs">
-                Used as the accent color on Bold Brand template invoices
+                {t("dashboard.settings.businesses.form.brandColorHint")}
               </p>
             </div>
           </div>
@@ -624,10 +628,10 @@ const BusinessesSettingsPage = () => {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Delete Business</DialogTitle>
+            <DialogTitle>{t("dashboard.settings.businesses.delete.title")}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete{" "}
-              <span className="font-medium">{deletingBusiness?.name}</span>? This action cannot be
+              {t("dashboard.settings.businesses.delete.description", { name: deletingBusiness?.name ?? "" })}
+              ? This action cannot be
               undone.
             </DialogDescription>
           </DialogHeader>

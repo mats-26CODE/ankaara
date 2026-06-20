@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { useTranslation } from "@/hooks/use-translation";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -111,6 +112,7 @@ const parsePriceInput = (raw: string): string => {
 };
 
 const ProductsPage = () => {
+  const { t } = useTranslation();
   const router = useRouter();
   const { businesses, loading: bizLoading } = useBusinesses();
   const { currencies } = useCurrencies();
@@ -273,13 +275,13 @@ const ProductsPage = () => {
         <CardContent className="flex flex-col items-center gap-4 py-12">
           <Building2 className="text-muted-foreground size-12" />
           <div className="space-y-1 text-center">
-            <p className="font-medium">No business yet</p>
+            <p className="font-medium">{t("dashboard.common.noBusinessTitle")}</p>
             <p className="text-muted-foreground text-sm">
-              Create a business first to add products or services.
+              {t("dashboard.common.noBusinessProductsDescription")}
             </p>
           </div>
           <Button asChild>
-            <Link href="/dashboard/settings/businesses">Go to Businesses</Link>
+            <Link href="/dashboard/settings/businesses">{t("dashboard.common.goToBusinesses")}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -290,11 +292,11 @@ const ProductsPage = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Inventory</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.common.inventoryTitle")}</h1>
           <p className="text-muted-foreground text-sm">
-            Manage products, services, prices, and stock for{" "}
+            {t("dashboard.common.inventorySubtitle")}{" "}
             <span className="font-medium">
-              {businesses.find((b) => b.id === currentBusinessId)?.name ?? "your business"}
+              {businesses.find((b) => b.id === currentBusinessId)?.name ?? t("dashboard.common.yourBusiness")}
             </span>
             .
           </p>
@@ -302,11 +304,11 @@ const ProductsPage = () => {
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant="outline" onClick={() => setShareCatalogOpen(true)}>
             <Share2 className="mr-1 size-4" />
-            Share Catalog
+            {t("dashboard.common.shareCatalog")}
           </Button>
           <Button size="sm" onClick={openCreate}>
             <Plus className="mr-1 size-4" />
-            Add Item
+            {t("dashboard.common.addItemButton")}
           </Button>
         </div>
       </div>
@@ -318,7 +320,7 @@ const ProductsPage = () => {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name or description..."
+              placeholder={t("dashboard.common.searchProductsPlaceholder")}
               className="pl-9"
             />
           </div>
@@ -332,19 +334,19 @@ const ProductsPage = () => {
             <div className="py-8 text-center">
               <p className="text-muted-foreground text-sm">
                 {debouncedSearch.trim()
-                  ? "No items match your search."
-                  : "No products or services yet. Add inventory items to start selling."}
+                  ? t("dashboard.common.noSearchMatchProducts")
+                  : t("dashboard.common.noProductsYet")}
               </p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead className="hidden md:table-cell">Base</TableHead>
-                  <TableHead>Selling</TableHead>
-                  <TableHead className="hidden lg:table-cell">Stock</TableHead>
+                  <TableHead>{t("dashboard.common.name")}</TableHead>
+                  <TableHead>{t("dashboard.common.type")}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t("dashboard.common.base")}</TableHead>
+                  <TableHead>{t("dashboard.common.selling")}</TableHead>
+                  <TableHead className="hidden lg:table-cell">{t("dashboard.common.stock")}</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
@@ -367,7 +369,7 @@ const ProductsPage = () => {
                     </TableCell>
                     <TableCell>
                       <Badge variant={product.item_type === "service" ? "secondary" : "default"}>
-                        {product.item_type === "service" ? "Service" : "Product"}
+                        {product.item_type === "service" ? t("dashboard.common.service") : t("dashboard.common.product")}
                       </Badge>
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
@@ -400,13 +402,13 @@ const ProductsPage = () => {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => openEdit(product)}>
                             <Pencil className="mr-2 size-4" />
-                            Edit
+                            {t("dashboard.common.edit")}
                           </DropdownMenuItem>
                           {product.item_type === "product" && (
                             <DropdownMenuItem asChild>
                               <Link href={`/dashboard/products/${product.id}/stock-history`}>
                                 <PackagePlus className="mr-2 size-4" />
-                                Stock history
+                                {t("dashboard.common.stockHistory")}
                               </Link>
                             </DropdownMenuItem>
                           )}
@@ -415,7 +417,7 @@ const ProductsPage = () => {
                             className="text-destructive focus:text-destructive"
                           >
                             <Trash2 className="mr-2 size-4" />
-                            Delete
+                            {t("dashboard.common.delete")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -428,7 +430,7 @@ const ProductsPage = () => {
           {total > 0 && (
             <div className="mt-4 flex flex-col gap-2 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-muted-foreground text-sm">
-                Showing {from}–{to} of {total}
+                {t("dashboard.common.showingRange", { from, to, total })}
               </p>
               <div className="flex items-center gap-2">
                 <Button
@@ -438,7 +440,7 @@ const ProductsPage = () => {
                   disabled={page <= 1 || loading}
                 >
                   <ChevronLeft className="mr-1 size-4" />
-                  Previous
+                  {t("dashboard.common.previous")}
                 </Button>
                 <Button
                   variant="outline"
@@ -446,7 +448,7 @@ const ProductsPage = () => {
                   onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
                   disabled={page >= lastPage || loading}
                 >
-                  Next
+                  {t("dashboard.common.next")}
                   <ChevronRight className="ml-1 size-4" />
                 </Button>
               </div>
@@ -459,14 +461,16 @@ const ProductsPage = () => {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-xl">
           <DialogHeader className="shrink-0">
-            <DialogTitle>{editingProduct ? "Edit Product" : "Add Product or Service"}</DialogTitle>
+            <DialogTitle>
+              {editingProduct ? t("dashboard.common.editProduct") : t("dashboard.common.addProductOrService")}
+            </DialogTitle>
             <DialogDescription className="flex flex-col gap-2">
               {editingProduct
-                ? "Update the item. Changes won't affect existing invoices."
-                : "Add an item to use when creating invoices."}
+                ? t("dashboard.common.editProductDialogDescription")
+                : t("dashboard.common.addProductDialogDescription")}
               {currentBusinessId && (
                 <span className="flex items-center gap-2">
-                  Business:{" "}
+                  {t("dashboard.common.businessLabel")}{" "}
                   <Badge variant="secondary" className="font-normal">
                     {businesses.find((b) => b.id === currentBusinessId)?.name ?? "—"}
                   </Badge>
@@ -477,7 +481,7 @@ const ProductsPage = () => {
 
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-2 pr-1">
             <div className="space-y-2">
-              <Label>Item Type *</Label>
+              <Label>{t("dashboard.common.itemType")}</Label>
               <Select
                 value={form.item_type}
                 onValueChange={(value) =>
@@ -485,36 +489,36 @@ const ProductsPage = () => {
                 }
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder={t("dashboard.common.selectType")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="product">Product</SelectItem>
-                  <SelectItem value="service">Service</SelectItem>
+                  <SelectItem value="product">{t("dashboard.common.product")}</SelectItem>
+                  <SelectItem value="service">{t("dashboard.common.service")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="product-name">Name *</Label>
+              <Label htmlFor="product-name">{t("dashboard.common.name")} *</Label>
               <Input
                 id="product-name"
                 value={form.name}
                 onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                placeholder="e.g. Web Development, Consulting Hour"
+                placeholder={t("dashboard.inventory.productEdit.namePlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="product-desc">Description</Label>
+              <Label htmlFor="product-desc">{t("dashboard.common.description")}</Label>
               <Textarea
                 id="product-desc"
                 value={form.description}
                 onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-                placeholder="Optional description"
+                placeholder={t("dashboard.inventory.productEdit.descriptionPlaceholder")}
                 rows={2}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="product-base-price">Base Price *</Label>
+                <Label htmlFor="product-base-price">{t("dashboard.common.basePrice")} *</Label>
                 <Input
                   id="product-base-price"
                   inputMode="decimal"
@@ -526,7 +530,7 @@ const ProductsPage = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="product-selling-price">Selling Price *</Label>
+                <Label htmlFor="product-selling-price">{t("dashboard.common.sellingPrice")} *</Label>
                 <Input
                   id="product-selling-price"
                   inputMode="decimal"
@@ -540,28 +544,28 @@ const ProductsPage = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="product-unit">Unit</Label>
+                <Label htmlFor="product-unit">{t("dashboard.common.unit")}</Label>
                 <Input
                   id="product-unit"
                   value={form.unit}
                   onChange={(e) => setForm((p) => ({ ...p, unit: e.target.value }))}
-                  placeholder="e.g. kg, piece, item, etc."
+                  placeholder={t("dashboard.inventory.productEdit.unitPlaceholder")}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="product-sku">SKU</Label>
+                <Label htmlFor="product-sku">{t("dashboard.common.sku")}</Label>
                 <Input
                   id="product-sku"
                   value={form.sku}
                   onChange={(e) => setForm((p) => ({ ...p, sku: e.target.value }))}
-                  placeholder="Optional"
+                  placeholder={t("dashboard.inventory.productEdit.skuPlaceholder")}
                 />
               </div>
             </div>
             {form.item_type === "product" && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="product-stock">Current Stock</Label>
+                  <Label htmlFor="product-stock">{t("dashboard.common.currentStock")}</Label>
                   <Input
                     id="product-stock"
                     inputMode="decimal"
@@ -577,7 +581,7 @@ const ProductsPage = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="product-low-stock">Low Stock Alert</Label>
+                  <Label htmlFor="product-low-stock">{t("dashboard.common.lowStockAlert")}</Label>
                   <Input
                     id="product-low-stock"
                     inputMode="decimal"
@@ -588,15 +592,13 @@ const ProductsPage = () => {
                         low_stock_threshold: e.target.value.replace(/[^\d.]/g, ""),
                       }))
                     }
-                    placeholder="Optional"
+                    placeholder={t("dashboard.inventory.productEdit.skuPlaceholder")}
                   />
                 </div>
               </div>
             )}
             {Number(form.selling_price || 0) < Number(form.base_price || 0) && (
-              <p className="text-destructive text-sm">
-                Selling price must be equal to or above the base price.
-              </p>
+              <p className="text-destructive text-sm">{t("dashboard.common.sellingBelowBaseError")}</p>
             )}
           </div>
 
@@ -606,7 +608,7 @@ const ProductsPage = () => {
               onClick={() => setDialogOpen(false)}
               disabled={createProduct.isPending || updateProduct.isPending}
             >
-              Cancel
+              {t("dashboard.common.cancel")}
             </Button>
             <Button
               onClick={handleSubmit}
@@ -618,7 +620,7 @@ const ProductsPage = () => {
               }
               isLoading={editingProduct ? updateProduct.isPending : createProduct.isPending}
             >
-              {editingProduct ? "Save" : "Add"}
+              {editingProduct ? t("dashboard.common.save") : t("dashboard.common.add")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -628,18 +630,17 @@ const ProductsPage = () => {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete product?</DialogTitle>
+            <DialogTitle>{t("dashboard.common.deleteProductTitle")}</DialogTitle>
             <DialogDescription>
-              This will remove &ldquo;{deletingProduct?.name}&rdquo; from your list. Existing
-              invoices are not changed.
+              {t("dashboard.common.deleteProductDescription", { name: deletingProduct?.name ?? "" })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              Cancel
+              {t("dashboard.common.cancel")}
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={isMutating}>
-              Delete
+              {t("dashboard.common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

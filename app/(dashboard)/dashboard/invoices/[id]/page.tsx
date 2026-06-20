@@ -33,25 +33,27 @@ import dayjs from "dayjs";
 import { useRouteUuidParam } from "@/hooks/use-route-uuid-param";
 import { canConvertInvoiceToSale } from "@/lib/invoice-sale-conversion";
 import { canShareInvoice } from "@/lib/invoices/can-share-invoice";
-import { canDeleteInvoice, INVOICE_DELETE_PAID_BLOCKED } from "@/lib/invoices/can-delete-invoice";
+import { canDeleteInvoice } from "@/lib/invoices/can-delete-invoice";
+import { useTranslation } from "@/hooks/use-translation";
 
-const STATUS_CONFIG: Record<
+const STATUS_VARIANT: Record<
   InvoiceStatus,
-  { label: string; variant: "default" | "secondary" | "outline" | "destructive" }
+  "default" | "secondary" | "outline" | "destructive"
 > = {
-  draft: { label: "Draft", variant: "secondary" },
-  sent: { label: "Sent", variant: "default" },
-  viewed: { label: "Viewed", variant: "outline" },
-  paid: { label: "Paid", variant: "default" },
-  overdue: { label: "Overdue", variant: "destructive" },
-  cancelled: { label: "Cancelled", variant: "secondary" },
+  draft: "secondary",
+  sent: "default",
+  viewed: "outline",
+  paid: "default",
+  overdue: "destructive",
+  cancelled: "secondary",
 };
 
 const StatusBadge = ({ status }: { status: InvoiceStatus }) => {
-  const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.draft;
+  const { t } = useTranslation();
+  const variant = STATUS_VARIANT[status] ?? STATUS_VARIANT.draft;
   return (
     <Badge
-      variant={config.variant}
+      variant={variant}
       className={
         status === "paid"
           ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400"
@@ -62,12 +64,13 @@ const StatusBadge = ({ status }: { status: InvoiceStatus }) => {
               : ""
       }
     >
-      {config.label}
+      {t(`dashboard.status.${status}`)}
     </Badge>
   );
 };
 
 const InvoiceDetailPage = () => {
+  const { t } = useTranslation();
   const id = useRouteUuidParam("id");
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -110,9 +113,9 @@ const InvoiceDetailPage = () => {
   if (!invoice) {
     return (
       <div className="flex flex-col items-center gap-4 py-12">
-        <p className="text-muted-foreground">Invoice not found.</p>
+        <p className="text-muted-foreground">{t("dashboard.invoices.detail.notFound")}</p>
         <Button variant="outline" asChild>
-          <Link href="/dashboard/invoices">Back to Invoices</Link>
+          <Link href="/dashboard/invoices">{t("dashboard.common.backToInvoices")}</Link>
         </Button>
       </div>
     );
@@ -166,7 +169,8 @@ const InvoiceDetailPage = () => {
               <StatusBadge status={invoice.status} />
             </div>
             <p className="text-muted-foreground text-sm">
-              Created {dayjs(invoice.created_at).format("MMM D, YYYY")}
+              {t("dashboard.invoices.detail.createdPrefix")}{" "}
+              {dayjs(invoice.created_at).format("MMM D, YYYY")}
               {invoice.quotation_id && (
                 <>
                   {" · "}
@@ -175,7 +179,7 @@ const InvoiceDetailPage = () => {
                     className="text-primary inline-flex items-center gap-1 hover:underline"
                   >
                     <Quote className="size-3.5" />
-                    Linked quotation
+                    {t("dashboard.invoices.detail.linkedQuotation")}
                   </Link>
                 </>
               )}
@@ -187,7 +191,7 @@ const InvoiceDetailPage = () => {
             <Button variant="outline" size="sm" asChild>
               <Link href={`/dashboard/invoices/${invoice.id}/edit`}>
                 <Pencil className="mr-1 size-4" />
-                Edit
+                {t("dashboard.common.edit")}
               </Link>
             </Button>
           )}
@@ -195,7 +199,7 @@ const InvoiceDetailPage = () => {
             <Button variant="outline" size="sm" asChild>
               <Link href={`/dashboard/sales/${linkedSale.id}`}>
                 <ShoppingCart className="mr-1 size-4" />
-                View Sale
+                {t("dashboard.common.viewSale")}
               </Link>
             </Button>
           ) : (
@@ -206,7 +210,7 @@ const InvoiceDetailPage = () => {
                 onClick={() => setConvertDialogOpen(true)}
               >
                 <ShoppingCart className="mr-1 size-4" />
-                Convert to sale
+                {t("dashboard.common.convertToSale")}
               </Button>
             )
           )}
@@ -218,12 +222,12 @@ const InvoiceDetailPage = () => {
             variant={!canShare ? "outline" : "default"}
             title={
               !canShare && isDraft
-                ? "Complete client, dates, currency, and line items to share"
+                ? t("dashboard.invoices.share.incompleteDraft")
                 : undefined
             }
           >
             <Share2 className="mr-1 size-4" />
-            Share
+            {t("dashboard.common.share")}
           </Button>
           <Button
             variant="ghost"
@@ -231,7 +235,9 @@ const InvoiceDetailPage = () => {
             onClick={() => setDeleteDialogOpen(true)}
             disabled={!canDeleteInvoice(invoice.status)}
             title={
-              !canDeleteInvoice(invoice.status) ? INVOICE_DELETE_PAID_BLOCKED : undefined
+              !canDeleteInvoice(invoice.status)
+                ? t("dashboard.invoices.list.paidDeleteBlocked")
+                : undefined
             }
             className="text-destructive hover:text-destructive"
           >
@@ -284,7 +290,7 @@ const InvoiceDetailPage = () => {
         open={shareDialogOpen}
         onOpenChange={setShareDialogOpen}
         invoiceNumber={invoice.invoice_number}
-        clientName={invoice.client?.name ?? "Client"}
+        clientName={invoice.client?.name ?? t("dashboard.invoices.share.clientFallback")}
         total={Number(invoice.total).toLocaleString()}
         currency={invoice.currency}
         shareUrl={shareUrl}
@@ -301,15 +307,19 @@ const InvoiceDetailPage = () => {
       <Dialog open={convertDialogOpen} onOpenChange={setConvertDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Convert invoice to sale</DialogTitle>
+            <DialogTitle>{t("dashboard.invoices.convert.title")}</DialogTitle>
             <DialogDescription>
               {invoice.status === "paid"
-                ? "This records the invoice as a sale on the date you choose and deducts stock for product line items."
-                : "The invoice will be marked paid, then recorded as a sale on the date you choose. Stock is deducted for product line items."}
+                ? t("dashboard.invoices.convert.descriptionPaid")
+                : t("dashboard.invoices.convert.descriptionUnpaid")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2 py-2">
-            <DatePicker value={saleDate} onChange={setSaleDate} placeholder="Sale date" />
+            <DatePicker
+              value={saleDate}
+              onChange={setSaleDate}
+              placeholder={t("dashboard.invoices.convert.saleDatePlaceholder")}
+            />
           </div>
           <DialogFooter>
             <Button
@@ -317,14 +327,14 @@ const InvoiceDetailPage = () => {
               onClick={() => setConvertDialogOpen(false)}
               disabled={convertInvoiceToSale.isPending}
             >
-              Cancel
+              {t("dashboard.common.cancel")}
             </Button>
             <Button
               onClick={handleConvertToSale}
               disabled={!saleDate || convertInvoiceToSale.isPending}
               isLoading={convertInvoiceToSale.isPending}
             >
-              Convert
+              {t("dashboard.common.convert")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -334,10 +344,9 @@ const InvoiceDetailPage = () => {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Delete Invoice</DialogTitle>
+            <DialogTitle>{t("dashboard.invoices.delete.title")}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete{" "}
-              <span className="font-medium">{invoice.invoice_number}</span>? This cannot be undone.
+              {t("dashboard.invoices.delete.description", { number: invoice.invoice_number })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -346,14 +355,14 @@ const InvoiceDetailPage = () => {
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteInvoice.isPending}
             >
-              Cancel
+              {t("dashboard.common.cancel")}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
               isLoading={deleteInvoice.isPending}
             >
-              Delete
+              {t("dashboard.common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

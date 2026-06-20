@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
 import { useBusinesses } from "@/hooks/use-businesses";
 import { useCurrentBusinessId } from "@/lib/stores/business-store";
+import { useTranslation } from "@/hooks/use-translation";
 
 const FALLBACK_BUSINESS: TemplateBusinessInfo = {
   name: "Ankaara Labs",
@@ -62,6 +63,7 @@ const SAMPLE_DATA = {
 };
 
 const TemplateSettingsPage = () => {
+  const { t } = useTranslation();
   const [previewId, setPreviewId] = useState<TemplateId>("classic");
   const { businesses, loading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
@@ -90,16 +92,19 @@ const TemplateSettingsPage = () => {
     };
   }, [activeBusiness]);
 
+  const previewTemplateName = t(`dashboard.invoices.templates.${previewId}.name`);
+
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-xl font-semibold tracking-tight">Invoice Templates</h2>
+        <h2 className="text-xl font-semibold tracking-tight">
+          {t("dashboard.settings.templates.title")}
+        </h2>
         <p className="text-muted-foreground mt-1 text-sm">
-          Choose and preview invoice templates. Select a template when creating invoices.
+          {t("dashboard.settings.templates.description")}
         </p>
       </div>
 
-      {/* Template selector grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {TEMPLATES.map((tmpl) => (
           <Card
@@ -117,19 +122,22 @@ const TemplateSettingsPage = () => {
               </Badge>
             )}
             <CardHeader>
-              <CardTitle className="text-sm">{tmpl.name}</CardTitle>
+              <CardTitle className="text-sm">
+                {t(`dashboard.invoices.templates.${tmpl.id}.name`)}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground text-xs">{tmpl.description}</p>
+              <p className="text-muted-foreground text-xs">
+                {t(`dashboard.invoices.templates.${tmpl.id}.description`)}
+              </p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Live preview */}
       <div>
         <h3 className="mb-4 text-lg font-semibold">
-          Preview: {TEMPLATES.find((t) => t.id === previewId)?.name}
+          {t("dashboard.settings.templates.previewHeading", { templateName: previewTemplateName })}
         </h3>
         <div className="bg-muted/30 overflow-auto rounded-xl border p-4 sm:p-6">
           <div className="mx-auto max-w-3xl">

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
 import { toastMutationSuccess } from "@/lib/mutation-toast";
+import { usePreferencesStore } from "@/lib/stores/preferences-store";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
 import { buildOrIlikeClause } from "@/lib/supabase/table-search";
 import type { Tables, TablesInsert, TablesUpdate } from "@/database.types";
@@ -109,7 +110,7 @@ export const useCreateClient = () => {
     },
     onSuccess: (_data, _variables, _onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
-      toastMutationSuccess(context, "Client added successfully");
+      toastMutationSuccess(context, usePreferencesStore.getState().t("dashboard.toast.clientAdded"));
     },
     onError: (error: Error) => {
       if (isPlanLimitError(error)) {
@@ -178,7 +179,7 @@ export const useUpdateClient = () => {
       return data;
     },
     onSuccess: (_data, _variables, _onMutateResult, context) => {
-      toastMutationSuccess(context, "Client updated successfully");
+      toastMutationSuccess(context, usePreferencesStore.getState().t("dashboard.toast.clientUpdated"));
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to update client");
@@ -234,7 +235,7 @@ export const useDeleteClient = () => {
       if (error) throw error;
     },
     onSuccess: (_data, _variables, _onMutateResult, context) => {
-      toastMutationSuccess(context, "Client deleted");
+      toastMutationSuccess(context, usePreferencesStore.getState().t("dashboard.toast.clientDeleted"));
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to delete client");

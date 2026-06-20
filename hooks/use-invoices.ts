@@ -8,6 +8,7 @@ import { runSupabaseDetailQueryWithRetry } from "@/lib/supabase/detail-fetch-ret
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
 import { toastMutationSuccess } from "@/lib/mutation-toast";
+import { usePreferencesStore } from "@/lib/stores/preferences-store";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
 import { buildOrIlikeClause } from "@/lib/supabase/table-search";
 import type { Tables } from "@/database.types";
@@ -278,7 +279,7 @@ export const useCreateInvoice = () => {
     },
     onSuccess: (_data, _variables, _onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
-      toastMutationSuccess(context, "Invoice created");
+      toastMutationSuccess(context, usePreferencesStore.getState().t("dashboard.toast.invoiceCreated"));
     },
     onError: (error: Error) => {
       if (isPlanLimitError(error)) {
@@ -351,7 +352,7 @@ export const useUpdateInvoice = () => {
       return { id: rowId };
     },
     onSuccess: (_data, _variables, _onMutateResult, context) => {
-      toastMutationSuccess(context, "Invoice updated");
+      toastMutationSuccess(context, usePreferencesStore.getState().t("dashboard.toast.invoiceUpdated"));
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to update invoice");
@@ -374,7 +375,7 @@ export const useSendInvoice = () => {
       return { id: ensureRowId(data, "Invoice send") };
     },
     onSuccess: (_data, _variables, _onMutateResult, context) => {
-      toastMutationSuccess(context, "Invoice marked as sent");
+      toastMutationSuccess(context, usePreferencesStore.getState().t("dashboard.toast.invoiceSent"));
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to send invoice");
@@ -392,7 +393,7 @@ export const useDeleteInvoice = () => {
       if (error) throw error;
     },
     onSuccess: (_data, _variables, _onMutateResult, context) => {
-      toastMutationSuccess(context, "Invoice deleted");
+      toastMutationSuccess(context, usePreferencesStore.getState().t("dashboard.toast.invoiceDeleted"));
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to delete invoice");

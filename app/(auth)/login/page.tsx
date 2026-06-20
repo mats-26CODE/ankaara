@@ -15,7 +15,11 @@ import {
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { APP_NAME } from "@/constants/values";
 import { useTranslation } from "@/hooks/use-translation";
-import { clampPhoneDigitInput, formatPhoneForDisplay, validatePhoneNumber } from "@/helpers/helpers";
+import {
+  clampPhoneDigitInput,
+  formatPhoneForDisplay,
+  validatePhoneNumber,
+} from "@/helpers/helpers";
 import { Spinner } from "@/components/ui/spinner";
 import Link from "next/link";
 import { motion } from "motion/react";
@@ -156,8 +160,8 @@ const LoginContent = () => {
   }
 
   const testimonial = {
-    quote: `${APP_NAME} has made getting paid on time a breeze. Professional invoices, payment links, and mobile money—everything I need in one place.`,
-    author: `@${APP_NAME.toLowerCase()}_user`,
+    quote: t("auth.common.testimonialQuote", { appName: APP_NAME }),
+    author: `@tayostz`,
   };
 
   return (

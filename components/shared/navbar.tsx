@@ -11,222 +11,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import type { LucideIcon } from "lucide-react";
-import {
-  AlertTriangle,
-  Building2,
-  ChartColumnIncreasing,
-  CheckCircle2,
-  Clock,
-  Eye,
-  FileText,
-  HandCoins,
-  Languages,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  Moon,
-  Package,
-  Palette,
-  Plus,
-  Quote,
-  Send,
-  ShoppingCart,
-  Sun,
-  User,
-  Users,
-  Wallet,
-  XCircle,
-} from "lucide-react";
+import { DASHBOARD_NAV_GROUPS } from "@/lib/i18n/dashboard-nav-config";
+import { Languages, LogOut, Menu, Moon, Sun } from "lucide-react";
 import Logo from "./logo";
 import { useTheme } from "@/lib/stores/preferences-store";
 import { ProfileAvatar } from "./profile-avatar";
 import { cn } from "@/lib/utils";
 import { resolveProfileDisplayName, resolveProfileFirstName } from "@/lib/profile-display-name";
-
-type DashboardNavMatcher = (pathname: string, status: string | null) => boolean;
-
-interface DashboardNavItem {
-  label: string;
-  href: string;
-  Icon: LucideIcon;
-  isActive: DashboardNavMatcher;
-}
-
-interface DashboardNavGroup {
-  label: string;
-  items: DashboardNavItem[];
-}
-
-const DASHBOARD_MOBILE_NAV_GROUPS: DashboardNavGroup[] = [
-  {
-    label: "Main",
-    items: [
-      {
-        label: "Overview",
-        href: "/dashboard",
-        Icon: LayoutDashboard,
-        isActive: (pathname) => pathname === "/dashboard" || pathname === "/dashboard/",
-      },
-      {
-        label: "Sales",
-        href: "/dashboard/sales",
-        Icon: ShoppingCart,
-        isActive: (pathname) => pathname.startsWith("/dashboard/sales"),
-      },
-      {
-        label: "Profits",
-        href: "/dashboard/profits",
-        Icon: ChartColumnIncreasing,
-        isActive: (pathname) => pathname.startsWith("/dashboard/profits"),
-      },
-      {
-        label: "Inventory",
-        href: "/dashboard/products",
-        Icon: Package,
-        isActive: (pathname) => pathname.startsWith("/dashboard/products"),
-      },
-      {
-        label: "Clients",
-        href: "/dashboard/clients",
-        Icon: Users,
-        isActive: (pathname) => pathname.startsWith("/dashboard/clients"),
-      },
-      {
-        label: "Loans",
-        href: "/dashboard/loans",
-        Icon: HandCoins,
-        isActive: (pathname) => pathname.startsWith("/dashboard/loans"),
-      },
-      {
-        label: "Expenses",
-        href: "/dashboard/expenses",
-        Icon: Wallet,
-        isActive: (pathname) => pathname.startsWith("/dashboard/expenses"),
-      },
-      {
-        label: "Invoice Templates",
-        href: "/dashboard/settings/templates",
-        Icon: Palette,
-        isActive: (pathname) => pathname === "/dashboard/settings/templates",
-      },
-    ],
-  },
-  {
-    label: "Invoices",
-    items: [
-      {
-        label: "All Invoices",
-        href: "/dashboard/invoices",
-        Icon: FileText,
-        isActive: (pathname, status) => pathname === "/dashboard/invoices" && !status,
-      },
-      {
-        label: "Create Invoice",
-        href: "/dashboard/invoices/create",
-        Icon: Plus,
-        isActive: (pathname) => pathname === "/dashboard/invoices/create",
-      },
-      {
-        label: "Drafts",
-        href: "/dashboard/invoices?status=draft",
-        Icon: Clock,
-        isActive: (pathname, status) => pathname === "/dashboard/invoices" && status === "draft",
-      },
-      {
-        label: "Sent",
-        href: "/dashboard/invoices?status=sent",
-        Icon: Send,
-        isActive: (pathname, status) => pathname === "/dashboard/invoices" && status === "sent",
-      },
-      {
-        label: "Paid",
-        href: "/dashboard/invoices?status=paid",
-        Icon: CheckCircle2,
-        isActive: (pathname, status) => pathname === "/dashboard/invoices" && status === "paid",
-      },
-      {
-        label: "Overdue",
-        href: "/dashboard/invoices?status=overdue",
-        Icon: AlertTriangle,
-        isActive: (pathname, status) => pathname === "/dashboard/invoices" && status === "overdue",
-      },
-    ],
-  },
-  {
-    label: "Quotations",
-    items: [
-      {
-        label: "All Quotations",
-        href: "/dashboard/quotations",
-        Icon: Quote,
-        isActive: (pathname, status) => pathname === "/dashboard/quotations" && !status,
-      },
-      {
-        label: "Create Quotation",
-        href: "/dashboard/quotations/create",
-        Icon: Plus,
-        isActive: (pathname) => pathname === "/dashboard/quotations/create",
-      },
-      {
-        label: "Drafts",
-        href: "/dashboard/quotations?status=draft",
-        Icon: Clock,
-        isActive: (pathname, status) => pathname === "/dashboard/quotations" && status === "draft",
-      },
-      {
-        label: "Sent",
-        href: "/dashboard/quotations?status=sent",
-        Icon: Send,
-        isActive: (pathname, status) => pathname === "/dashboard/quotations" && status === "sent",
-      },
-      {
-        label: "Viewed",
-        href: "/dashboard/quotations?status=viewed",
-        Icon: Eye,
-        isActive: (pathname, status) => pathname === "/dashboard/quotations" && status === "viewed",
-      },
-      {
-        label: "Accepted",
-        href: "/dashboard/quotations?status=accepted",
-        Icon: CheckCircle2,
-        isActive: (pathname, status) =>
-          pathname === "/dashboard/quotations" && status === "accepted",
-      },
-      {
-        label: "Expired",
-        href: "/dashboard/quotations?status=expired",
-        Icon: AlertTriangle,
-        isActive: (pathname, status) =>
-          pathname === "/dashboard/quotations" && status === "expired",
-      },
-      {
-        label: "Cancelled",
-        href: "/dashboard/quotations?status=cancelled",
-        Icon: XCircle,
-        isActive: (pathname, status) =>
-          pathname === "/dashboard/quotations" && status === "cancelled",
-      },
-    ],
-  },
-  {
-    label: "Account",
-    items: [
-      {
-        label: "Profile",
-        href: "/dashboard/settings/profile",
-        Icon: User,
-        isActive: (pathname) => pathname === "/dashboard/settings/profile",
-      },
-      {
-        label: "Businesses",
-        href: "/dashboard/settings/businesses",
-        Icon: Building2,
-        isActive: (pathname) => pathname === "/dashboard/settings/businesses",
-      },
-    ],
-  },
-];
 
 const NavBar = () => {
   const pathname = usePathname();
@@ -283,13 +74,16 @@ const NavBar = () => {
 
   const renderDashboardMobileNav = () => (
     <div className="space-y-5 border-b pb-5">
-      {DASHBOARD_MOBILE_NAV_GROUPS.map((group) => (
-        <div key={group.label}>
+      {DASHBOARD_NAV_GROUPS.map((group) => (
+        <div key={group.labelKey}>
           <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
-            {group.label}
+            {t(group.labelKey)}
           </p>
-          <nav className="flex flex-col gap-0.5" aria-label={`${group.label} dashboard navigation`}>
-            {group.items.map(({ href, label, Icon, isActive }) => {
+          <nav
+            className="flex flex-col gap-0.5"
+            aria-label={`${t(group.labelKey)} dashboard navigation`}
+          >
+            {group.items.map(({ href, labelKey, Icon, isActive }) => {
               const active = isActive(pathname, status);
 
               return (
@@ -303,7 +97,7 @@ const NavBar = () => {
                   )}
                 >
                   <Icon className="size-4 shrink-0 opacity-90" />
-                  {label}
+                  {t(labelKey)}
                 </Link>
               );
             })}

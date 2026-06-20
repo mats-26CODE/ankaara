@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/use-dashboard-stats";
 import { ToastAlert } from "@/config/toast";
 import { toastMutationSuccess } from "@/lib/mutation-toast";
+import { usePreferencesStore } from "@/lib/stores/preferences-store";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
 import { useBusinessStore } from "@/lib/stores/business-store";
 import type { Tables, TablesInsert, TablesUpdate } from "@/database.types";
@@ -98,7 +99,7 @@ export const useCreateBusiness = () => {
       if (data?.is_primary) {
         useBusinessStore.getState().setCurrentBusiness(data.id);
       }
-      toastMutationSuccess(context, "Business created successfully");
+      toastMutationSuccess(context, usePreferencesStore.getState().t("dashboard.toast.businessCreated"));
     },
     onError: (error: Error) => {
       if (isPlanLimitError(error)) {
@@ -137,7 +138,7 @@ export const useUpdateBusiness = () => {
       if (data?.is_primary) {
         useBusinessStore.getState().setCurrentBusiness(data.id);
       }
-      toastMutationSuccess(context, "Business updated successfully");
+      toastMutationSuccess(context, usePreferencesStore.getState().t("dashboard.toast.businessUpdated"));
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to update business");
@@ -173,7 +174,7 @@ export const useDeleteBusiness = () => {
       if (error) throw error;
     },
     onSuccess: (_data, _variables, _onMutateResult, context) => {
-      toastMutationSuccess(context, "Business deleted");
+      toastMutationSuccess(context, usePreferencesStore.getState().t("dashboard.toast.businessDeleted"));
     },
     onError: (error: Error) => {
       ToastAlert.error(error.message || "Failed to delete business");

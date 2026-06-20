@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import { useSale } from "@/hooks/use-sales";
+import { useTranslation } from "@/hooks/use-translation";
 import { useFormatAmount } from "@/hooks/use-format-amount";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +29,7 @@ import {
 } from "lucide-react";
 
 const SaleDetailPage = () => {
+  const { t } = useTranslation();
   const id = useRouteUuidParam("id");
   const router = useRouter();
   const { sale, loading } = useSale(id);
@@ -52,9 +54,9 @@ const SaleDetailPage = () => {
   if (!sale) {
     return (
       <div className="flex flex-col items-center gap-4 py-12">
-        <p className="text-muted-foreground">Sale not found.</p>
+        <p className="text-muted-foreground">{t("dashboard.sales.detail.notFound")}</p>
         <Button variant="outline" asChild>
-          <Link href="/dashboard/sales">Back to Sales</Link>
+          <Link href="/dashboard/sales">{t("dashboard.common.backToSales")}</Link>
         </Button>
       </div>
     );
@@ -71,11 +73,14 @@ const SaleDetailPage = () => {
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-bold tracking-tight">{sale.sale_number}</h1>
               <Badge variant={sale.source === "invoice" ? "secondary" : "default"}>
-                {sale.source === "invoice" ? "Invoice sale" : "Direct sale"}
+                {sale.source === "invoice"
+                  ? t("dashboard.sales.detail.badgeInvoice")
+                  : t("dashboard.sales.detail.badgeDirect")}
               </Badge>
             </div>
             <p className="text-muted-foreground text-sm">
-              Sold on {dayjs(sale.sale_date).format("MMMM D, YYYY")} · Recorded{" "}
+              {t("dashboard.sales.detail.soldOn")}{" "}
+              {dayjs(sale.sale_date).format("MMMM D, YYYY")} · {t("dashboard.sales.detail.recorded")}{" "}
               {dayjs(sale.recorded_at).format("MMMM D, YYYY h:mm A")}
             </p>
           </div>
@@ -84,7 +89,7 @@ const SaleDetailPage = () => {
           <Button variant="outline" asChild>
             <Link href={`/dashboard/invoices/${sale.invoice_id}`}>
               <FileText className="mr-2 size-4" />
-              View Invoice
+              {t("dashboard.common.viewInvoice")}
             </Link>
           </Button>
         )}
@@ -92,14 +97,14 @@ const SaleDetailPage = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Sale summary</CardTitle>
-          <CardDescription>Amounts and customer for this sale.</CardDescription>
+          <CardTitle>{t("dashboard.sales.detail.summaryTitle")}</CardTitle>
+          <CardDescription>{t("dashboard.sales.detail.summaryDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
             <div className="rounded-lg border p-4">
               <div className="flex items-center justify-between gap-2">
-                <p className="text-sm font-medium">Total</p>
+                <p className="text-sm font-medium">{t("dashboard.common.total")}</p>
                 <CircleDollarSign className="size-4 shrink-0 text-blue-600" />
               </div>
               <p className="mt-2 text-xl font-bold">
@@ -108,7 +113,7 @@ const SaleDetailPage = () => {
             </div>
             <div className="rounded-lg border p-4">
               <div className="flex items-center justify-between gap-2">
-                <p className="text-sm font-medium">Cost</p>
+                <p className="text-sm font-medium">{t("dashboard.common.cost")}</p>
                 <Package className="size-4 shrink-0 text-violet-600" />
               </div>
               <p className="mt-2 text-xl font-bold">
@@ -117,7 +122,7 @@ const SaleDetailPage = () => {
             </div>
             <div className="rounded-lg border bg-green-100 p-4">
               <div className="flex items-center justify-between gap-2">
-                <p className="text-sm font-medium">Profit</p>
+                <p className="text-sm font-medium">{t("dashboard.common.profit")}</p>
                 <TrendingUp className="size-4 shrink-0 text-green-600" />
               </div>
               <p className="mt-2 text-xl font-bold">
@@ -126,14 +131,14 @@ const SaleDetailPage = () => {
             </div>
             <div className="min-w-0 rounded-lg border p-4">
               <div className="flex items-center justify-between gap-2">
-                <p className="text-sm font-medium">Client</p>
+                <p className="text-sm font-medium">{t("dashboard.common.client")}</p>
                 <UserRound className="text-muted-foreground size-4 shrink-0" />
               </div>
               <p
                 className="mt-2 truncate text-xl font-medium"
-                title={sale.client?.name ?? "Walk-in"}
+                title={sale.client?.name ?? t("dashboard.common.walkIn")}
               >
-                {sale.client?.name ?? "Walk-in"}
+                {sale.client?.name ?? t("dashboard.common.walkIn")}
               </p>
             </div>
           </div>
@@ -142,18 +147,18 @@ const SaleDetailPage = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Items Sold</CardTitle>
+          <CardTitle>{t("dashboard.sales.detail.itemsTitle")}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Item</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Qty</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Profit</TableHead>
+                <TableHead>{t("dashboard.sales.detail.item")}</TableHead>
+                <TableHead>{t("dashboard.common.type")}</TableHead>
+                <TableHead>{t("dashboard.common.quantity")}</TableHead>
+                <TableHead>{t("dashboard.common.price")}</TableHead>
+                <TableHead>{t("dashboard.common.total")}</TableHead>
+                <TableHead>{t("dashboard.common.profit")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -162,7 +167,9 @@ const SaleDetailPage = () => {
                   <TableCell className="font-medium">{item.description}</TableCell>
                   <TableCell>
                     <Badge variant={item.item_type === "service" ? "secondary" : "default"}>
-                      {item.item_type === "service" ? "Service" : "Product"}
+                      {item.item_type === "service"
+                        ? t("dashboard.common.service")
+                        : t("dashboard.common.product")}
                     </Badge>
                   </TableCell>
                   <TableCell>{Number(item.quantity).toLocaleString()}</TableCell>

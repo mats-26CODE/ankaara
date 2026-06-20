@@ -8,6 +8,7 @@ import { useBusinesses, type Business } from "@/hooks/use-businesses";
 import { useClients, useEnsureWalkInClient } from "@/hooks/use-clients";
 import { useProducts } from "@/hooks/use-products";
 import { useCreateDirectSale, type DirectSaleItemInput } from "@/hooks/use-sales";
+import { useTranslation } from "@/hooks/use-translation";
 import { useCurrentBusinessId } from "@/lib/stores/business-store";
 import {
   ProductPickerDialog,
@@ -44,6 +45,7 @@ const hasEnoughStock = (item: SaleLine) => {
 };
 
 const CreateSalePage = () => {
+  const { t } = useTranslation();
   const router = useRouter();
   const { businesses, loading: businessesLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
@@ -185,10 +187,13 @@ const CreateSalePage = () => {
             </Link>
           </Button>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Record Sale</h1>
+            <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.sales.create.title")}</h1>
             <p className="text-muted-foreground text-sm">
-              Add a direct product or service sale for{" "}
-              <span className="font-medium">{currentBusiness?.name ?? "your business"}</span>.
+              {t("dashboard.sales.create.subtitlePrefix")}{" "}
+              <span className="font-medium">
+                {currentBusiness?.name ?? t("dashboard.common.yourBusiness")}
+              </span>
+              .
             </p>
           </div>
         </div>
@@ -197,7 +202,7 @@ const CreateSalePage = () => {
           disabled={!canSubmit || createSale.isPending}
           isLoading={createSale.isPending}
         >
-          Save Sale
+          {t("dashboard.common.saveSale")}
         </Button>
       </div>
 
@@ -205,15 +210,15 @@ const CreateSalePage = () => {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Sale Details</CardTitle>
+              <CardTitle className="text-base">{t("dashboard.sales.create.detailsTitle")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Sale Date</Label>
+                <Label>{t("dashboard.sales.create.saleDate")}</Label>
                 <DatePicker value={saleDate} onChange={setSaleDate} disableFuture />
               </div>
               <div className="space-y-2">
-                <Label>Client</Label>
+                <Label>{t("dashboard.common.client")}</Label>
                 <div className="space-y-2">
                   <ClientPickerDialog
                     businessId={currentBusinessId}
@@ -232,22 +237,22 @@ const CreateSalePage = () => {
                       onClick={() => setClientId(walkInClient.id)}
                       className="text-muted-foreground px-0"
                     >
-                      Use walk-in customer
+                      {t("dashboard.sales.create.useWalkIn")}
                     </Button>
                   )}
                   {clientId === walkInClient?.id && (
                     <p className="text-muted-foreground text-xs">
-                      Walk-in Customer is selected by default for direct sales.
+                      {t("dashboard.sales.create.walkInHint")}
                     </p>
                   )}
                 </div>
               </div>
               <div className="space-y-2 sm:col-span-2">
-                <Label>Notes</Label>
+                <Label>{t("dashboard.common.notes")}</Label>
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Optional sale note"
+                  placeholder={t("dashboard.sales.create.notesPlaceholder")}
                   rows={2}
                 />
               </div>
@@ -256,7 +261,7 @@ const CreateSalePage = () => {
 
           <Card>
             <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between">
-              <CardTitle className="text-base">Sale Items</CardTitle>
+              <CardTitle className="text-base">{t("dashboard.sales.create.itemsTitle")}</CardTitle>
               <Button
                 type="button"
                 variant="outline"
@@ -264,13 +269,13 @@ const CreateSalePage = () => {
                 onClick={() => setProductPickerOpen(true)}
               >
                 <Plus className="mr-1 size-4" />
-                Add item
+                {t("dashboard.common.addItem")}
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
               {items.length === 0 && (
                 <p className="text-muted-foreground py-4 text-center text-sm">
-                  Add products or services from inventory to record a sale.
+                  {t("dashboard.sales.create.itemsEmpty")}
                 </p>
               )}
               {items.map((item, idx) => (
@@ -280,11 +285,14 @@ const CreateSalePage = () => {
                       <p className="font-medium">{item.description}</p>
                       <div className="flex items-center gap-2">
                         <Badge variant={item.item_type === "service" ? "secondary" : "default"}>
-                          {item.item_type === "service" ? "Service" : "Product"}
+                          {item.item_type === "service"
+                            ? t("dashboard.common.service")
+                            : t("dashboard.common.product")}
                         </Badge>
                         {item.item_type === "product" && (
                           <span className="text-muted-foreground text-xs">
-                            Stock: {Number(item.stock_quantity).toLocaleString()}
+                            {t("dashboard.sales.create.stockLabel")}{" "}
+                            {Number(item.stock_quantity).toLocaleString()}
                           </span>
                         )}
                       </div>
@@ -295,7 +303,7 @@ const CreateSalePage = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <div className="space-y-2">
-                      <Label>Qty *</Label>
+                      <Label>{t("dashboard.common.qtyRequired")}</Label>
                       <Input
                         type="number"
                         min={0.0001}
@@ -305,7 +313,7 @@ const CreateSalePage = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Price *</Label>
+                      <Label>{t("dashboard.common.priceRequired")}</Label>
                       <Input
                         type="number"
                         min={item.base_price}
@@ -315,7 +323,7 @@ const CreateSalePage = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Discount</Label>
+                      <Label>{t("dashboard.common.discount")}</Label>
                       <Input
                         type="number"
                         min={0}
@@ -325,7 +333,7 @@ const CreateSalePage = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Total</Label>
+                      <Label>{t("dashboard.common.total")}</Label>
                       <Input
                         readOnly
                         value={lineTotal(item).toLocaleString()}
@@ -335,13 +343,14 @@ const CreateSalePage = () => {
                   </div>
                   {!itemMeetsMinimumPrice(item) && (
                     <p className="text-destructive text-sm">
-                      Price after discount cannot be below base price{" "}
-                      {Number(item.base_price).toLocaleString()}.
+                      {t("dashboard.common.belowBasePriceError", {
+                        amount: Number(item.base_price).toLocaleString(),
+                      })}
                     </p>
                   )}
                   {!hasEnoughStock(item) && (
                     <p className="text-destructive text-sm">
-                      Quantity exceeds available stock for this product.
+                      {t("dashboard.sales.create.exceedsStock")}
                     </p>
                   )}
                 </div>
@@ -362,23 +371,25 @@ const CreateSalePage = () => {
 
         <Card className="h-fit">
           <CardHeader>
-            <CardTitle className="text-base">Summary</CardTitle>
+            <CardTitle className="text-base">{t("dashboard.common.summary")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-sm">Items</span>
+              <span className="text-muted-foreground text-sm">{t("dashboard.common.items")}</span>
               <span className="font-medium">{items.length}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-sm">Sales</span>
+              <span className="text-muted-foreground text-sm">
+                {t("dashboard.sales.create.summarySales")}
+              </span>
               <span className="font-medium">{subtotal.toLocaleString()}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-sm">Cost</span>
+              <span className="text-muted-foreground text-sm">{t("dashboard.common.cost")}</span>
               <span className="font-medium">{totalCost.toLocaleString()}</span>
             </div>
             <div className="flex items-center justify-between border-t pt-3">
-              <span className="font-medium">Profit</span>
+              <span className="font-medium">{t("dashboard.common.profit")}</span>
               <span className="text-lg font-bold">{profit.toLocaleString()}</span>
             </div>
           </CardContent>

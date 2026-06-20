@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { Search, Plus, Check, User } from "lucide-react";
+import { useTranslation } from "@/hooks/use-translation";
 
 const PAGE_SIZE = 20;
 
@@ -42,6 +43,7 @@ const ClientPickerDialog = ({
   contextLabel = "invoice",
   includeWalkIn = false,
 }: ClientPickerDialogProps) => {
+  const { t } = useTranslation();
   const createClient = useCreateClient();
   const selectedClient = clients.find((c) => c.id === value);
 
@@ -122,6 +124,18 @@ const ClientPickerDialog = ({
     });
   };
 
+  const contextKeyMap: Record<string, string> = {
+    invoice: "dashboard.pickers.client.contextInvoice",
+    quotation: "dashboard.pickers.client.contextQuotation",
+    sale: "dashboard.pickers.client.contextSale",
+    loan: "dashboard.pickers.client.contextLoan",
+  };
+  const contextText = t(contextKeyMap[contextLabel] ?? contextKeyMap.invoice);
+  const clientCountLabel =
+    filtered.length === 1
+      ? t("dashboard.pickers.client.count", { count: filtered.length })
+      : t("dashboard.pickers.client.countPlural", { count: filtered.length });
+
   return (
     <>
       {/* Trigger row: picker button + add client button */}
@@ -136,7 +150,7 @@ const ClientPickerDialog = ({
           {selectedClient ? (
             <span className="truncate">{selectedClient.name}</span>
           ) : (
-            <span className="text-muted-foreground">Select a client</span>
+            <span className="text-muted-foreground">{t("dashboard.pickers.client.selectPlaceholder")}</span>
           )}
         </Button>
         <Button
@@ -147,11 +161,11 @@ const ClientPickerDialog = ({
             resetAddForm();
             setAddOpen(true);
           }}
-          title="Add new client"
+          title={t("dashboard.pickers.client.addNewTitle")}
           className="w-full shrink-0 sm:w-auto"
         >
           <Plus className="size-4" />
-          Add new client
+          {t("dashboard.pickers.client.addNew")}
         </Button>
       </div>
 
@@ -159,8 +173,10 @@ const ClientPickerDialog = ({
       <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
         <DialogContent className="flex max-h-[80vh] flex-col sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Select Client</DialogTitle>
-            <DialogDescription>Search and pick a client for this {contextLabel}.</DialogDescription>
+            <DialogTitle>{t("dashboard.pickers.client.title")}</DialogTitle>
+            <DialogDescription>
+              {t("dashboard.pickers.client.description", { context: contextText })}
+            </DialogDescription>
           </DialogHeader>
 
           {/* Search */}
@@ -169,7 +185,7 @@ const ClientPickerDialog = ({
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name, email, or phone..."
+              placeholder={t("dashboard.pickers.client.searchPlaceholder")}
               className="pl-9"
               autoFocus
             />
@@ -184,7 +200,9 @@ const ClientPickerDialog = ({
             {filtered.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-10 text-center">
                 <p className="text-muted-foreground text-sm">
-                  {search ? "No clients match your search." : "No clients yet."}
+                  {search
+                    ? t("dashboard.pickers.client.emptySearch")
+                    : t("dashboard.pickers.client.emptyNoData")}
                 </p>
                 <Button
                   variant="outline"
@@ -198,7 +216,7 @@ const ClientPickerDialog = ({
                   }}
                 >
                   <Plus className="mr-1 size-4" />
-                  Add Client
+                  {t("dashboard.common.addClient")}
                 </Button>
               </div>
             ) : (
@@ -220,7 +238,7 @@ const ClientPickerDialog = ({
                           <p className="truncate text-sm font-medium">{client.name}</p>
                           {client.is_walk_in && (
                             <span className="text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] uppercase">
-                              Walk-in
+                              {t("dashboard.common.walkIn")}
                             </span>
                           )}
                         </div>
@@ -245,9 +263,7 @@ const ClientPickerDialog = ({
 
           {/* Footer: Add client shortcut */}
           <div className="flex items-center justify-between border-t pt-2">
-            <p className="text-muted-foreground text-xs">
-              {filtered.length} client{filtered.length !== 1 ? "s" : ""}
-            </p>
+            <p className="text-muted-foreground text-xs">{clientCountLabel}</p>
             <Button
               variant="ghost"
               size="sm"
@@ -257,7 +273,7 @@ const ClientPickerDialog = ({
               }}
             >
               <Plus className="mr-1 size-4" />
-              New Client
+              {t("dashboard.pickers.client.newClient")}
             </Button>
           </div>
         </DialogContent>
@@ -267,23 +283,23 @@ const ClientPickerDialog = ({
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Add Client</DialogTitle>
-            <DialogDescription>Create a new client for your business.</DialogDescription>
+            <DialogTitle>{t("dashboard.pickers.client.addTitle")}</DialogTitle>
+            <DialogDescription>{t("dashboard.pickers.client.addDescription")}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
-              <Label htmlFor="new-client-name">Name *</Label>
+              <Label htmlFor="new-client-name">{t("dashboard.common.name")} *</Label>
               <Input
                 id="new-client-name"
                 value={addForm.name}
                 onChange={(e) => setAddForm((p) => ({ ...p, name: e.target.value }))}
-                placeholder="Client name"
+                placeholder={t("dashboard.pickers.client.namePlaceholder")}
                 autoFocus
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="new-client-email">Email</Label>
+              <Label htmlFor="new-client-email">{t("dashboard.common.email")}</Label>
               <Input
                 id="new-client-email"
                 type="email"
@@ -293,7 +309,7 @@ const ClientPickerDialog = ({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="new-client-phone">Phone</Label>
+              <Label htmlFor="new-client-phone">{t("dashboard.common.phone")}</Label>
               <Input
                 id="new-client-phone"
                 type="tel"
@@ -303,12 +319,12 @@ const ClientPickerDialog = ({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="new-client-address">Address</Label>
+              <Label htmlFor="new-client-address">{t("dashboard.common.address")}</Label>
               <Input
                 id="new-client-address"
                 value={addForm.address}
                 onChange={(e) => setAddForm((p) => ({ ...p, address: e.target.value }))}
-                placeholder="Client address"
+                placeholder={t("dashboard.pickers.client.addressPlaceholder")}
               />
             </div>
           </div>
@@ -319,14 +335,14 @@ const ClientPickerDialog = ({
               onClick={() => setAddOpen(false)}
               disabled={createClient.isPending}
             >
-              Cancel
+              {t("dashboard.common.cancel")}
             </Button>
             <Button
               onClick={handleAddClient}
               disabled={!addForm.name.trim()}
               isLoading={createClient.isPending}
             >
-              Add Client
+              {t("dashboard.common.addClient")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -30,8 +30,10 @@ import { QuotationTemplate } from "@/lib/quotation-templates/registry";
 import { TemplateFullscreenPreviewDialog } from "@/components/shared/template-fullscreen-preview-dialog";
 import dayjs from "dayjs";
 import { useRouteUuidParam } from "@/hooks/use-route-uuid-param";
+import { useTranslation } from "@/hooks/use-translation";
 
 const EditQuotationPage = () => {
+  const { t } = useTranslation();
   const id = useRouteUuidParam("id");
   const router = useRouter();
   const { quotation, loading } = useQuotation(id);
@@ -264,9 +266,9 @@ const EditQuotationPage = () => {
   if (!quotation) {
     return (
       <div className="flex flex-col items-center gap-4 py-12">
-        <p className="text-muted-foreground">Quotation not found.</p>
+        <p className="text-muted-foreground">{t("dashboard.quotations.detail.notFound")}</p>
         <Button variant="outline" asChild>
-          <Link href="/dashboard/quotations">Back to Quotations</Link>
+          <Link href="/dashboard/quotations">{t("dashboard.common.backToQuotations")}</Link>
         </Button>
       </div>
     );
@@ -275,9 +277,9 @@ const EditQuotationPage = () => {
   if (quotation.status !== "draft") {
     return (
       <div className="flex flex-col items-center gap-4 py-12">
-        <p className="text-muted-foreground">Only draft quotations can be edited.</p>
+        <p className="text-muted-foreground">{t("dashboard.quotations.edit.draftOnly")}</p>
         <Button variant="outline" asChild>
-          <Link href={`/dashboard/quotations/${id}`}>View Quotation</Link>
+          <Link href={`/dashboard/quotations/${id}`}>{t("dashboard.quotations.edit.viewQuotation")}</Link>
         </Button>
       </div>
     );
@@ -290,8 +292,8 @@ const EditQuotationPage = () => {
           <ArrowLeft className="size-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Edit {quotation.quotation_number}</h1>
-          <p className="text-muted-foreground text-sm">Update this draft quotation.</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.quotations.edit.title", { quotationNumber: quotation.quotation_number })}</h1>
+          <p className="text-muted-foreground text-sm">{t("dashboard.quotations.edit.subtitle")}</p>
         </div>
       </div>
 
@@ -299,11 +301,11 @@ const EditQuotationPage = () => {
         <div className="space-y-6 lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Details</CardTitle>
+              <CardTitle className="text-base">{t("dashboard.common.details")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Client *</Label>
+                <Label>{t("dashboard.invoices.form.clientRequired")}</Label>
                 <ClientPickerDialog
                   businessId={quotation?.business_id ?? null}
                   value={clientId}
@@ -315,25 +317,25 @@ const EditQuotationPage = () => {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Issue Date *</Label>
+                  <Label>{t("dashboard.invoices.form.issueDateRequired")}</Label>
                   <DatePicker
                     value={issueDate}
                     onChange={setIssueDate}
-                    placeholder="Select issue date"
+                    placeholder={t("dashboard.invoices.form.issueDatePlaceholder")}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Valid Until</Label>
+                  <Label>{t("dashboard.common.validUntil")}</Label>
                   <DatePicker
                     value={validUntil}
                     onChange={setValidUntil}
-                    placeholder="Optional expiry date"
+                    placeholder={t("dashboard.quotations.form.validUntilPlaceholder")}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Currency</Label>
+                <Label>{t("dashboard.common.currency")}</Label>
                 <Select value={currency} onValueChange={setCurrency}>
                   <SelectTrigger className="w-full">
                     <SelectValue />
@@ -349,11 +351,11 @@ const EditQuotationPage = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Scope of Work</Label>
+                <Label>{t("dashboard.common.scopeOfWork")}</Label>
                 <Textarea
                   value={scopeOfWork}
                   onChange={(e) => setScopeOfWork(e.target.value)}
-                  placeholder="Describe deliverables, services, or project scope (optional)"
+                  placeholder={t("dashboard.quotations.form.scopePlaceholder")}
                   rows={3}
                   className="resize-none"
                 />
@@ -363,7 +365,7 @@ const EditQuotationPage = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-base">Line Items</CardTitle>
+              <CardTitle className="text-base">{t("dashboard.common.lineItems")}</CardTitle>
               <Button
                 type="button"
                 variant="outline"
@@ -385,7 +387,7 @@ const EditQuotationPage = () => {
                 <div key={idx} className="space-y-3 rounded-lg border p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 space-y-2">
-                      <Label>Description</Label>
+                      <Label>{t("dashboard.common.description")}</Label>
                       <Input readOnly value={item.description} className="bg-muted" />
                     </div>
                     <Button
@@ -393,14 +395,14 @@ const EditQuotationPage = () => {
                       size="icon"
                       className="mt-5.5 shrink-0"
                       onClick={() => removeItem(idx)}
-                      title="Remove item"
+                      title={t("dashboard.common.removeItem")}
                     >
                       <Trash2 className="text-destructive size-4" />
                     </Button>
                   </div>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <div className="space-y-2">
-                      <Label>Qty *</Label>
+                      <Label>{t("dashboard.common.qtyRequired")}</Label>
                       <Input
                         type="number"
                         min={1}
@@ -411,7 +413,7 @@ const EditQuotationPage = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Unit Price</Label>
+                      <Label>{t("dashboard.common.unitPrice")}</Label>
                       <Input
                         type="number"
                         min={item.base_price ?? 0}
@@ -421,7 +423,7 @@ const EditQuotationPage = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Discount</Label>
+                      <Label>{t("dashboard.common.discount")}</Label>
                       <Input
                         type="number"
                         min={0}
@@ -432,7 +434,7 @@ const EditQuotationPage = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Line Total</Label>
+                      <Label>{t("dashboard.common.lineTotal")}</Label>
                       <Input
                         readOnly
                         tabIndex={-1}
@@ -467,15 +469,15 @@ const EditQuotationPage = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Notes & Customization</CardTitle>
+              <CardTitle className="text-base">{t("dashboard.common.notesCustomization")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Notes</Label>
+                <Label>{t("dashboard.common.notes")}</Label>
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Additional notes or terms..."
+                  placeholder={t("dashboard.quotations.form.notesPlaceholder")}
                   rows={3}
                 />
               </div>
@@ -484,12 +486,12 @@ const EditQuotationPage = () => {
                 <Textarea
                   value={footerNote}
                   onChange={(e) => setFooterNote(e.target.value)}
-                  placeholder="e.g. Thank you for your business!"
+                  placeholder={t("dashboard.quotations.form.footerNotePlaceholder")}
                   rows={2}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Accent Color</Label>
+                <Label>{t("dashboard.common.accentColor")}</Label>
                 <div className="flex items-center gap-3">
                   <input
                     type="color"
@@ -512,7 +514,7 @@ const EditQuotationPage = () => {
         <div className="space-y-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-base">Template</CardTitle>
+              <CardTitle className="text-base">{t("dashboard.common.template")}</CardTitle>
               <Button
                 type="button"
                 variant="outline"
@@ -535,8 +537,8 @@ const EditQuotationPage = () => {
                       : "bg-muted/50 hover:border-primary/30 border-transparent"
                   }`}
                 >
-                  <p className="text-sm font-medium">{tmpl.name}</p>
-                  <p className="text-muted-foreground mt-0.5 text-xs">{tmpl.description}</p>
+                  <p className="text-sm font-medium">{t(`dashboard.quotations.templates.${tmpl.id}.name`)}</p>
+                  <p className="text-muted-foreground mt-0.5 text-xs">{t(`dashboard.quotations.templates.${tmpl.id}.description`)}</p>
                 </button>
               ))}
             </CardContent>
@@ -544,23 +546,23 @@ const EditQuotationPage = () => {
 
           <Card className="sticky top-6">
             <CardHeader>
-              <CardTitle className="text-base">Summary</CardTitle>
+              <CardTitle className="text-base">{t("dashboard.common.summary")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {totalDiscount > 0 && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Total discount</span>
+                  <span className="text-muted-foreground">{t("dashboard.common.totalDiscount")}</span>
                   <span className="font-medium text-green-600 dark:text-green-400">
                     -{totalDiscount.toLocaleString()}
                   </span>
                 </div>
               )}
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Subtotal</span>
+                <span className="text-muted-foreground">{t("dashboard.common.subtotal")}</span>
                 <span className="font-medium">{subtotal.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="text-muted-foreground shrink-0">Tax (%)</span>
+                <span className="text-muted-foreground shrink-0">{t("dashboard.common.taxPercent")}</span>
                 <div className="relative w-28">
                   <Input
                     type="number"
@@ -579,13 +581,13 @@ const EditQuotationPage = () => {
               </div>
               {taxAmount > 0 && (
                 <div className="text-muted-foreground flex justify-between text-xs">
-                  <span>Tax amount</span>
+                  <span>{t("dashboard.common.taxAmount")}</span>
                   <span>{taxAmount.toLocaleString()}</span>
                 </div>
               )}
               <Separator />
               <div className="flex justify-between text-lg font-semibold">
-                <span>Total</span>
+                <span>{t("dashboard.common.total")}</span>
                 <span>
                   {currency} {total.toLocaleString()}
                 </span>
@@ -612,7 +614,7 @@ const EditQuotationPage = () => {
       <TemplateFullscreenPreviewDialog
         open={previewOpen}
         onOpenChange={setPreviewOpen}
-        title="Quotation preview"
+        title={t("dashboard.quotations.form.previewDialogTitle")}
       >
         <QuotationTemplate {...previewProps} />
       </TemplateFullscreenPreviewDialog>

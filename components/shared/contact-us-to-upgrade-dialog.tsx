@@ -12,11 +12,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  getUpgradeWhatsAppUrl,
-  SUBSCRIBE_SCREEN,
-} from "@/constants/subscribe";
+import { getUpgradeWhatsAppUrlFromContact } from "@/constants/subscribe";
 import { CONTACT_US_PHONE, CONTACT_US_PHONE_TEL_HREF } from "@/constants/values";
+import { useTranslation } from "@/hooks/use-translation";
 
 type ContactUsToUpgradeDialogProps = {
   open: boolean;
@@ -31,9 +29,11 @@ const ContactUsToUpgradeDialog = ({
   planName,
   intervalLabel,
 }: ContactUsToUpgradeDialogProps) => {
+  const { t } = useTranslation();
+
   const description = planName
-    ? SUBSCRIBE_SCREEN.contactUsToUpgradeDescriptionWithPlan(planName)
-    : SUBSCRIBE_SCREEN.contactUsToUpgradeDescription;
+    ? t("dashboard.subscription.contactUpgrade.descriptionWithPlan", { planName })
+    : t("dashboard.subscription.contactUpgrade.description");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -42,7 +42,7 @@ const ContactUsToUpgradeDialog = ({
           <Logo size="sm" linked={false} />
 
           <DialogHeader className="w-full items-center space-y-2 sm:text-center">
-            <DialogTitle>{SUBSCRIBE_SCREEN.contactUsToUpgradeTitle}</DialogTitle>
+            <DialogTitle>{t("dashboard.subscription.contactUpgrade.title")}</DialogTitle>
             <DialogDescription className="text-center">{description}</DialogDescription>
           </DialogHeader>
 
@@ -55,11 +55,11 @@ const ContactUsToUpgradeDialog = ({
 
           <SocialConnectButtons
             className="justify-center"
-            whatsappUrl={getUpgradeWhatsAppUrl(planName, intervalLabel)}
+            whatsappUrl={getUpgradeWhatsAppUrlFromContact(planName, intervalLabel)}
           />
 
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            {SUBSCRIBE_SCREEN.contactUsToUpgradeDismiss}
+            {t("dashboard.common.close")}
           </Button>
         </div>
       </DialogContent>

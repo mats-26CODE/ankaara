@@ -2,31 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getCopyrightNotice } from "@/constants/values";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Collapsible } from "radix-ui";
-import {
-  LayoutDashboard,
-  FileText,
-  Quote,
-  Users,
-  Package,
-  ShoppingCart,
-  Wallet,
-  HandCoins,
-  ChartColumnIncreasing,
-  Plus,
-  ChevronRight,
-  Send,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  User,
-  Building2,
-  Palette,
-  Eye,
-  XCircle,
-} from "lucide-react";
+import { FileText, ChevronRight, Quote, Palette } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -41,7 +19,6 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  SidebarSeparator,
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
@@ -53,21 +30,54 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { ReportsIcon } from "@/components/icons/reports-icon";
+import { useTranslation } from "@/hooks/use-translation";
+import {
+  DASHBOARD_SIDEBAR_ACCOUNT_ITEMS,
+  DASHBOARD_SIDEBAR_INVOICE_SUB_ITEMS,
+  DASHBOARD_SIDEBAR_MAIN_ITEMS,
+  DASHBOARD_SIDEBAR_QUOTATION_SUB_ITEMS,
+  type DashboardNavItem,
+} from "@/lib/i18n/dashboard-nav-config";
+
+const renderSubMenuItems = (
+  items: DashboardNavItem[],
+  pathname: string,
+  status: string | null,
+  t: (key: string) => string,
+) =>
+  items.map((item) => (
+    <SidebarMenuSubItem key={item.href}>
+      <SidebarMenuSubButton asChild isActive={item.isActive(pathname, status)}>
+        <Link href={item.href}>
+          <item.Icon className="size-4" />
+          <span>{t(item.labelKey)}</span>
+        </Link>
+      </SidebarMenuSubButton>
+    </SidebarMenuSubItem>
+  ));
+
+const renderDropdownItems = (
+  items: DashboardNavItem[],
+  t: (key: string) => string,
+) =>
+  items.map((item) => (
+    <DropdownMenuItem key={item.href} asChild>
+      <Link href={item.href} className="flex items-center gap-2">
+        <item.Icon className="size-4" />
+        {t(item.labelKey)}
+      </Link>
+    </DropdownMenuItem>
+  ));
 
 export const DashboardSidebar = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { state } = useSidebar();
+  const { t } = useTranslation();
   const [invoicesOpen, setInvoicesOpen] = useState(false);
   const [quotationsOpen, setQuotationsOpen] = useState(false);
 
-  const isActive = (path: string) => {
-    if (path === "/dashboard") {
-      return pathname === "/dashboard" || pathname === "/dashboard/";
-    }
-    return pathname === path;
-  };
-
+  const status = searchParams.get("status");
   const isInvoicesActive = pathname.startsWith("/dashboard/invoices");
   const isQuotationsActive = pathname.startsWith("/dashboard/quotations");
   const showSubmenu = state !== "collapsed";
@@ -83,134 +93,50 @@ export const DashboardSidebar = () => {
   return (
     <Sidebar variant="floating" collapsible="icon">
       <SidebarHeader className="border-sidebar-border flex flex-row items-center justify-between border-b p-4">
-        <span className={cn("font-semibold", state === "collapsed" && "hidden")}>Dashboard</span>
+        <span className={cn("font-semibold", state === "collapsed" && "hidden")}>
+          {t("dashboard.nav.title")}
+        </span>
         <SidebarTrigger className="shrink-0 group-data-[collapsible=icon]:-ml-1.5" />
       </SidebarHeader>
 
       <SidebarContent>
-        {/* ── Main ── */}
         <SidebarGroup>
           <SidebarGroupLabel className={cn("text-xs uppercase", !showSubmenu && "sr-only")}>
-            Main
+            {t("dashboard.nav.groupMain")}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {/* Overview */}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/dashboard")} tooltip="Overview">
-                  <Link href="/dashboard">
-                    <LayoutDashboard className="size-4" />
-                    <span>Overview</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {DASHBOARD_SIDEBAR_MAIN_ITEMS.map((item) => {
+                const Icon =
+                  item.labelKey === "dashboard.nav.reports" ? ReportsIcon : item.Icon;
 
-              {/* Sales */}
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname.startsWith("/dashboard/sales")}
-                  tooltip="Sales"
-                >
-                  <Link href="/dashboard/sales">
-                    <ShoppingCart className="size-4" />
-                    <span>Sales</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={item.isActive(pathname, status)}
+                      tooltip={t(item.labelKey)}
+                    >
+                      <Link href={item.href}>
+                        <Icon className="size-4" />
+                        <span>{t(item.labelKey)}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
 
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname.startsWith("/dashboard/profits")}
-                  tooltip="Profits"
-                >
-                  <Link href="/dashboard/profits">
-                    <ChartColumnIncreasing className="size-4" />
-                    <span>Profits</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname.startsWith("/dashboard/reports")}
-                  tooltip="Reports"
-                >
-                  <Link href="/dashboard/reports">
-                    <ReportsIcon className="size-4" />
-                    <span>Reports</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              {/* Inventory */}
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isActive("/dashboard/products")}
-                  tooltip="Inventory"
-                >
-                  <Link href="/dashboard/products">
-                    <Package className="size-4" />
-                    <span>Inventory</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              {/* Clients */}
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isActive("/dashboard/clients")}
-                  tooltip="Clients"
-                >
-                  <Link href="/dashboard/clients">
-                    <Users className="size-4" />
-                    <span>Clients</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname.startsWith("/dashboard/loans")}
-                  tooltip="Loans"
-                >
-                  <Link href="/dashboard/loans">
-                    <HandCoins className="size-4" />
-                    <span>Loans</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname.startsWith("/dashboard/expenses")}
-                  tooltip="Expenses"
-                >
-                  <Link href="/dashboard/expenses">
-                    <Wallet className="size-4" />
-                    <span>Expenses</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              {/* Invoices — collapsible when expanded, dropdown when collapsed */}
               {showSubmenu ? (
                 <Collapsible.Root open={invoicesOpen} onOpenChange={setInvoicesOpen} asChild>
                   <SidebarMenuItem>
                     <Collapsible.Trigger asChild>
                       <SidebarMenuButton
                         isActive={isInvoicesActive}
-                        tooltip="Invoices"
+                        tooltip={t("dashboard.nav.invoices")}
                         className="cursor-pointer"
                       >
                         <FileText className="size-4 shrink-0" />
-                        <span>Invoices</span>
+                        <span>{t("dashboard.nav.invoices")}</span>
                         <ChevronRight
                           className={cn(
                             "ml-auto size-4 shrink-0 transition-transform duration-200",
@@ -221,86 +147,12 @@ export const DashboardSidebar = () => {
                     </Collapsible.Trigger>
                     <Collapsible.Content>
                       <SidebarMenuSub>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={
-                              pathname === "/dashboard/invoices" && !searchParams.get("status")
-                            }
-                          >
-                            <Link href="/dashboard/invoices">
-                              <FileText className="size-4" />
-                              <span>All Invoices</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={isActive("/dashboard/invoices/create")}
-                          >
-                            <Link href="/dashboard/invoices/create">
-                              <Plus className="size-4" />
-                              <span>Create Invoice</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={
-                              pathname === "/dashboard/invoices" &&
-                              searchParams.get("status") === "draft"
-                            }
-                          >
-                            <Link href="/dashboard/invoices?status=draft">
-                              <Clock className="size-4" />
-                              <span>Drafts</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={
-                              pathname === "/dashboard/invoices" &&
-                              searchParams.get("status") === "sent"
-                            }
-                          >
-                            <Link href="/dashboard/invoices?status=sent">
-                              <Send className="size-4" />
-                              <span>Sent</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={
-                              pathname === "/dashboard/invoices" &&
-                              searchParams.get("status") === "paid"
-                            }
-                          >
-                            <Link href="/dashboard/invoices?status=paid">
-                              <CheckCircle2 className="size-4" />
-                              <span>Paid</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={
-                              pathname === "/dashboard/invoices" &&
-                              searchParams.get("status") === "overdue"
-                            }
-                          >
-                            <Link href="/dashboard/invoices?status=overdue">
-                              <AlertTriangle className="size-4" />
-                              <span>Overdue</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
+                        {renderSubMenuItems(
+                          DASHBOARD_SIDEBAR_INVOICE_SUB_ITEMS,
+                          pathname,
+                          status,
+                          t,
+                        )}
                       </SidebarMenuSub>
                     </Collapsible.Content>
                   </SidebarMenuItem>
@@ -309,77 +161,32 @@ export const DashboardSidebar = () => {
                 <SidebarMenuItem>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <SidebarMenuButton isActive={isInvoicesActive} tooltip="Invoices">
+                      <SidebarMenuButton
+                        isActive={isInvoicesActive}
+                        tooltip={t("dashboard.nav.invoices")}
+                      >
                         <FileText className="size-4 shrink-0" />
-                        <span>Invoices</span>
+                        <span>{t("dashboard.nav.invoices")}</span>
                       </SidebarMenuButton>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent side="right" align="start" className="min-w-44">
-                      <DropdownMenuItem asChild>
-                        <Link href="/dashboard/invoices" className="flex items-center gap-2">
-                          <FileText className="size-4" />
-                          All Invoices
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link href="/dashboard/invoices/create" className="flex items-center gap-2">
-                          <Plus className="size-4" />
-                          Create Invoice
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link
-                          href="/dashboard/invoices?status=draft"
-                          className="flex items-center gap-2"
-                        >
-                          <Clock className="size-4" />
-                          Drafts
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link
-                          href="/dashboard/invoices?status=sent"
-                          className="flex items-center gap-2"
-                        >
-                          <Send className="size-4" />
-                          Sent
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link
-                          href="/dashboard/invoices?status=paid"
-                          className="flex items-center gap-2"
-                        >
-                          <CheckCircle2 className="size-4" />
-                          Paid
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link
-                          href="/dashboard/invoices?status=overdue"
-                          className="flex items-center gap-2"
-                        >
-                          <AlertTriangle className="size-4" />
-                          Overdue
-                        </Link>
-                      </DropdownMenuItem>
+                      {renderDropdownItems(DASHBOARD_SIDEBAR_INVOICE_SUB_ITEMS, t)}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </SidebarMenuItem>
               )}
 
-              {/* Quotations — collapsible when expanded, dropdown when collapsed */}
               {showSubmenu ? (
                 <Collapsible.Root open={quotationsOpen} onOpenChange={setQuotationsOpen} asChild>
                   <SidebarMenuItem>
                     <Collapsible.Trigger asChild>
                       <SidebarMenuButton
                         isActive={isQuotationsActive}
-                        tooltip="Quotations"
+                        tooltip={t("dashboard.nav.quotations")}
                         className="cursor-pointer"
                       >
                         <Quote className="size-4 shrink-0" />
-                        <span>Quotations</span>
+                        <span>{t("dashboard.nav.quotations")}</span>
                         <ChevronRight
                           className={cn(
                             "ml-auto size-4 shrink-0 transition-transform duration-200",
@@ -390,114 +197,12 @@ export const DashboardSidebar = () => {
                     </Collapsible.Trigger>
                     <Collapsible.Content>
                       <SidebarMenuSub>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={
-                              pathname === "/dashboard/quotations" && !searchParams.get("status")
-                            }
-                          >
-                            <Link href="/dashboard/quotations">
-                              <Quote className="size-4" />
-                              <span>All Quotations</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={isActive("/dashboard/quotations/create")}
-                          >
-                            <Link href="/dashboard/quotations/create">
-                              <Plus className="size-4" />
-                              <span>Create Quotation</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={
-                              pathname === "/dashboard/quotations" &&
-                              searchParams.get("status") === "draft"
-                            }
-                          >
-                            <Link href="/dashboard/quotations?status=draft">
-                              <Clock className="size-4" />
-                              <span>Drafts</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={
-                              pathname === "/dashboard/quotations" &&
-                              searchParams.get("status") === "sent"
-                            }
-                          >
-                            <Link href="/dashboard/quotations?status=sent">
-                              <Send className="size-4" />
-                              <span>Sent</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={
-                              pathname === "/dashboard/quotations" &&
-                              searchParams.get("status") === "viewed"
-                            }
-                          >
-                            <Link href="/dashboard/quotations?status=viewed">
-                              <Eye className="size-4" />
-                              <span>Viewed</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={
-                              pathname === "/dashboard/quotations" &&
-                              searchParams.get("status") === "accepted"
-                            }
-                          >
-                            <Link href="/dashboard/quotations?status=accepted">
-                              <CheckCircle2 className="size-4" />
-                              <span>Accepted</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={
-                              pathname === "/dashboard/quotations" &&
-                              searchParams.get("status") === "expired"
-                            }
-                          >
-                            <Link href="/dashboard/quotations?status=expired">
-                              <AlertTriangle className="size-4" />
-                              <span>Expired</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={
-                              pathname === "/dashboard/quotations" &&
-                              searchParams.get("status") === "cancelled"
-                            }
-                          >
-                            <Link href="/dashboard/quotations?status=cancelled">
-                              <XCircle className="size-4" />
-                              <span>Cancelled</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
+                        {renderSubMenuItems(
+                          DASHBOARD_SIDEBAR_QUOTATION_SUB_ITEMS,
+                          pathname,
+                          status,
+                          t,
+                        )}
                       </SidebarMenuSub>
                     </Collapsible.Content>
                   </SidebarMenuItem>
@@ -506,96 +211,30 @@ export const DashboardSidebar = () => {
                 <SidebarMenuItem>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <SidebarMenuButton isActive={isQuotationsActive} tooltip="Quotations">
+                      <SidebarMenuButton
+                        isActive={isQuotationsActive}
+                        tooltip={t("dashboard.nav.quotations")}
+                      >
                         <Quote className="size-4 shrink-0" />
-                        <span>Quotations</span>
+                        <span>{t("dashboard.nav.quotations")}</span>
                       </SidebarMenuButton>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent side="right" align="start" className="min-w-44">
-                      <DropdownMenuItem asChild>
-                        <Link href="/dashboard/quotations" className="flex items-center gap-2">
-                          <Quote className="size-4" />
-                          All Quotations
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link
-                          href="/dashboard/quotations/create"
-                          className="flex items-center gap-2"
-                        >
-                          <Plus className="size-4" />
-                          Create Quotation
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link
-                          href="/dashboard/quotations?status=draft"
-                          className="flex items-center gap-2"
-                        >
-                          <Clock className="size-4" />
-                          Drafts
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link
-                          href="/dashboard/quotations?status=sent"
-                          className="flex items-center gap-2"
-                        >
-                          <Send className="size-4" />
-                          Sent
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link
-                          href="/dashboard/quotations?status=viewed"
-                          className="flex items-center gap-2"
-                        >
-                          <Eye className="size-4" />
-                          Viewed
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link
-                          href="/dashboard/quotations?status=accepted"
-                          className="flex items-center gap-2"
-                        >
-                          <CheckCircle2 className="size-4" />
-                          Accepted
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link
-                          href="/dashboard/quotations?status=expired"
-                          className="flex items-center gap-2"
-                        >
-                          <AlertTriangle className="size-4" />
-                          Expired
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link
-                          href="/dashboard/quotations?status=cancelled"
-                          className="flex items-center gap-2"
-                        >
-                          <XCircle className="size-4" />
-                          Cancelled
-                        </Link>
-                      </DropdownMenuItem>
+                      {renderDropdownItems(DASHBOARD_SIDEBAR_QUOTATION_SUB_ITEMS, t)}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </SidebarMenuItem>
               )}
 
-              {/* Invoice Templates */}
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  isActive={isActive("/dashboard/settings/templates")}
-                  tooltip="Invoice Templates"
+                  isActive={pathname === "/dashboard/settings/templates"}
+                  tooltip={t("dashboard.nav.invoiceTemplates")}
                 >
                   <Link href="/dashboard/settings/templates">
                     <Palette className="size-4" />
-                    <span>Invoice Templates</span>
+                    <span>{t("dashboard.nav.invoiceTemplates")}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -603,48 +242,33 @@ export const DashboardSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* <SidebarSeparator /> */}
-
-        {/* ── Account ── */}
         <SidebarGroup>
           <SidebarGroupLabel className={cn("text-xs uppercase", !showSubmenu && "sr-only")}>
-            Account
+            {t("dashboard.nav.groupAccount")}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isActive("/dashboard/settings/profile")}
-                  tooltip="Profile"
-                >
-                  <Link href="/dashboard/settings/profile">
-                    <User className="size-4" />
-                    <span>Profile</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isActive("/dashboard/settings/businesses")}
-                  tooltip="Businesses"
-                >
-                  <Link href="/dashboard/settings/businesses">
-                    <Building2 className="size-4" />
-                    <span>Businesses</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {DASHBOARD_SIDEBAR_ACCOUNT_ITEMS.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={item.isActive(pathname, status)}
+                    tooltip={t(item.labelKey)}
+                  >
+                    <Link href={item.href}>
+                      <item.Icon className="size-4" />
+                      <span>{t(item.labelKey)}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter className="border-sidebar-border border-t p-2 group-data-[collapsible=icon]:hidden">
-        <p className="text-sidebar-foreground/50 text-center text-xs">
-          {getCopyrightNotice()}
-        </p>
+        <p className="text-sidebar-foreground/50 text-center text-xs">{t("footer.copyright")}</p>
       </SidebarFooter>
     </Sidebar>
   );

@@ -12,6 +12,7 @@ import {
   type Client,
 } from "@/hooks/use-clients";
 import { useBusinesses } from "@/hooks/use-businesses";
+import { useTranslation } from "@/hooks/use-translation";
 import { useCurrentBusinessId } from "@/lib/stores/business-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,6 +65,7 @@ const emptyForm: FormState = { name: "", email: "", phone: "", address: "" };
 const PAGE_SIZE = 10;
 
 const ClientsPage = () => {
+  const { t } = useTranslation();
   const router = useRouter();
   const { businesses, loading: bizLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
@@ -192,13 +194,13 @@ const ClientsPage = () => {
         <CardContent className="flex flex-col items-center gap-4 py-12">
           <Building2 className="text-muted-foreground size-12" />
           <div className="space-y-1 text-center">
-            <p className="font-medium">No business yet</p>
+            <p className="font-medium">{t("dashboard.common.noBusinessTitle")}</p>
             <p className="text-muted-foreground text-sm">
-              Create a business first to start adding clients.
+              {t("dashboard.empty.noBusiness.clients")}
             </p>
           </div>
           <Button asChild>
-            <Link href="/dashboard/settings/businesses">Go to Businesses</Link>
+            <Link href="/dashboard/settings/businesses">{t("dashboard.common.goToBusinesses")}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -209,18 +211,19 @@ const ClientsPage = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Clients</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.clients.title")}</h1>
           <p className="text-muted-foreground text-sm">
-            Manage your clients for{" "}
+            {t("dashboard.clients.subtitlePrefix")}{" "}
             <span className="font-medium">
-              {businesses.find((b) => b.id === currentBusinessId)?.name || "your business"}
+              {businesses.find((b) => b.id === currentBusinessId)?.name ||
+                t("dashboard.common.yourBusiness")}
             </span>
             .
           </p>
         </div>
         <Button size="sm" onClick={openCreate}>
           <Plus className="mr-1 size-4" />
-          Add Client
+          {t("dashboard.common.addClient")}
         </Button>
       </div>
 
@@ -231,7 +234,7 @@ const ClientsPage = () => {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name, email, or phone..."
+              placeholder={t("dashboard.clients.searchPlaceholder")}
               className="pl-9"
             />
           </div>
@@ -245,18 +248,18 @@ const ClientsPage = () => {
             <div className="py-8 text-center">
               <p className="text-muted-foreground text-sm">
                 {debouncedSearch.trim()
-                  ? "No clients match your search."
-                  : "No clients yet. Add your first client to get started."}
+                  ? t("dashboard.clients.emptyNoMatch")
+                  : t("dashboard.clients.emptyNoData")}
               </p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="hidden sm:table-cell">Email</TableHead>
-                  <TableHead className="hidden md:table-cell">Phone</TableHead>
-                  <TableHead className="hidden lg:table-cell">Address</TableHead>
+                  <TableHead>{t("dashboard.common.name")}</TableHead>
+                  <TableHead className="hidden sm:table-cell">{t("dashboard.common.email")}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t("dashboard.common.phone")}</TableHead>
+                  <TableHead className="hidden lg:table-cell">{t("dashboard.common.address")}</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
@@ -272,7 +275,7 @@ const ClientsPage = () => {
                         <span>{client.name}</span>
                         {client.is_walk_in && (
                           <Badge variant="secondary" className="text-[10px] uppercase">
-                            Walk-in
+                            {t("dashboard.common.walkIn")}
                           </Badge>
                         )}
                       </div>
@@ -295,19 +298,21 @@ const ClientsPage = () => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           {client.is_walk_in ? (
-                            <DropdownMenuItem disabled>System client</DropdownMenuItem>
+                            <DropdownMenuItem disabled>
+                              {t("dashboard.common.systemClient")}
+                            </DropdownMenuItem>
                           ) : (
                             <>
                               <DropdownMenuItem onClick={() => openEdit(client)}>
                                 <Pencil className="mr-2 size-4" />
-                                Edit
+                                {t("dashboard.common.edit")}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => openDelete(client)}
                                 className="text-destructive focus:text-destructive"
                               >
                                 <Trash2 className="mr-2 size-4" />
-                                Delete
+                                {t("dashboard.common.delete")}
                               </DropdownMenuItem>
                             </>
                           )}
@@ -322,7 +327,7 @@ const ClientsPage = () => {
           {total > 0 && (
             <div className="mt-4 flex flex-col gap-2 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-muted-foreground text-sm">
-                Showing {from}–{to} of {total}
+                {t("dashboard.common.showingRange", { from, to, total })}
               </p>
               <div className="flex items-center gap-2">
                 <Button
@@ -332,7 +337,7 @@ const ClientsPage = () => {
                   disabled={page <= 1 || loading}
                 >
                   <ChevronLeft className="mr-1 size-4" />
-                  Previous
+                  {t("dashboard.common.previous")}
                 </Button>
                 <Button
                   variant="outline"
@@ -340,7 +345,7 @@ const ClientsPage = () => {
                   onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
                   disabled={page >= lastPage || loading}
                 >
-                  Next
+                  {t("dashboard.common.next")}
                   <ChevronRight className="ml-1 size-4" />
                 </Button>
               </div>
@@ -353,14 +358,16 @@ const ClientsPage = () => {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editingClient ? "Edit Client" : "Add Client"}</DialogTitle>
+            <DialogTitle>
+              {editingClient ? t("dashboard.clients.dialog.editTitle") : t("dashboard.common.addClient")}
+            </DialogTitle>
             <DialogDescription className="flex flex-col gap-2">
               {editingClient
-                ? "Update the client's information."
-                : "Add a new client to bill on your invoices."}
+                ? t("dashboard.clients.dialog.editDescription")
+                : t("dashboard.clients.dialog.addDescription")}
               {currentBusinessId && (
                 <span className="flex items-center gap-2">
-                  Business:{" "}
+                  {t("dashboard.common.businessLabel")}{" "}
                   <Badge variant="secondary" className="font-normal">
                     {businesses.find((b) => b.id === currentBusinessId)?.name ?? "—"}
                   </Badge>
@@ -371,53 +378,53 @@ const ClientsPage = () => {
 
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label htmlFor="client-name">Name *</Label>
+              <Label htmlFor="client-name">{t("dashboard.common.name")} *</Label>
               <Input
                 id="client-name"
                 value={form.name}
                 onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                placeholder="Client or company name"
+                placeholder={t("dashboard.clients.form.namePlaceholder")}
               />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="client-email">Email</Label>
+                <Label htmlFor="client-email">{t("dashboard.common.email")}</Label>
                 <Input
                   id="client-email"
                   type="email"
                   value={form.email}
                   onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
-                  placeholder="client@example.com"
+                  placeholder={t("dashboard.clients.form.emailPlaceholder")}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="client-phone">Phone</Label>
+                <Label htmlFor="client-phone">{t("dashboard.common.phone")}</Label>
                 <Input
                   id="client-phone"
                   type="tel"
                   value={form.phone}
                   onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
-                  placeholder="2557XXXXXXXX"
+                  placeholder={t("dashboard.clients.form.phonePlaceholder")}
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="client-address">Address</Label>
+              <Label htmlFor="client-address">{t("dashboard.common.address")}</Label>
               <Input
                 id="client-address"
                 value={form.address}
                 onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
-                placeholder="Client address"
+                placeholder={t("dashboard.clients.form.addressPlaceholder")}
               />
             </div>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={isMutating}>
-              Cancel
+              {t("dashboard.common.cancel")}
             </Button>
             <Button onClick={handleSubmit} disabled={!form.name.trim()} isLoading={isMutating}>
-              {editingClient ? "Save" : "Add Client"}
+              {editingClient ? t("dashboard.common.save") : t("dashboard.common.addClient")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -427,10 +434,11 @@ const ClientsPage = () => {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Delete Client</DialogTitle>
+            <DialogTitle>{t("dashboard.clients.delete.title")}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete{" "}
-              <span className="font-medium">{deletingClient?.name}</span>? This cannot be undone.
+              {t("dashboard.clients.delete.confirmPrefix")}{" "}
+              <span className="font-medium">{deletingClient?.name}</span>
+              {t("dashboard.clients.delete.confirmSuffix")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -439,10 +447,10 @@ const ClientsPage = () => {
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteClient.isPending}
             >
-              Cancel
+              {t("dashboard.common.cancel")}
             </Button>
             <Button variant="destructive" onClick={handleDelete} isLoading={deleteClient.isPending}>
-              Delete
+              {t("dashboard.common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

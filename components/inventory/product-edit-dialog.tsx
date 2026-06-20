@@ -6,6 +6,7 @@ import {
   type Product,
   type ProductItemType,
 } from "@/hooks/use-products";
+import { useTranslation } from "@/hooks/use-translation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -85,6 +86,7 @@ export const ProductEditDialog = ({
   onSuccess,
   businessName,
 }: ProductEditDialogProps) => {
+  const { t } = useTranslation();
   const updateProduct = useUpdateProduct();
   const [form, setForm] = useState<FormState>(() => productToFormState(product));
 
@@ -144,12 +146,12 @@ export const ProductEditDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-xl">
         <DialogHeader className="shrink-0">
-          <DialogTitle>Edit Product</DialogTitle>
+          <DialogTitle>{t("dashboard.common.editProduct")}</DialogTitle>
           <DialogDescription className="flex flex-col gap-2">
-            Update the item. Changes won&apos;t affect existing invoices.
+            {t("dashboard.common.editProductDialogDescription")}
             {businessName ? (
               <span className="flex items-center gap-2">
-                Business:{" "}
+                {t("dashboard.common.businessLabel")}{" "}
                 <Badge variant="secondary" className="font-normal">
                   {businessName}
                 </Badge>
@@ -160,7 +162,7 @@ export const ProductEditDialog = ({
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-2 pr-1">
           <div className="space-y-2">
-            <Label>Item Type *</Label>
+            <Label>{t("dashboard.common.itemType")}</Label>
             <Select
               value={form.item_type}
               onValueChange={(value) =>
@@ -168,36 +170,36 @@ export const ProductEditDialog = ({
               }
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select type" />
+                <SelectValue placeholder={t("dashboard.common.selectType")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="product">Product</SelectItem>
-                <SelectItem value="service">Service</SelectItem>
+                <SelectItem value="product">{t("dashboard.common.product")}</SelectItem>
+                <SelectItem value="service">{t("dashboard.common.service")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="product-name">Name *</Label>
+            <Label htmlFor="product-name">{t("dashboard.common.name")} *</Label>
             <Input
               id="product-name"
               value={form.name}
               onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-              placeholder="e.g. Web Development, Consulting Hour"
+              placeholder={t("dashboard.inventory.productEdit.namePlaceholder")}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="product-desc">Description</Label>
+            <Label htmlFor="product-desc">{t("dashboard.common.description")}</Label>
             <Textarea
               id="product-desc"
               value={form.description}
               onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-              placeholder="Optional description"
+              placeholder={t("dashboard.inventory.productEdit.descriptionPlaceholder")}
               rows={2}
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="product-base-price">Base Price *</Label>
+              <Label htmlFor="product-base-price">{t("dashboard.common.basePrice")} *</Label>
               <Input
                 id="product-base-price"
                 inputMode="decimal"
@@ -209,7 +211,7 @@ export const ProductEditDialog = ({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="product-selling-price">Selling Price *</Label>
+              <Label htmlFor="product-selling-price">{t("dashboard.common.sellingPrice")} *</Label>
               <Input
                 id="product-selling-price"
                 inputMode="decimal"
@@ -223,28 +225,28 @@ export const ProductEditDialog = ({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="product-unit">Unit</Label>
+              <Label htmlFor="product-unit">{t("dashboard.common.unit")}</Label>
               <Input
                 id="product-unit"
                 value={form.unit}
                 onChange={(e) => setForm((prev) => ({ ...prev, unit: e.target.value }))}
-                placeholder="e.g. kg, piece, item, etc."
+                placeholder={t("dashboard.inventory.productEdit.unitPlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="product-sku">SKU</Label>
+              <Label htmlFor="product-sku">{t("dashboard.common.sku")}</Label>
               <Input
                 id="product-sku"
                 value={form.sku}
                 onChange={(e) => setForm((prev) => ({ ...prev, sku: e.target.value }))}
-                placeholder="Optional"
+                placeholder={t("dashboard.inventory.productEdit.skuPlaceholder")}
               />
             </div>
           </div>
           {form.item_type === "product" && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="product-stock">Current Stock</Label>
+                <Label htmlFor="product-stock">{t("dashboard.common.currentStock")}</Label>
                 <Input
                   id="product-stock"
                   inputMode="decimal"
@@ -260,7 +262,7 @@ export const ProductEditDialog = ({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="product-low-stock">Low Stock Alert</Label>
+                <Label htmlFor="product-low-stock">{t("dashboard.common.lowStockAlert")}</Label>
                 <Input
                   id="product-low-stock"
                   inputMode="decimal"
@@ -271,21 +273,19 @@ export const ProductEditDialog = ({
                       low_stock_threshold: e.target.value.replace(/[^\d.]/g, ""),
                     }))
                   }
-                  placeholder="Optional"
+                  placeholder={t("dashboard.inventory.productEdit.skuPlaceholder")}
                 />
               </div>
             </div>
           )}
           {sellingBelowBase ? (
-            <p className="text-destructive text-sm">
-              Selling price must be equal to or above the base price.
-            </p>
+            <p className="text-destructive text-sm">{t("dashboard.common.sellingBelowBaseError")}</p>
           ) : null}
         </div>
 
         <DialogFooter className="shrink-0 border-t pt-4">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={updateProduct.isPending}>
-            Cancel
+            {t("dashboard.common.cancel")}
           </Button>
           <Button
             onClick={handleSubmit}
@@ -297,7 +297,7 @@ export const ProductEditDialog = ({
             }
             isLoading={updateProduct.isPending}
           >
-            Save
+            {t("dashboard.common.save")}
           </Button>
         </DialogFooter>
       </DialogContent>

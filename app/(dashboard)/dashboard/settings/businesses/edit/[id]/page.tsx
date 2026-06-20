@@ -36,6 +36,7 @@ import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, ImageIcon, Type, Upload, X } from "lucide-react";
+import { useTranslation } from "@/hooks/use-translation";
 import Image from "next/image";
 
 type LogoMode = "image" | "text";
@@ -81,21 +82,25 @@ const toStored255Digits = (raw: string): string | null => {
 const normalizePhonesForSave = (
   phoneTrim: string,
   secondTrim: string,
-): { phone: string | null; second_phone: string | null; error?: string } => {
+): {
+  phone: string | null;
+  second_phone: string | null;
+  errorKey?: "phoneInvalid" | "secondPhoneInvalid";
+} => {
   const phoneStored = phoneTrim ? toStored255Digits(phoneTrim) : null;
   const secondStored = secondTrim ? toStored255Digits(secondTrim) : null;
   if (phoneTrim && !phoneStored) {
     return {
       phone: null,
       second_phone: null,
-      error: "Business phone looks invalid. Enter a Tanzanian mobile (e.g. 0767 123 456).",
+      errorKey: "phoneInvalid",
     };
   }
   if (secondTrim && !secondStored) {
     return {
       phone: null,
       second_phone: null,
-      error: "Second phone looks invalid. Enter a Tanzanian mobile (e.g. 0767 123 456).",
+      errorKey: "secondPhoneInvalid",
     };
   }
   let secondOut = secondStored;
@@ -106,6 +111,7 @@ const normalizePhonesForSave = (
 };
 
 const EditBusinessPage = () => {
+  const { t } = useTranslation();
   const router = useRouter();
   const id = useRouteUuidParam("id");
 
@@ -161,9 +167,9 @@ const EditBusinessPage = () => {
       setForm((p) => ({ ...p, logo_url: url }));
       await updateBusiness.mutateAsync({ id: business.id, logo_url: url });
       refetch();
-      ToastAlert.success("Logo uploaded");
+      ToastAlert.success(t("dashboard.toast.logoUploaded"));
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Upload failed";
+      const message = err instanceof Error ? err.message : t("dashboard.toast.logoUploadFailed");
       setLogoError(message);
       ToastAlert.error(message);
     } finally {
@@ -182,9 +188,9 @@ const EditBusinessPage = () => {
         logo_url: null,
       });
       refetch();
-      ToastAlert.success("Logo removed");
+      ToastAlert.success(t("dashboard.toast.logoRemoved"));
     } catch (err) {
-      ToastAlert.error(err instanceof Error ? err.message : "Could not remove logo");
+      ToastAlert.error(err instanceof Error ? err.message : t("dashboard.toast.logoRemoveFailed"));
     }
   };
 
@@ -194,13 +200,13 @@ const EditBusinessPage = () => {
     const phoneTrim = form.phone.trim();
     const secondTrim = form.second_phone.trim();
     if (form.send_sale_alert && !phoneTrim && !secondTrim) {
-      ToastAlert.error("Add at least one phone number to receive sale SMS alerts.");
+      ToastAlert.error(t("dashboard.settings.businesses.validation.phoneRequiredForAlerts"));
       return;
     }
 
     const normalized = normalizePhonesForSave(phoneTrim, secondTrim);
-    if (normalized.error) {
-      ToastAlert.error(normalized.error);
+    if (normalized.errorKey) {
+      ToastAlert.error(t(`dashboard.settings.businesses.validation.${normalized.errorKey}`));
       return;
     }
 
@@ -239,12 +245,12 @@ const EditBusinessPage = () => {
     const phoneTrim = form.phone.trim();
     const secondTrim = form.second_phone.trim();
     if (!phoneTrim && !secondTrim) {
-      ToastAlert.error("Add at least one phone number first.");
+      ToastAlert.error(t("dashboard.settings.businesses.validation.phoneRequiredFirst"));
       return;
     }
     const normalized = normalizePhonesForSave(phoneTrim, secondTrim);
-    if (normalized.error) {
-      ToastAlert.error(normalized.error);
+    if (normalized.errorKey) {
+      ToastAlert.error(t(`dashboard.settings.businesses.validation.${normalized.errorKey}`));
       return;
     }
     const { phone: phoneStored, second_phone: secondPhoneOut } = normalized;
@@ -296,12 +302,14 @@ const EditBusinessPage = () => {
         <Button variant="ghost" size="sm" asChild>
           <Link href="/dashboard/settings/businesses">
             <ArrowLeft className="mr-1 size-4" />
-            Back to Businesses
+            {t("dashboard.common.backToBusinesses")}
           </Link>
         </Button>
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">Business not found.</p>
+            <p className="text-muted-foreground">
+              {t("dashboard.settings.businesses.edit.notFound")}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -322,19 +330,17 @@ const EditBusinessPage = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Edit Business</CardTitle>
-          <CardDescription>
-            Update your business details. Changes apply to invoices and branding.
-          </CardDescription>
+          <CardTitle>{t("dashboard.settings.businesses.edit.title")}</CardTitle>
+          <CardDescription>{t("dashboard.settings.businesses.edit.description")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="biz-name">Business Name *</Label>
+            <Label htmlFor="biz-name">{t("dashboard.common.name")} *</Label>
             <Input
               id="biz-name"
               value={form.name}
               onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-              placeholder="My Business"
+              placeholder={t("dashboard.settings.businesses.form.namePlaceholder")}
             />
           </div>
           <div className="space-y-2">
@@ -356,22 +362,24 @@ const EditBusinessPage = () => {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="biz-address">Address</Label>
+            <Label htmlFor="biz-address">{t("dashboard.common.address")}</Label>
             <Input
               id="biz-address"
               value={form.address}
               onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
-              placeholder="Business address"
+              placeholder={t("dashboard.settings.businesses.form.addressPlaceholder")}
             />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="biz-tax">Tax Number</Label>
+              <Label htmlFor="biz-tax">
+                {t("dashboard.settings.businesses.details.fieldTaxNumber")}
+              </Label>
               <Input
                 id="biz-tax"
                 value={form.tax_number}
                 onChange={(e) => setForm((p) => ({ ...p, tax_number: e.target.value }))}
-                placeholder="TIN / VAT"
+                placeholder={t("dashboard.settings.businesses.form.taxNumberPlaceholder")}
               />
             </div>
             <div className="space-y-2">
@@ -380,7 +388,7 @@ const EditBusinessPage = () => {
                 id="biz-capacity"
                 value={form.capacity}
                 onChange={(e) => setForm((p) => ({ ...p, capacity: e.target.value }))}
-                placeholder="e.g. 1-10 employees"
+                placeholder={t("dashboard.settings.businesses.form.capacityPlaceholder")}
               />
             </div>
           </div>
@@ -389,21 +397,26 @@ const EditBusinessPage = () => {
 
           <div className="space-y-4">
             <div>
-              <h3 className="text-sm font-medium">SMS notifications</h3>
+              <h3 className="text-sm font-medium">
+                {t("dashboard.settings.businesses.sms.sectionTitle")}
+              </h3>
               <p className="text-muted-foreground text-xs">
-                Enter your business phone numbers. We will use these to send SMS notifications.
+                Enter your business phone numbers. We will use these to send{" "}
+                {t("dashboard.settings.businesses.sms.sectionTitle")}.
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="biz-phone">Business phone</Label>
+                <Label htmlFor="biz-phone">
+                  {t("dashboard.settings.businesses.sms.phoneLabel")}
+                </Label>
                 <Input
                   id="biz-phone"
                   value={form.phone}
                   onChange={(e) =>
                     setForm((p) => ({ ...p, phone: clampPhoneDigitInput(e.target.value) }))
                   }
-                  placeholder="0767 XXX XXX"
+                  placeholder={t("dashboard.settings.businesses.sms.phonePlaceholder")}
                   type="tel"
                   inputMode="numeric"
                   maxLength={10}
@@ -411,14 +424,16 @@ const EditBusinessPage = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="biz-second-phone">Second phone (optional)</Label>
+                <Label htmlFor="biz-second-phone">
+                  {t("dashboard.settings.businesses.sms.secondPhoneLabel")}
+                </Label>
                 <Input
                   id="biz-second-phone"
                   value={form.second_phone}
                   onChange={(e) =>
                     setForm((p) => ({ ...p, second_phone: clampPhoneDigitInput(e.target.value) }))
                   }
-                  placeholder="0767 XXX XXX"
+                  placeholder={t("dashboard.settings.businesses.sms.phonePlaceholder")}
                   type="tel"
                   inputMode="numeric"
                   maxLength={10}
@@ -429,7 +444,7 @@ const EditBusinessPage = () => {
             <div className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-1">
                 <Label htmlFor="biz-sale-sms" className="text-sm font-medium">
-                  Sale SMS alerts
+                  {t("dashboard.settings.businesses.sms.saleAlertsLabel")}
                 </Label>
                 <p className="text-muted-foreground text-xs">
                   Turning alerts on or off saves immediately. Add at least one phone before you can
@@ -442,7 +457,7 @@ const EditBusinessPage = () => {
                 disabled={saleSmsSwitchDisabled || isMutating}
                 title={
                   saleSmsSwitchDisabled && !form.send_sale_alert
-                    ? "Add a business phone number to enable sale SMS alerts"
+                    ? t("dashboard.settings.businesses.sms.enableTooltip")
                     : undefined
                 }
                 onCheckedChange={(checked) => {
@@ -461,7 +476,7 @@ const EditBusinessPage = () => {
             {(form.logo_url || form.logo_text) && (
               <div className="space-y-2">
                 <p className="text-muted-foreground text-xs font-medium uppercase">
-                  Preview (as on invoices)
+                  {t("dashboard.settings.businesses.form.logoPreviewOnInvoices")}
                 </p>
 
                 <div className="flex items-center gap-2">
@@ -516,7 +531,7 @@ const EditBusinessPage = () => {
                 <Input
                   value={form.logo_text}
                   onChange={(e) => setForm((p) => ({ ...p, logo_text: e.target.value }))}
-                  placeholder="e.g. Acme Corp"
+                  placeholder={t("dashboard.settings.businesses.form.logoTextPlaceholder")}
                 />
                 {form.logo_text && (
                   <div className="bg-muted/30 rounded-md border px-4 py-3">
@@ -535,7 +550,7 @@ const EditBusinessPage = () => {
                   disabled={logoUploading || !business}
                 />
                 <p className="text-muted-foreground text-xs">
-                  JPEG, PNG, WebP or GIF. Max 1MB. Uploaded to your secure storage.
+                  {t("dashboard.settings.businesses.form.logoUploadHint")}
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
                   <Button
@@ -548,12 +563,12 @@ const EditBusinessPage = () => {
                     {logoUploading ? (
                       <>
                         <Spinner className="mr-1.5 size-3.5" />
-                        Uploading…
+                        {t("dashboard.settings.businesses.form.uploading")}
                       </>
                     ) : (
                       <>
                         <Upload className="mr-1.5 size-3.5" />
-                        Choose image
+                        {t("dashboard.settings.businesses.form.chooseImage")}
                       </>
                     )}
                   </Button>
@@ -567,7 +582,7 @@ const EditBusinessPage = () => {
                       className="text-muted-foreground"
                     >
                       <X className="mr-1.5 size-3.5" />
-                      Remove logo
+                      {t("dashboard.settings.businesses.form.removeLogo")}
                     </Button>
                   )}
                 </div>
@@ -577,7 +592,7 @@ const EditBusinessPage = () => {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={form.logo_url}
-                      alt="Logo preview"
+                      alt={t("dashboard.settings.businesses.form.logoPreviewAlt")}
                       className="h-10 w-auto max-w-[200px] object-contain"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = "none";
@@ -589,9 +604,9 @@ const EditBusinessPage = () => {
             )}
           </div>
 
-          {/* Brand Color */}
+          {/* {t("dashboard.common.accentColor")} */}
           <div className="space-y-2">
-            <Label htmlFor="biz-brand-color">Brand Color</Label>
+            <Label htmlFor="biz-brand-color">{t("dashboard.common.accentColor")}</Label>
             <div className="flex items-center gap-3">
               <input
                 type="color"
@@ -608,16 +623,16 @@ const EditBusinessPage = () => {
               />
             </div>
             <p className="text-muted-foreground text-xs">
-              Used as the accent color on Bold Brand template invoices
+              {t("dashboard.settings.businesses.form.brandColorHint")}
             </p>
           </div>
 
           <div className="flex gap-2 pt-2">
             <Button variant="outline" asChild disabled={isMutating}>
-              <Link href="/dashboard/settings/businesses">Cancel</Link>
+              <Link href="/dashboard/settings/businesses">{t("dashboard.common.cancel")}</Link>
             </Button>
             <Button onClick={handleSubmit} disabled={!form.name.trim()} isLoading={isMutating}>
-              Save Changes
+              {t("dashboard.common.saveChanges")}
             </Button>
           </div>
         </CardContent>
@@ -631,7 +646,9 @@ const EditBusinessPage = () => {
           {saleSmsDialog === "enable" && (
             <>
               <DialogHeader>
-                <DialogTitle>Enable sale SMS alerts?</DialogTitle>
+                <DialogTitle>
+                  {t("dashboard.settings.businesses.sms.enableDialogTitle")}
+                </DialogTitle>
                 <DialogDescription>
                   You are opting in to SMS when a sale is recorded for this business. This saves
                   now. Messages use the phone numbers entered above (valid Tanzanian mobiles).
@@ -651,7 +668,7 @@ const EditBusinessPage = () => {
                   onClick={() => void persistSaleSmsEnable()}
                   isLoading={isMutating}
                 >
-                  Enable alerts
+                  {t("dashboard.settings.businesses.sms.enableConfirm")}
                 </Button>
               </DialogFooter>
             </>
@@ -659,10 +676,12 @@ const EditBusinessPage = () => {
           {saleSmsDialog === "disable" && (
             <>
               <DialogHeader>
-                <DialogTitle>Turn off sale SMS alerts?</DialogTitle>
+                <DialogTitle>
+                  {t("dashboard.settings.businesses.sms.disableDialogTitle")}
+                </DialogTitle>
                 <DialogDescription>
-                  You will no longer receive SMS notifications when sales are recorded for this
-                  business. This saves now.
+                  You will no longer receive {t("dashboard.settings.businesses.sms.sectionTitle")}{" "}
+                  when sales are recorded for this business. This saves now.
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
@@ -679,7 +698,7 @@ const EditBusinessPage = () => {
                   onClick={() => void persistSaleSmsDisable()}
                   isLoading={isMutating}
                 >
-                  Turn off
+                  {t("dashboard.settings.businesses.sms.disableConfirm")}
                 </Button>
               </DialogFooter>
             </>

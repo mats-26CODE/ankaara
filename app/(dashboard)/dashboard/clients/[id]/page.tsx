@@ -4,6 +4,7 @@ import Link from "next/link";
 import dayjs from "dayjs";
 import { useRouteUuidParam } from "@/hooks/use-route-uuid-param";
 import { useFormatAmount } from "@/hooks/use-format-amount";
+import { useTranslation } from "@/hooks/use-translation";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -33,6 +34,7 @@ type ClientLoanRow = {
 };
 
 const ClientDetailPage = () => {
+  const { t } = useTranslation();
   const router = useRouter();
   const { format: formatAmount } = useFormatAmount();
   const id = useRouteUuidParam("id");
@@ -69,6 +71,12 @@ const ClientDetailPage = () => {
     fetchData();
   }, [id, loanPage]);
 
+  const loanStatusLabel = (status: string) => {
+    const key = `dashboard.status.${status}`;
+    const translated = t(key);
+    return translated === key ? status.replace(/_/g, " ") : translated;
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-10">
@@ -80,9 +88,9 @@ const ClientDetailPage = () => {
   if (!client) {
     return (
       <div className="space-y-3 py-8 text-center">
-        <p className="text-muted-foreground">Client not found.</p>
+        <p className="text-muted-foreground">{t("dashboard.clients.detail.notFound")}</p>
         <Button asChild variant="outline">
-          <Link href="/dashboard/clients">Back to clients</Link>
+          <Link href="/dashboard/clients">{t("dashboard.common.backToClients")}</Link>
         </Button>
       </div>
     );
@@ -117,12 +125,17 @@ const ClientDetailPage = () => {
                   {client.email && (client.phone || client.created_at) ? <span>•</span> : null}
                   {client.phone ? <span>{client.phone}</span> : null}
                   {client.phone ? <span>•</span> : null}
-                  <span>Joined {dayjs(client.created_at).format("MMM D, YYYY")}</span>
+                  <span>
+                    {t("dashboard.common.joined")}{" "}
+                    {dayjs(client.created_at).format("MMM D, YYYY")}
+                  </span>
                 </div>
               </div>
             </div>
             <div className="px-4 py-2 lg:text-right">
-              <p className="text-muted-foreground text-sm">Outstanding loans</p>
+              <p className="text-muted-foreground text-sm">
+                {t("dashboard.clients.detail.outstandingLoans")}
+              </p>
               <p className="text-xl font-bold tabular-nums">
                 {formatAmount(totalOutstanding, { decimalDigits: 0 })}
               </p>
@@ -133,20 +146,20 @@ const ClientDetailPage = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Loans</CardTitle>
+          <CardTitle>{t("dashboard.clients.detail.loansTitle")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {loans.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No loans for this client.</p>
+            <p className="text-muted-foreground text-sm">{t("dashboard.clients.detail.loansEmpty")}</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Loan</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead className="text-right">Outstanding</TableHead>
+                  <TableHead>{t("dashboard.clients.detail.loansTable.loan")}</TableHead>
+                  <TableHead>{t("dashboard.common.date")}</TableHead>
+                  <TableHead>{t("dashboard.common.status")}</TableHead>
+                  <TableHead className="text-right">{t("dashboard.common.total")}</TableHead>
+                  <TableHead className="text-right">{t("dashboard.common.outstanding")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -162,7 +175,7 @@ const ClientDetailPage = () => {
                     <TableCell>{dayjs(loan.loan_date).format("MMM D, YYYY")}</TableCell>
                     <TableCell>
                       <Badge variant={loan.status === "paid" ? "default" : "secondary"}>
-                        {loan.status.replace("_", " ")}
+                        {loanStatusLabel(loan.status)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -179,7 +192,7 @@ const ClientDetailPage = () => {
           {totalLoans > 0 && (
             <div className="mt-4 flex flex-col gap-2 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-muted-foreground text-sm">
-                Showing {loanFrom}-{loanTo} of {totalLoans}
+                {t("dashboard.common.showingRange", { from: loanFrom, to: loanTo, total: totalLoans })}
               </p>
               <div className="flex items-center gap-2">
                 <Button
@@ -189,7 +202,7 @@ const ClientDetailPage = () => {
                   disabled={loanPage <= 1}
                 >
                   <ChevronLeft className="mr-1 size-4" />
-                  Previous
+                  {t("dashboard.common.previous")}
                 </Button>
                 <Button
                   variant="outline"
@@ -197,7 +210,7 @@ const ClientDetailPage = () => {
                   onClick={() => setLoanPage((prev) => Math.min(prev + 1, loanLastPage))}
                   disabled={loanPage >= loanLastPage}
                 >
-                  Next
+                  {t("dashboard.common.next")}
                   <ChevronRight className="ml-1 size-4" />
                 </Button>
               </div>
