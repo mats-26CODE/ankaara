@@ -25,6 +25,7 @@ import {
   isPlanDowngrade,
 } from "@/lib/subscription-limits";
 import { getBillingIntervalChangeNote, SUBSCRIBE_SCREEN } from "@/constants/subscribe";
+import { ContactUsToUpgradeDialog } from "@/components/shared/contact-us-to-upgrade-dialog";
 import { PlanFeaturesList } from "@/components/shared/plan-features-list";
 import { formatPlanCurrency } from "@/lib/format-plan-currency";
 import { useTranslation } from "@/hooks/use-translation";
@@ -72,6 +73,7 @@ const SubscribeContent = () => {
   const setSubscription = useSetSubscription();
 
   const [selectedSlug, setSelectedSlug] = useState<SubscriptionPlanSlug | null>(null);
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
 
   useEffect(() => {
     if (planParam) {
@@ -155,12 +157,7 @@ const SubscribeContent = () => {
   };
 
   const handleContinueToPayment = () => {
-    // TODO: Integrate Snippe Payment API
-    // 1. Create payment: POST https://api.snippe.sh/v1/payments (Authorization: Bearer API_KEY, Idempotency-Key)
-    // 2. Redirect customer: card → payment_url; mobile → USSD; dynamic-qr → payment_qr_code
-    // 3. Handle webhook to confirm payment, then create subscription_payments + set subscription
-    // Docs: https://docs.snippe.sh/docs/2026-01-25
-    ToastAlert.error("Payment integration coming soon. You'll be redirected to complete payment.");
+    setContactDialogOpen(true);
   };
 
   if (authLoading || !user) {
@@ -447,6 +444,13 @@ const SubscribeContent = () => {
           )}
         </div>
       </div>
+
+      <ContactUsToUpgradeDialog
+        open={contactDialogOpen}
+        onOpenChange={setContactDialogOpen}
+        planName={selectedPlan?.name}
+        intervalLabel={getIntervalLabel(selectedPlan?.billing_interval ?? null)}
+      />
     </div>
   );
 };

@@ -13,16 +13,18 @@ import { cn } from "@/lib/utils";
 
 type SocialConnectButtonsProps = {
   className?: string;
+  /** Override WhatsApp link (e.g. pre-filled upgrade message). */
+  whatsappUrl?: string;
 };
 
-const SocialConnectButtons = ({ className }: SocialConnectButtonsProps) => {
+const SocialConnectButtons = ({ className, whatsappUrl }: SocialConnectButtonsProps) => {
   const { t } = useTranslation();
 
   return (
     <div className={cn("flex gap-2", className)}>
       <Button size="icon" variant="outline" className="rounded-full" asChild>
         <a
-          href={CONTACT_US_WHATSAPP_URL}
+          href={whatsappUrl ?? CONTACT_US_WHATSAPP_URL}
           target="_blank"
           rel="noopener noreferrer"
           aria-label={t("footer.socialWhatsApp")}
