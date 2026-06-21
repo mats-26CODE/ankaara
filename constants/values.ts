@@ -1,7 +1,7 @@
 export const API_TIMEOUT = 10000; // 10 seconds
 export const SUPPORT_EMAIL = "support@ankaara.app";
 export const CAREERS_EMAIL = "careers@ankaara.app";
-export const CONTACT_US_PHONE = "+255 767 645 559";
+export const CONTACT_US_PHONE = "+255 676 805 186";
 /** `tel:` link for {@link CONTACT_US_PHONE}. */
 export const CONTACT_US_PHONE_TEL_HREF = `tel:${CONTACT_US_PHONE.replace(/\s/g, "")}`;
 /** Digits-only for `https://wa.me/...` (must match {@link CONTACT_US_PHONE}). */
