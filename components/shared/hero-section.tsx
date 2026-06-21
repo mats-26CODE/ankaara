@@ -12,7 +12,6 @@ import {
   landingFadeUp,
   landingFadeUpTight,
   landingStaggerParent,
-  landingViewport,
 } from "@/components/shared/scroll-reveal";
 import { useLandingMotion } from "@/hooks/use-landing-motion";
 import { HeroFloatingEmojis } from "@/components/shared/hero-floating-emojis";
@@ -46,7 +45,7 @@ const HeroSection = () => {
         className="from-primary/15 via-primary/5 to-accent/10 absolute inset-0 -z-10 bg-linear-to-br"
         aria-hidden
       />
-      <div className="container relative z-10 mx-auto w-full px-4 pt-14 pb-14 md:max-w-5xl md:pt-16 md:pb-14">
+      <div className="relative z-10 container mx-auto w-full px-4 pt-14 pb-14 md:max-w-5xl md:pt-16 md:pb-14">
         <motion.div
           className="flex flex-col items-center space-y-4 text-center md:space-y-6"
           variants={landingStaggerParent}
