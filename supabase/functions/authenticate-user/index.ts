@@ -25,7 +25,11 @@ type AuthFunctionPayload = PhonePayload | SendOtpCodesPayload;
 const ERROR_CODES = {
   ACCOUNT_NOT_FOUND: "ACCOUNT_NOT_FOUND",
   ACCOUNT_EXISTS: "ACCOUNT_EXISTS",
+  STAFF_SUSPENDED: "STAFF_SUSPENDED",
 } as const;
+
+const STAFF_SUSPENDED_MESSAGE =
+  "Your staff account has been suspended or removed. Please contact your business administrator.";
 
 const serviceClient = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -79,6 +83,18 @@ const sendCodeSms = async (phone_number: string, code: string, _userId: string) 
   }
 
   return responseData;
+};
+
+const assertStaffCanAuthenticate = async (userId: string): Promise<void> => {
+  const { data: canAuthenticate, error } = await serviceClient.rpc("staff_user_can_authenticate", {
+    p_user_id: userId,
+  });
+  if (error) throw error;
+  if (canAuthenticate !== true) {
+    const err = new Error(STAFF_SUSPENDED_MESSAGE);
+    (err as Error & { code: string }).code = ERROR_CODES.STAFF_SUSPENDED;
+    throw err;
+  }
 };
 
 const getUserIdByPhone = async (phone_number: string): Promise<string | null> => {
@@ -166,6 +182,7 @@ const login = async ({ phone_number }: PhonePayload) => {
     throw err;
   }
 
+  await assertStaffCanAuthenticate(userId);
   await ensureAuthMetadataMatchesStaff(userId);
   await sendOtpForUser(phone_number, userId);
 };
@@ -209,6 +226,7 @@ const resend = async ({ phone_number }: PhonePayload) => {
   }
   userId = existingUser[0].id;
 
+  await assertStaffCanAuthenticate(userId);
   await ensureAuthMetadataMatchesStaff(userId);
   await sendOtpForUser(phone_number, userId);
 };
@@ -303,7 +321,9 @@ Deno.serve(async (req) => {
         ? 404
         : code === ERROR_CODES.ACCOUNT_EXISTS
           ? 409
-          : 500;
+          : code === ERROR_CODES.STAFF_SUSPENDED
+            ? 403
+            : 500;
     return new Response(
       JSON.stringify({
         error: true,

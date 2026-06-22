@@ -7,6 +7,7 @@ import { Footer } from "@/components/shared/footer";
 import { DashboardSidebar } from "@/components/shared/dashboard-sidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useUser } from "@/hooks/use-user";
+import { useStaffSessionGuard } from "@/hooks/use-staff-session-guard";
 import { useProfile, isProfileComplete, isStaffAccount } from "@/hooks/use-profile";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import { Spinner } from "@/components/ui/spinner";
@@ -14,6 +15,7 @@ import { Spinner } from "@/components/ui/spinner";
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { user, loading: userLoading } = useUser();
+  useStaffSessionGuard();
   const { profile, loading: profileLoading } = useProfile();
 
   const onboardingSkipped = useOnboardingStore((s) => s.skipped);

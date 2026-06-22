@@ -1748,6 +1748,11 @@ export type Database = {
     Functions: {
       accessible_business_ids: { Args: never; Returns: string[] }
       activate_pending_staff_membership: { Args: never; Returns: undefined }
+      staff_user_can_authenticate: { Args: { p_user_id: string }; Returns: boolean }
+      update_business_staff_status: {
+        Args: { p_business_id: string; p_staff_id: string; p_status: string }
+        Returns: Database["public"]["Tables"]["business_staff"]["Row"]
+      }
       accept_quotation: { Args: { p_quotation_id: string }; Returns: boolean }
       adjust_product_stock: {
         Args: {

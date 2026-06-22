@@ -294,19 +294,32 @@ export const useUpdateBusinessStaff = () => {
   return useMutation({
     mutationFn: async ({ id, business_id, ...fields }: UpdateBusinessStaffPayload) => {
       const supabase = createClient();
+
+      if (fields.status !== undefined) {
+        const { data, error } = await supabase.rpc("update_business_staff_status", {
+          p_staff_id: id,
+          p_business_id: business_id,
+          p_status: fields.status,
+        });
+        if (error) throw error;
+        if (!data) throw new Error("Staff member not found");
+        return business_id;
+      }
+
       const updateFields: Partial<BusinessStaff> = {};
       if (fields.staff_category_id !== undefined) {
         updateFields.staff_category_id = fields.staff_category_id;
       }
-      if (fields.status !== undefined) {
-        updateFields.status = fields.status;
-        if (fields.status === "removed") {
-          updateFields.removed_at = new Date().toISOString();
-        }
-      }
 
-      const { error } = await supabase.from("business_staff").update(updateFields).eq("id", id);
+      const { data, error } = await supabase
+        .from("business_staff")
+        .update(updateFields)
+        .eq("id", id)
+        .eq("business_id", business_id)
+        .select("id")
+        .maybeSingle();
       if (error) throw error;
+      if (!data) throw new Error("Staff member not found");
       return business_id;
     },
     onSuccess: (businessId, _variables, _onMutateResult, context) => {

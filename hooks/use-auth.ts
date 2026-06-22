@@ -11,10 +11,15 @@ import {
 } from "@supabase/supabase-js";
 import { addCountryCode } from "@/helpers/helpers";
 import { activatePendingStaffMembership } from "@/hooks/use-staff";
+import {
+  enforceStaffSessionAllowed,
+  StaffAccessDeniedError,
+} from "@/lib/staff-auth-session";
 
 export const AUTH_PHONE_ERROR_CODES = {
   ACCOUNT_NOT_FOUND: "ACCOUNT_NOT_FOUND",
   ACCOUNT_EXISTS: "ACCOUNT_EXISTS",
+  STAFF_SUSPENDED: "STAFF_SUSPENDED",
 } as const;
 
 export type AuthPhoneErrorCode =
@@ -129,6 +134,14 @@ export const useVerifyOtp = (options?: { redirect?: string }) => {
       if (error) throw error;
 
       if (data.user && data.session) {
+        try {
+          await enforceStaffSessionAllowed(supabase, data.user.id);
+        } catch (err) {
+          if (err instanceof StaffAccessDeniedError) {
+            throw new AuthPhoneError(err.message, err.code);
+          }
+          throw err;
+        }
         await activatePendingStaffMembership();
       }
 
