@@ -380,6 +380,11 @@ Deno.serve(async (req) => {
       if (insertError) throw insertError;
     }
 
+    const { error: repairError } = await serviceClient.rpc("repair_staff_account", {
+      p_user_id: staffUserId,
+    });
+    if (repairError) throw repairError;
+
     const businessName = business.name?.trim() || "your business";
     const inviterName = resolveDisplayName(inviterProfile);
     await sendInviteNotificationSms(phone_number, businessName, inviterName);

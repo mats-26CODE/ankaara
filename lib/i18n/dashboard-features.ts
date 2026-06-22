@@ -560,6 +560,10 @@ const featuresSw = {
     suspendDescription:
       'Hii itamzuia "{name}" kufikia biashara hii na itamkatisha kipindi cha kuingia. Unaweza kuamsha tena baadaye.',
     suspendConfirm: "Simamisha",
+    reactivateTitle: "Amsha mfanyakazi tena?",
+    reactivateDescription:
+      'Hii itarejesha ufikiaji wa "{name}" kwa biashara hii.',
+    reactivateConfirm: "Amsha tena",
   },
   expenses: {
     title: "Matumizi",
@@ -1223,6 +1227,10 @@ const featuresEn = {
     suspendDescription:
       'This will block "{name}" from accessing this business and sign them out. You can reactivate them later.',
     suspendConfirm: "Suspend",
+    reactivateTitle: "Reactivate staff member?",
+    reactivateDescription:
+      'This will restore "{name}"\'s access to this business.',
+    reactivateConfirm: "Reactivate",
   },
   expenses: {
     title: "Expenses",

@@ -109,6 +109,11 @@ const getUserIdByPhone = async (phone_number: string): Promise<string | null> =>
 
 /** Keep JWT app_metadata aligned with staff profile / membership (repairs invited existing users). */
 const ensureAuthMetadataMatchesStaff = async (userId: string): Promise<void> => {
+  const { error: repairError } = await serviceClient.rpc("repair_staff_account", {
+    p_user_id: userId,
+  });
+  if (repairError) throw repairError;
+
   const { data: profile, error: profileError } = await serviceClient
     .from("profiles")
     .select("account_type")
@@ -192,6 +197,19 @@ const signup = async ({ phone_number }: PhonePayload) => {
 
   const existingUserId = await getUserIdByPhone(phone_number);
   if (existingUserId) {
+    const err = new Error(
+      "An account already exists for this phone number. Please sign in instead.",
+    );
+    (err as Error & { code: string }).code = ERROR_CODES.ACCOUNT_EXISTS;
+    throw err;
+  }
+
+  const { data: staffInviteUserId, error: staffInviteError } = await serviceClient.rpc(
+    "find_staff_user_id_by_phone",
+    { p_phone: phone_number },
+  );
+  if (staffInviteError) throw staffInviteError;
+  if (staffInviteUserId) {
     const err = new Error(
       "An account already exists for this phone number. Please sign in instead.",
     );

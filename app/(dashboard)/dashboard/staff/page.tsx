@@ -117,8 +117,10 @@ const StaffPage = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
+  const [reactivateDialogOpen, setReactivateDialogOpen] = useState(false);
   const [removingStaff, setRemovingStaff] = useState<BusinessStaffRow | null>(null);
   const [suspendingStaff, setSuspendingStaff] = useState<BusinessStaffRow | null>(null);
+  const [reactivatingStaff, setReactivatingStaff] = useState<BusinessStaffRow | null>(null);
   const [editingMember, setEditingMember] = useState<BusinessStaffRow | null>(null);
   const [form, setForm] = useState<InviteForm>(emptyInviteForm);
   const { data: staffPage, isLoading } = useBusinessStaff(
@@ -244,9 +246,22 @@ const StaffPage = () => {
     );
   };
 
-  const handleStaffAction = (member: BusinessStaffRow, status: BusinessStaffRow["status"]) => {
-    if (!currentBusinessId) return;
-    updateStaff.mutate({ id: member.id, business_id: currentBusinessId, status });
+  const handleRequestReactivateStaff = (member: BusinessStaffRow) => {
+    setReactivatingStaff(member);
+    setReactivateDialogOpen(true);
+  };
+
+  const handleConfirmReactivateStaff = () => {
+    if (!reactivatingStaff || !currentBusinessId) return;
+    updateStaff.mutate(
+      { id: reactivatingStaff.id, business_id: currentBusinessId, status: "active" },
+      {
+        onSuccess: () => {
+          setReactivateDialogOpen(false);
+          setReactivatingStaff(null);
+        },
+      },
+    );
   };
 
   const handleRequestSuspendStaff = (member: BusinessStaffRow) => {
@@ -452,7 +467,7 @@ const StaffPage = () => {
                                 </DropdownMenuItem>
                               ) : member.status === "suspended" ? (
                                 <DropdownMenuItem
-                                  onClick={() => handleStaffAction(member, "active")}
+                                  onClick={() => handleRequestReactivateStaff(member)}
                                 >
                                   <UserCheck className="mr-2 size-4" />
                                   Reactivate
@@ -767,6 +782,41 @@ const StaffPage = () => {
               isLoading={updateStaff.isPending}
             >
               {t("dashboard.common.delete")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={reactivateDialogOpen}
+        onOpenChange={(open) => {
+          setReactivateDialogOpen(open);
+          if (!open) setReactivatingStaff(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("dashboard.staff.reactivateTitle")}</DialogTitle>
+            <DialogDescription>
+              {t("dashboard.staff.reactivateDescription", {
+                name: reactivatingStaff ? getStaffDisplayName(reactivatingStaff) : "",
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setReactivateDialogOpen(false)}
+              disabled={updateStaff.isPending}
+            >
+              {t("dashboard.common.cancel")}
+            </Button>
+            <Button
+              onClick={handleConfirmReactivateStaff}
+              disabled={updateStaff.isPending}
+              isLoading={updateStaff.isPending}
+            >
+              {t("dashboard.staff.reactivateConfirm")}
             </Button>
           </DialogFooter>
         </DialogContent>
