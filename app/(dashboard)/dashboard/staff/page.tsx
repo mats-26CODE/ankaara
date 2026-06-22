@@ -37,6 +37,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -114,6 +115,10 @@ const StaffPage = () => {
   const debouncedSearch = useDebouncedValue(search);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
+  const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
+  const [removingStaff, setRemovingStaff] = useState<BusinessStaffRow | null>(null);
+  const [suspendingStaff, setSuspendingStaff] = useState<BusinessStaffRow | null>(null);
   const [editingMember, setEditingMember] = useState<BusinessStaffRow | null>(null);
   const [form, setForm] = useState<InviteForm>(emptyInviteForm);
   const { data: staffPage, isLoading } = useBusinessStaff(
@@ -242,6 +247,42 @@ const StaffPage = () => {
   const handleStaffAction = (member: BusinessStaffRow, status: BusinessStaffRow["status"]) => {
     if (!currentBusinessId) return;
     updateStaff.mutate({ id: member.id, business_id: currentBusinessId, status });
+  };
+
+  const handleRequestSuspendStaff = (member: BusinessStaffRow) => {
+    setSuspendingStaff(member);
+    setSuspendDialogOpen(true);
+  };
+
+  const handleConfirmSuspendStaff = () => {
+    if (!suspendingStaff || !currentBusinessId) return;
+    updateStaff.mutate(
+      { id: suspendingStaff.id, business_id: currentBusinessId, status: "suspended" },
+      {
+        onSuccess: () => {
+          setSuspendDialogOpen(false);
+          setSuspendingStaff(null);
+        },
+      },
+    );
+  };
+
+  const handleRequestRemoveStaff = (member: BusinessStaffRow) => {
+    setRemovingStaff(member);
+    setRemoveDialogOpen(true);
+  };
+
+  const handleConfirmRemoveStaff = () => {
+    if (!removingStaff || !currentBusinessId) return;
+    updateStaff.mutate(
+      { id: removingStaff.id, business_id: currentBusinessId, status: "removed" },
+      {
+        onSuccess: () => {
+          setRemoveDialogOpen(false);
+          setRemovingStaff(null);
+        },
+      },
+    );
   };
 
   if (businessesLoading || isPlanAccessLoading) {
@@ -404,7 +445,7 @@ const StaffPage = () => {
                               </DropdownMenuItem>
                               {member.status === "active" ? (
                                 <DropdownMenuItem
-                                  onClick={() => handleStaffAction(member, "suspended")}
+                                  onClick={() => handleRequestSuspendStaff(member)}
                                 >
                                   <UserX className="mr-2 size-4" />
                                   Suspend
@@ -418,7 +459,7 @@ const StaffPage = () => {
                                 </DropdownMenuItem>
                               ) : null}
                               <DropdownMenuItem
-                                onClick={() => handleStaffAction(member, "removed")}
+                                onClick={() => handleRequestRemoveStaff(member)}
                                 className="text-destructive focus:text-destructive"
                               >
                                 <Trash2 className="mr-2 size-4" />
@@ -654,6 +695,78 @@ const StaffPage = () => {
               isLoading={updateStaffMember.isPending}
             >
               {t("dashboard.common.saveChanges")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={suspendDialogOpen}
+        onOpenChange={(open) => {
+          setSuspendDialogOpen(open);
+          if (!open) setSuspendingStaff(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("dashboard.staff.suspendTitle")}</DialogTitle>
+            <DialogDescription>
+              {t("dashboard.staff.suspendDescription", {
+                name: suspendingStaff ? getStaffDisplayName(suspendingStaff) : "",
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setSuspendDialogOpen(false)}
+              disabled={updateStaff.isPending}
+            >
+              {t("dashboard.common.cancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmSuspendStaff}
+              disabled={updateStaff.isPending}
+              isLoading={updateStaff.isPending}
+            >
+              {t("dashboard.staff.suspendConfirm")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={removeDialogOpen}
+        onOpenChange={(open) => {
+          setRemoveDialogOpen(open);
+          if (!open) setRemovingStaff(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("dashboard.staff.removeTitle")}</DialogTitle>
+            <DialogDescription>
+              {t("dashboard.staff.removeDescription", {
+                name: removingStaff ? getStaffDisplayName(removingStaff) : "",
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setRemoveDialogOpen(false)}
+              disabled={updateStaff.isPending}
+            >
+              {t("dashboard.common.cancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmRemoveStaff}
+              disabled={updateStaff.isPending}
+              isLoading={updateStaff.isPending}
+            >
+              {t("dashboard.common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -553,6 +553,13 @@ const featuresSw = {
       title: "Boresha ili usimamie wafanyakazi",
       description: "Usimamizi wa wafanyakazi unapatikana kwenye mipango ya Pro na Biashara.",
     },
+    removeTitle: "Ondoa mfanyakazi?",
+    removeDescription:
+      'Hii itaondoa "{name}" kutoka kwa biashara hii. Hawataweza kufikia biashara hii tena.',
+    suspendTitle: "Simamisha mfanyakazi?",
+    suspendDescription:
+      'Hii itamzuia "{name}" kufikia biashara hii na itamkatisha kipindi cha kuingia. Unaweza kuamsha tena baadaye.',
+    suspendConfirm: "Simamisha",
   },
   expenses: {
     title: "Matumizi",
@@ -1209,6 +1216,13 @@ const featuresEn = {
       title: "Upgrade to manage staff",
       description: "Staff management is available on Pro and Business plans.",
     },
+    removeTitle: "Remove staff member?",
+    removeDescription:
+      'This will remove "{name}" from this business. They will no longer have access to this business.',
+    suspendTitle: "Suspend staff member?",
+    suspendDescription:
+      'This will block "{name}" from accessing this business and sign them out. You can reactivate them later.',
+    suspendConfirm: "Suspend",
   },
   expenses: {
     title: "Expenses",

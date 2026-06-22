@@ -22,6 +22,12 @@ export const translations = {
       logout: "Toka",
       language: "Lugha",
       goToDashboard: "Nenda kwenye Dashibodi",
+      accountRole: {
+        owner: "Mmiliki",
+        manager: "Meneja",
+        accountant: "Mhasibu",
+        salesperson: "Muuzaji",
+      },
     },
     greeting: {
       morning: "Habari za asubuhi 🌅",
@@ -696,6 +702,12 @@ export const translations = {
       logout: "Logout",
       language: "Language",
       goToDashboard: "Go to dashboard",
+      accountRole: {
+        owner: "Owner",
+        manager: "Manager",
+        accountant: "Accountant",
+        salesperson: "Salesperson",
+      },
     },
     greeting: {
       morning: "Good Morning 🌅",

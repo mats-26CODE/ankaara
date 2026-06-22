@@ -31,7 +31,7 @@ SECURITY DEFINER
 SET search_path = auth, public
 AS $$
 BEGIN
-  DELETE FROM auth.refresh_tokens WHERE user_id = p_user_id;
+  DELETE FROM auth.refresh_tokens WHERE user_id = p_user_id::text;
   DELETE FROM auth.sessions WHERE user_id = p_user_id;
 END;
 $$;

@@ -14,6 +14,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { DASHBOARD_NAV_GROUPS } from "@/lib/i18n/dashboard-nav-config";
 import { Languages, LogOut, Menu, Moon, Sun } from "lucide-react";
 import Logo from "./logo";
+import { AccountRoleBadge } from "./account-role-badge";
 import { useTheme } from "@/lib/stores/preferences-store";
 import { ProfileAvatar } from "./profile-avatar";
 import { cn } from "@/lib/utils";
@@ -151,13 +152,14 @@ const NavBar = () => {
                     image={profile?.avatar_url ?? user.user_metadata?.avatar_url}
                     size="xs"
                   />
-                  <span>{t("nav.dashboard")}</span>
+                  <span className="hidden sm:inline">{t("nav.dashboard")}</span>
+                  <AccountRoleBadge className="hidden sm:inline-flex" />
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-56 rounded-xl" align="end">
                 <div className="space-y-3">
-                  <div className="flex flex-col items-center space-y-0.5">
-                    <p className="text-sm font-semibold">Hello 👋, {profileFirstName}</p>
+                  <div>
+                    <p className="text-sm font-semibold">👋 {profileFirstName}</p>
                   </div>
                   <div className="flex flex-col gap-2 border-t pt-2">
                     <Button
@@ -367,7 +369,10 @@ const NavBar = () => {
                           <p className="truncate text-sm font-semibold">
                             Hello 👋, {profileFirstName}
                           </p>
-                          <p className="text-muted-foreground text-xs">{t("nav.dashboard")}</p>
+                          <div className="mt-1 flex flex-wrap items-center gap-2">
+                            <AccountRoleBadge />
+                            <p className="text-muted-foreground text-xs">{t("nav.dashboard")}</p>
+                          </div>
                         </div>
                       </Link>
                       <Button
