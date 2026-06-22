@@ -200,15 +200,15 @@ const DashboardPage = () => {
       {/* ────── Profile Card ────── */}
       <Card>
         <CardHeader>
-          <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
-            <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
+            <div className="flex min-w-1/3 flex-col gap-4 sm:flex-row sm:items-center">
               <ProfileAvatar
                 name={profile?.full_name || undefined}
                 image={profile?.avatar_url}
                 size="xl"
                 className="border-border border-2"
               />
-              <div className="space-y-1">
+              <div className="">
                 <CardTitle className="text-xl wrap-break-word sm:text-2xl">
                   {profile?.full_name || profile?.email || t("dashboard.common.yourAccount")}
                 </CardTitle>
