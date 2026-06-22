@@ -7,6 +7,7 @@ import { ToastAlert } from "@/config/toast";
 import { toastMutationSuccess } from "@/lib/mutation-toast";
 import { usePreferencesStore } from "@/lib/stores/preferences-store";
 import type { Tables } from "@/database.types";
+import type { User } from "@supabase/supabase-js";
 
 /**
  * App-facing profile shape. Normalized from DB row (image_url -> avatar_url).
@@ -20,8 +21,23 @@ export type Profile = {
   preferred_currency: string;
   preferred_language: "en" | "sw";
   onboarding_completed: boolean;
+  account_type: Tables<"profiles">["account_type"];
   created_at: string;
   updated_at: string | null;
+};
+
+export const isStaffAccount = (profile?: Profile | null, user?: User | null): boolean =>
+  profile?.account_type === "staff" || user?.app_metadata?.account_type === "staff";
+
+export const isProfileComplete = (
+  profile?: Profile | null,
+  options?: { onboardingSkipped?: boolean; user?: User | null },
+): boolean => {
+  if (!profile) return false;
+  if (options?.onboardingSkipped) return true;
+  if (isStaffAccount(profile, options?.user)) return true;
+  if (!profile.full_name?.trim()) return false;
+  return !!profile.onboarding_completed;
 };
 
 type ProfileRow = Tables<"profiles">;
@@ -46,6 +62,7 @@ const normalizeRow = (row: ProfileRow): Profile => ({
   preferred_currency: row.preferred_currency ?? "TZS",
   preferred_language: row.preferred_language === "en" ? "en" : "sw",
   onboarding_completed: row.onboarding_completed ?? false,
+  account_type: row.account_type ?? "owner",
   created_at: row.created_at,
   updated_at: row.updated_at ?? null,
 });
@@ -84,6 +101,13 @@ export const useProfile = () => {
     }
 
     // Create profile if missing (first login)
+    const accountType =
+      user.app_metadata?.account_type === "staff"
+        ? ("staff" as const)
+        : user.app_metadata?.account_type === "owner"
+          ? ("owner" as const)
+          : undefined;
+
     const { data: inserted, error: insertError } = await supabase
       .from("profiles")
       .insert({
@@ -95,6 +119,8 @@ export const useProfile = () => {
         is_active: true,
         is_deleted: false,
         preferred_language: "sw",
+        ...(accountType ? { account_type: accountType } : {}),
+        ...(accountType === "staff" ? { onboarding_completed: true } : {}),
       })
       .select()
       .single();
@@ -109,7 +135,20 @@ export const useProfile = () => {
   }, []);
 
   useEffect(() => {
-    refetch();
+    void refetch();
+  }, [refetch]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      void refetch();
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [refetch]);
 
   return { profile, loading, refetch };

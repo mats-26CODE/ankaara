@@ -37,6 +37,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, ImageIcon, Type, Upload, X } from "lucide-react";
 import { useTranslation } from "@/hooks/use-translation";
+import { useStaffPermissions } from "@/hooks/use-staff-permissions";
 import Image from "next/image";
 
 type LogoMode = "image" | "text";
@@ -118,6 +119,9 @@ const EditBusinessPage = () => {
   const { businesses, loading, refetch } = useBusinesses();
   const { currencies, loading: currenciesLoading } = useCurrencies();
   const updateBusiness = useUpdateBusiness();
+  const permissions = useStaffPermissions();
+  const canEditBusiness =
+    permissions.isOwner || permissions.can("business_settings", "edit");
 
   const business = id ? (businesses.find((b) => b.id === id) ?? null) : null;
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -126,6 +130,12 @@ const EditBusinessPage = () => {
   const [logoError, setLogoError] = useState<string | null>(null);
   const [saleSmsDialog, setSaleSmsDialog] = useState<"enable" | "disable" | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!loading && !canEditBusiness) {
+      router.replace("/dashboard/settings/businesses");
+    }
+  }, [canEditBusiness, loading, router]);
 
   useEffect(() => {
     if (!business || prefilled) return;

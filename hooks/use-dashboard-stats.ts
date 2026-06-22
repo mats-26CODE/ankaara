@@ -73,10 +73,12 @@ const fetchDashboardStats = async (
 
   const supabase = createClient();
 
-  let businessesQuery = supabase.from("businesses").select("id, currency").eq("owner_id", userId);
+  let businessesQuery = supabase.from("businesses").select("id, currency");
 
   if (businessId) {
     businessesQuery = businessesQuery.eq("id", businessId);
+  } else {
+    businessesQuery = businessesQuery.eq("owner_id", userId);
   }
 
   const { data: businesses } = await businessesQuery;
@@ -189,11 +191,15 @@ const fetchDashboardStats = async (
   };
 };
 
-export const useDashboardStats = (userId: string | undefined, businessId?: string | null) => {
+export const useDashboardStats = (
+  userId: string | undefined,
+  businessId?: string | null,
+  options?: { enabled?: boolean },
+) => {
   const { data, isLoading, refetch } = useQuery({
     queryKey: [...DASHBOARD_STATS_QUERY_KEY, userId ?? "anon", businessId ?? "all"],
     queryFn: () => fetchDashboardStats(userId, businessId),
-    enabled: !!userId,
+    enabled: !!userId && (options?.enabled ?? true),
     staleTime: 60 * 1000,
   });
 

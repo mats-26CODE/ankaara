@@ -409,3 +409,7 @@ verify_jwt = false
 
 [functions.activate-business-subscription]
 verify_jwt = false
+
+# Staff invite: requires owner JWT.
+[functions.invite-staff]
+verify_jwt = true

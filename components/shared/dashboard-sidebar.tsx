@@ -38,6 +38,8 @@ import {
   DASHBOARD_SIDEBAR_QUOTATION_SUB_ITEMS,
   type DashboardNavItem,
 } from "@/lib/i18n/dashboard-nav-config";
+import { DASHBOARD_ROUTE_PERMISSIONS } from "@/lib/staff-permissions";
+import { useStaffPermissions } from "@/hooks/use-staff-permissions";
 
 const renderSubMenuItems = (
   items: DashboardNavItem[],
@@ -69,13 +71,35 @@ const renderDropdownItems = (
     </DropdownMenuItem>
   ));
 
+const OWNER_ONLY_ACCOUNT_HREFS = new Set(["/dashboard/settings/profile"]);
+
 export const DashboardSidebar = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { state } = useSidebar();
   const { t } = useTranslation();
+  const permissions = useStaffPermissions();
   const [invoicesOpen, setInvoicesOpen] = useState(false);
   const [quotationsOpen, setQuotationsOpen] = useState(false);
+
+  const canShowHref = (href: string) => {
+    const gate = DASHBOARD_ROUTE_PERMISSIONS[href];
+    if (!gate) return true;
+    return permissions.can(gate.resource, gate.action as never);
+  };
+
+  const mainItems = DASHBOARD_SIDEBAR_MAIN_ITEMS.filter((item) => canShowHref(item.href));
+  const accountItems = DASHBOARD_SIDEBAR_ACCOUNT_ITEMS.filter((item) => {
+    if (OWNER_ONLY_ACCOUNT_HREFS.has(item.href) && !permissions.isOwner) return false;
+    return canShowHref(item.href);
+  });
+  const invoiceItems = DASHBOARD_SIDEBAR_INVOICE_SUB_ITEMS.filter((item) => canShowHref(item.href));
+  const quotationItems = DASHBOARD_SIDEBAR_QUOTATION_SUB_ITEMS.filter((item) =>
+    canShowHref(item.href),
+  );
+  const showInvoices = invoiceItems.length > 0 && permissions.can("invoices", "view");
+  const showQuotations = quotationItems.length > 0 && permissions.can("quotations", "view");
+  const showTemplates = permissions.can("invoices", "view");
 
   const status = searchParams.get("status");
   const isInvoicesActive = pathname.startsWith("/dashboard/invoices");
@@ -106,7 +130,7 @@ export const DashboardSidebar = () => {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {DASHBOARD_SIDEBAR_MAIN_ITEMS.map((item) => {
+              {mainItems.map((item) => {
                 const Icon =
                   item.labelKey === "dashboard.nav.reports" ? ReportsIcon : item.Icon;
 
@@ -126,118 +150,114 @@ export const DashboardSidebar = () => {
                 );
               })}
 
-              {showSubmenu ? (
-                <Collapsible.Root open={invoicesOpen} onOpenChange={setInvoicesOpen} asChild>
+              {showInvoices ? (
+                showSubmenu ? (
+                  <Collapsible.Root open={invoicesOpen} onOpenChange={setInvoicesOpen} asChild>
+                    <SidebarMenuItem>
+                      <Collapsible.Trigger asChild>
+                        <SidebarMenuButton
+                          isActive={isInvoicesActive}
+                          tooltip={t("dashboard.nav.invoices")}
+                          className="cursor-pointer"
+                        >
+                          <FileText className="size-4 shrink-0" />
+                          <span>{t("dashboard.nav.invoices")}</span>
+                          <ChevronRight
+                            className={cn(
+                              "ml-auto size-4 shrink-0 transition-transform duration-200",
+                              invoicesOpen && "rotate-90",
+                            )}
+                          />
+                        </SidebarMenuButton>
+                      </Collapsible.Trigger>
+                      <Collapsible.Content>
+                        <SidebarMenuSub>
+                          {renderSubMenuItems(invoiceItems, pathname, status, t)}
+                        </SidebarMenuSub>
+                      </Collapsible.Content>
+                    </SidebarMenuItem>
+                  </Collapsible.Root>
+                ) : (
                   <SidebarMenuItem>
-                    <Collapsible.Trigger asChild>
-                      <SidebarMenuButton
-                        isActive={isInvoicesActive}
-                        tooltip={t("dashboard.nav.invoices")}
-                        className="cursor-pointer"
-                      >
-                        <FileText className="size-4 shrink-0" />
-                        <span>{t("dashboard.nav.invoices")}</span>
-                        <ChevronRight
-                          className={cn(
-                            "ml-auto size-4 shrink-0 transition-transform duration-200",
-                            invoicesOpen && "rotate-90",
-                          )}
-                        />
-                      </SidebarMenuButton>
-                    </Collapsible.Trigger>
-                    <Collapsible.Content>
-                      <SidebarMenuSub>
-                        {renderSubMenuItems(
-                          DASHBOARD_SIDEBAR_INVOICE_SUB_ITEMS,
-                          pathname,
-                          status,
-                          t,
-                        )}
-                      </SidebarMenuSub>
-                    </Collapsible.Content>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <SidebarMenuButton
+                          isActive={isInvoicesActive}
+                          tooltip={t("dashboard.nav.invoices")}
+                        >
+                          <FileText className="size-4 shrink-0" />
+                          <span>{t("dashboard.nav.invoices")}</span>
+                        </SidebarMenuButton>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent side="right" align="start" className="min-w-44">
+                        {renderDropdownItems(invoiceItems, t)}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </SidebarMenuItem>
-                </Collapsible.Root>
-              ) : (
-                <SidebarMenuItem>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <SidebarMenuButton
-                        isActive={isInvoicesActive}
-                        tooltip={t("dashboard.nav.invoices")}
-                      >
-                        <FileText className="size-4 shrink-0" />
-                        <span>{t("dashboard.nav.invoices")}</span>
-                      </SidebarMenuButton>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent side="right" align="start" className="min-w-44">
-                      {renderDropdownItems(DASHBOARD_SIDEBAR_INVOICE_SUB_ITEMS, t)}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </SidebarMenuItem>
-              )}
+                )
+              ) : null}
 
-              {showSubmenu ? (
-                <Collapsible.Root open={quotationsOpen} onOpenChange={setQuotationsOpen} asChild>
+              {showQuotations ? (
+                showSubmenu ? (
+                  <Collapsible.Root open={quotationsOpen} onOpenChange={setQuotationsOpen} asChild>
+                    <SidebarMenuItem>
+                      <Collapsible.Trigger asChild>
+                        <SidebarMenuButton
+                          isActive={isQuotationsActive}
+                          tooltip={t("dashboard.nav.quotations")}
+                          className="cursor-pointer"
+                        >
+                          <Quote className="size-4 shrink-0" />
+                          <span>{t("dashboard.nav.quotations")}</span>
+                          <ChevronRight
+                            className={cn(
+                              "ml-auto size-4 shrink-0 transition-transform duration-200",
+                              quotationsOpen && "rotate-90",
+                            )}
+                          />
+                        </SidebarMenuButton>
+                      </Collapsible.Trigger>
+                      <Collapsible.Content>
+                        <SidebarMenuSub>
+                          {renderSubMenuItems(quotationItems, pathname, status, t)}
+                        </SidebarMenuSub>
+                      </Collapsible.Content>
+                    </SidebarMenuItem>
+                  </Collapsible.Root>
+                ) : (
                   <SidebarMenuItem>
-                    <Collapsible.Trigger asChild>
-                      <SidebarMenuButton
-                        isActive={isQuotationsActive}
-                        tooltip={t("dashboard.nav.quotations")}
-                        className="cursor-pointer"
-                      >
-                        <Quote className="size-4 shrink-0" />
-                        <span>{t("dashboard.nav.quotations")}</span>
-                        <ChevronRight
-                          className={cn(
-                            "ml-auto size-4 shrink-0 transition-transform duration-200",
-                            quotationsOpen && "rotate-90",
-                          )}
-                        />
-                      </SidebarMenuButton>
-                    </Collapsible.Trigger>
-                    <Collapsible.Content>
-                      <SidebarMenuSub>
-                        {renderSubMenuItems(
-                          DASHBOARD_SIDEBAR_QUOTATION_SUB_ITEMS,
-                          pathname,
-                          status,
-                          t,
-                        )}
-                      </SidebarMenuSub>
-                    </Collapsible.Content>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <SidebarMenuButton
+                          isActive={isQuotationsActive}
+                          tooltip={t("dashboard.nav.quotations")}
+                        >
+                          <Quote className="size-4 shrink-0" />
+                          <span>{t("dashboard.nav.quotations")}</span>
+                        </SidebarMenuButton>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent side="right" align="start" className="min-w-44">
+                        {renderDropdownItems(quotationItems, t)}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </SidebarMenuItem>
-                </Collapsible.Root>
-              ) : (
-                <SidebarMenuItem>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <SidebarMenuButton
-                        isActive={isQuotationsActive}
-                        tooltip={t("dashboard.nav.quotations")}
-                      >
-                        <Quote className="size-4 shrink-0" />
-                        <span>{t("dashboard.nav.quotations")}</span>
-                      </SidebarMenuButton>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent side="right" align="start" className="min-w-44">
-                      {renderDropdownItems(DASHBOARD_SIDEBAR_QUOTATION_SUB_ITEMS, t)}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </SidebarMenuItem>
-              )}
+                )
+              ) : null}
 
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === "/dashboard/settings/templates"}
-                  tooltip={t("dashboard.nav.invoiceTemplates")}
-                >
-                  <Link href="/dashboard/settings/templates">
-                    <Palette className="size-4" />
-                    <span>{t("dashboard.nav.invoiceTemplates")}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {showTemplates ? (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === "/dashboard/settings/templates"}
+                    tooltip={t("dashboard.nav.invoiceTemplates")}
+                  >
+                    <Link href="/dashboard/settings/templates">
+                      <Palette className="size-4" />
+                      <span>{t("dashboard.nav.invoiceTemplates")}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ) : null}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -248,7 +268,7 @@ export const DashboardSidebar = () => {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {DASHBOARD_SIDEBAR_ACCOUNT_ITEMS.map((item) => (
+              {accountItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild

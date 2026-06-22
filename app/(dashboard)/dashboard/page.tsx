@@ -29,8 +29,9 @@ import { useCurrentBusinessId } from "@/lib/stores/business-store";
 import { getGreetingKey } from "@/lib/i18n/greeting";
 import { useFormatAmount } from "@/hooks/use-format-amount";
 import { useDashboardStats } from "@/hooks/use-dashboard-stats";
-import { useCurrentSubscription } from "@/hooks/use-current-subscription";
+import { useEffectiveSubscription } from "@/hooks/use-effective-subscription";
 import { useSubscriptionPlans, type SubscriptionPlanSlug } from "@/hooks/use-subscription-plans";
+import { useIsStaffUser, useStaffPermissions } from "@/hooks/use-staff-permissions";
 import {
   UserRound,
   ChevronRight,
@@ -75,6 +76,11 @@ const DashboardPage = () => {
   const { businesses, loading: businessesLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
   const { format: formatAmount } = useFormatAmount();
+  const permissions = useStaffPermissions();
+  const isStaff = useIsStaffUser();
+  const showDashboard = permissions.can("dashboard", "view");
+  const showProfits = permissions.can("profits", "view");
+  const showInvoices = permissions.can("invoices", "view");
   const {
     invoiceStats,
     salesStats,
@@ -83,8 +89,12 @@ const DashboardPage = () => {
     productCount,
     quotationCount,
     loading: statsLoading,
-  } = useDashboardStats(user?.id, currentBusinessId);
-  const { data: subscription, isLoading: subscriptionLoading } = useCurrentSubscription(user?.id);
+  } = useDashboardStats(user?.id, currentBusinessId, { enabled: showDashboard });
+  const {
+    data: subscription,
+    isLoading: subscriptionLoading,
+    planInheritedFromBusiness,
+  } = useEffectiveSubscription();
   const { data: plans } = useSubscriptionPlans();
   const currentPlanSlug = (subscription?.planSlug ?? "free") as SubscriptionPlanSlug;
   const currentPlan = plans?.find((p) => p.slug === currentPlanSlug);
@@ -139,25 +149,23 @@ const DashboardPage = () => {
         </div>
 
         {/* Current subscription plan badge; upgrade / change plan CTA */}
-        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-          {!subscriptionLoading && (
-            <>
-              <SubscriptionPlanBadge planSlug={currentPlanSlug} planName={currentPlan?.name} />
-              {isFreePlan ? (
-                <Button asChild size="sm" variant="default" className="gap-1.5">
-                  <Link href={upgradeHref}>
-                    <Zap className="size-3.5" />
-                    {t("dashboard.common.upgrade")}
-                  </Link>
-                </Button>
-              ) : (
-                <Button asChild size="sm" variant="outline">
-                  <Link href={changePlanHref}>{t("dashboard.common.changePlan")}</Link>
-                </Button>
-              )}
-            </>
-          )}
-        </div>
+        {!subscriptionLoading ? (
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+            <SubscriptionPlanBadge planSlug={currentPlanSlug} planName={currentPlan?.name} />
+            {!planInheritedFromBusiness && isFreePlan ? (
+              <Button asChild size="sm" variant="default" className="gap-1.5">
+                <Link href={upgradeHref}>
+                  <Zap className="size-3.5" />
+                  {t("dashboard.common.upgrade")}
+                </Link>
+              </Button>
+            ) : !planInheritedFromBusiness ? (
+              <Button asChild size="sm" variant="outline">
+                <Link href={changePlanHref}>{t("dashboard.common.changePlan")}</Link>
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       {/* ────── Complete your profile banner ────── */}
@@ -200,7 +208,7 @@ const DashboardPage = () => {
                 size="xl"
                 className="border-border border-2"
               />
-              <div className="min-w-0 space-y-1">
+              <div className="space-y-1">
                 <CardTitle className="text-xl wrap-break-word sm:text-2xl">
                   {profile?.full_name || profile?.email || t("dashboard.common.yourAccount")}
                 </CardTitle>
@@ -229,7 +237,7 @@ const DashboardPage = () => {
             </div>
 
             <div className="flex w-full min-w-0 flex-col gap-2 lg:flex-row lg:items-center lg:justify-end lg:gap-2">
-              {!businessesLoading && businesses.length > 0 && (
+              {!isStaff && !businessesLoading && businesses.length > 0 && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -272,170 +280,230 @@ const DashboardPage = () => {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6">
-            <div className="min-w-0 space-y-1">
-              <p className="text-muted-foreground text-sm">{t("dashboard.common.totalSales")}</p>
-              <p className="text-lg font-bold wrap-break-word tabular-nums">
-                {statsLoading
-                  ? "—"
-                  : formatAmount(salesStats.totalSales, {
-                      decimalDigits: 0,
-                    })}
-              </p>
+        {showDashboard ? (
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6">
+              <div className="min-w-0 space-y-1">
+                <p className="text-muted-foreground text-sm">{t("dashboard.common.totalSales")}</p>
+                <p className="text-lg font-bold wrap-break-word tabular-nums">
+                  {statsLoading
+                    ? "—"
+                    : formatAmount(salesStats.totalSales, {
+                        decimalDigits: 0,
+                      })}
+                </p>
+              </div>
+              {showProfits ? (
+                <div className="min-w-0 space-y-1">
+                  <p className="text-muted-foreground text-sm">
+                    {t("dashboard.common.totalProfit")}
+                  </p>
+                  <p className="text-lg font-bold wrap-break-word tabular-nums">
+                    {statsLoading
+                      ? "—"
+                      : formatAmount(salesStats.totalProfit, { decimalDigits: 0 })}
+                  </p>
+                </div>
+              ) : null}
+              <div className="min-w-0 space-y-1">
+                <p className="text-muted-foreground text-sm">
+                  {t("dashboard.common.totalProducts")}
+                </p>
+                <p className="text-lg font-bold tabular-nums">
+                  {statsLoading ? "—" : productCount}
+                </p>
+              </div>
+              <div className="min-w-0 space-y-1">
+                <p className="text-muted-foreground text-sm">
+                  {t("dashboard.common.totalClients")}
+                </p>
+                <p className="text-lg font-bold tabular-nums">{statsLoading ? "—" : clientCount}</p>
+              </div>
+              {showInvoices ? (
+                <>
+                  <div className="min-w-0 space-y-1">
+                    <p className="text-muted-foreground text-sm">
+                      {t("dashboard.common.totalInvoices")}
+                    </p>
+                    <p className="text-lg font-bold tabular-nums">
+                      {statsLoading ? "—" : invoiceStats.total}
+                    </p>
+                  </div>
+                  <div className="min-w-0 space-y-1">
+                    <p className="text-muted-foreground text-sm">
+                      {t("dashboard.common.totalQuotations")}
+                    </p>
+                    <p className="text-lg font-bold tabular-nums">
+                      {statsLoading ? "—" : quotationCount}
+                    </p>
+                  </div>
+                </>
+              ) : null}
             </div>
-            <div className="min-w-0 space-y-1">
-              <p className="text-muted-foreground text-sm">{t("dashboard.common.totalProfit")}</p>
-              <p className="text-lg font-bold wrap-break-word tabular-nums">
-                {statsLoading ? "—" : formatAmount(salesStats.totalProfit, { decimalDigits: 0 })}
-              </p>
-            </div>
-            <div className="min-w-0 space-y-1">
-              <p className="text-muted-foreground text-sm">{t("dashboard.common.totalProducts")}</p>
-              <p className="text-lg font-bold tabular-nums">{statsLoading ? "—" : productCount}</p>
-            </div>
-            <div className="min-w-0 space-y-1">
-              <p className="text-muted-foreground text-sm">{t("dashboard.common.totalClients")}</p>
-              <p className="text-lg font-bold tabular-nums">{statsLoading ? "—" : clientCount}</p>
-            </div>
-            <div className="min-w-0 space-y-1">
-              <p className="text-muted-foreground text-sm">{t("dashboard.common.totalInvoices")}</p>
-              <p className="text-lg font-bold tabular-nums">
-                {statsLoading ? "—" : invoiceStats.total}
-              </p>
-            </div>
-            <div className="min-w-0 space-y-1">
-              <p className="text-muted-foreground text-sm">{t("dashboard.common.totalQuotations")}</p>
-              <p className="text-lg font-bold tabular-nums">
-                {statsLoading ? "—" : quotationCount}
-              </p>
-            </div>
-          </div>
-        </CardContent>
+          </CardContent>
+        ) : null}
       </Card>
 
-      {/* ────── Core POS Stats ────── */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-medium">{t("dashboard.common.todaysSales")}</CardTitle>
-            <ShoppingCart className="size-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold">
-              {statsLoading ? "—" : formatAmount(salesStats.todaySales, { decimalDigits: 0 })}
-            </div>
-            <p className="text-muted-foreground mt-1 text-xs">{t("dashboard.common.salesDatedToday")}</p>
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" size="sm" asChild className="w-full">
-              <Link href="/dashboard/sales">{t("dashboard.common.viewSales")}</Link>
-            </Button>
-          </CardFooter>
-        </Card>
+      {showDashboard ? (
+        <>
+          {/* ────── Core POS Stats ────── */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-sm font-medium">
+                  {t("dashboard.common.todaysSales")}
+                </CardTitle>
+                <ShoppingCart className="size-4 text-blue-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-xl font-bold">
+                  {statsLoading ? "—" : formatAmount(salesStats.todaySales, { decimalDigits: 0 })}
+                </div>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {t("dashboard.common.salesDatedToday")}
+                </p>
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" size="sm" asChild className="w-full">
+                  <Link href="/dashboard/sales">{t("dashboard.common.viewSales")}</Link>
+                </Button>
+              </CardFooter>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-medium">{t("dashboard.common.todaysProfit")}</CardTitle>
-            <TrendingUp className="size-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold">
-              {statsLoading ? "—" : formatAmount(salesStats.todayProfit, { decimalDigits: 0 })}
-            </div>
-            <p className="text-muted-foreground mt-1 text-xs">{t("dashboard.common.profitDatedToday")}</p>
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" size="sm" asChild className="w-full">
-              <Link href="/dashboard/profits">{t("dashboard.common.viewProfit")}</Link>
-            </Button>
-          </CardFooter>
-        </Card>
+            {showProfits ? (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm font-medium">
+                    {t("dashboard.common.todaysProfit")}
+                  </CardTitle>
+                  <TrendingUp className="size-4 text-green-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-xl font-bold">
+                    {statsLoading
+                      ? "—"
+                      : formatAmount(salesStats.todayProfit, { decimalDigits: 0 })}
+                  </div>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {t("dashboard.common.profitDatedToday")}
+                  </p>
+                </CardContent>
+                <CardFooter>
+                  <Button variant="outline" size="sm" asChild className="w-full">
+                    <Link href="/dashboard/profits">{t("dashboard.common.viewProfit")}</Link>
+                  </Button>
+                </CardFooter>
+              </Card>
+            ) : null}
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-medium">{t("dashboard.common.todaysExpenses")}</CardTitle>
-            <Wallet className="size-4 text-amber-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold">
-              {statsLoading ? "—" : formatAmount(salesStats.todayExpenses, { decimalDigits: 0 })}
-            </div>
-            <p className="text-muted-foreground mt-1 text-xs">{t("dashboard.common.expensesDatedToday")}</p>
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" size="sm" asChild className="w-full">
-              <Link href="/dashboard/expenses">{t("dashboard.common.viewExpenses")}</Link>
-            </Button>
-          </CardFooter>
-        </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-sm font-medium">
+                  {t("dashboard.common.todaysExpenses")}
+                </CardTitle>
+                <Wallet className="size-4 text-amber-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-xl font-bold">
+                  {statsLoading
+                    ? "—"
+                    : formatAmount(salesStats.todayExpenses, { decimalDigits: 0 })}
+                </div>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {t("dashboard.common.expensesDatedToday")}
+                </p>
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" size="sm" asChild className="w-full">
+                  <Link href="/dashboard/expenses">{t("dashboard.common.viewExpenses")}</Link>
+                </Button>
+              </CardFooter>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-medium">{t("dashboard.common.inventoryValue")}</CardTitle>
-            <Package className="size-4 text-violet-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold">
-              {statsLoading
-                ? "—"
-                : formatAmount(inventoryStats.inventoryValue, { decimalDigits: 0 })}
-            </div>
-            <p className="text-muted-foreground mt-1 text-xs">{t("dashboard.common.stockAtBasePrice")}</p>
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" size="sm" asChild className="w-full">
-              <Link href="/dashboard/products">{t("dashboard.common.manageInventory")}</Link>
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("dashboard.common.invoiceStats")}</CardTitle>
-          <CardDescription>{t("dashboard.common.invoiceStatsDescription")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-            <Link href="/dashboard/invoices?status=paid" className="rounded-lg border p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">{t("dashboard.status.paid")}</p>
-                <CheckCircle2 className="size-4 text-green-600" />
-              </div>
-              <p className="mt-2 text-2xl font-bold">{statsLoading ? "—" : invoiceStats.paid}</p>
-            </Link>
-            <Link href="/dashboard/invoices?status=sent" className="rounded-lg border p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">{t("dashboard.status.sent")}</p>
-                <Send className="size-4 text-blue-600" />
-              </div>
-              <p className="mt-2 text-2xl font-bold">{statsLoading ? "—" : invoiceStats.sent}</p>
-            </Link>
-            <Link href="/dashboard/invoices?status=overdue" className="rounded-lg border p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">{t("dashboard.status.overdue")}</p>
-                <AlertTriangle className="text-destructive size-4" />
-              </div>
-              <p className="mt-2 text-2xl font-bold">{statsLoading ? "—" : invoiceStats.overdue}</p>
-            </Link>
-            <Link href="/dashboard/invoices?status=draft" className="rounded-lg border p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">{t("dashboard.common.drafts")}</p>
-                <Clock className="size-4 text-yellow-600" />
-              </div>
-              <p className="mt-2 text-2xl font-bold">{statsLoading ? "—" : invoiceStats.draft}</p>
-            </Link>
-            <Link href="/dashboard/invoices" className="rounded-lg border p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">{t("dashboard.common.total")}</p>
-                <FileText className="text-muted-foreground size-4" />
-              </div>
-              <p className="mt-2 text-2xl font-bold">{statsLoading ? "—" : invoiceStats.total}</p>
-            </Link>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-sm font-medium">
+                  {t("dashboard.common.inventoryValue")}
+                </CardTitle>
+                <Package className="size-4 text-violet-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-xl font-bold">
+                  {statsLoading
+                    ? "—"
+                    : formatAmount(inventoryStats.inventoryValue, { decimalDigits: 0 })}
+                </div>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {t("dashboard.common.stockAtBasePrice")}
+                </p>
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" size="sm" asChild className="w-full">
+                  <Link href="/dashboard/products">{t("dashboard.common.manageInventory")}</Link>
+                </Button>
+              </CardFooter>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
+
+          {showInvoices ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("dashboard.common.invoiceStats")}</CardTitle>
+                <CardDescription>{t("dashboard.common.invoiceStatsDescription")}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+                  <Link href="/dashboard/invoices?status=paid" className="rounded-lg border p-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">{t("dashboard.status.paid")}</p>
+                      <CheckCircle2 className="size-4 text-green-600" />
+                    </div>
+                    <p className="mt-2 text-2xl font-bold">
+                      {statsLoading ? "—" : invoiceStats.paid}
+                    </p>
+                  </Link>
+                  <Link href="/dashboard/invoices?status=sent" className="rounded-lg border p-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">{t("dashboard.status.sent")}</p>
+                      <Send className="size-4 text-blue-600" />
+                    </div>
+                    <p className="mt-2 text-2xl font-bold">
+                      {statsLoading ? "—" : invoiceStats.sent}
+                    </p>
+                  </Link>
+                  <Link href="/dashboard/invoices?status=overdue" className="rounded-lg border p-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">{t("dashboard.status.overdue")}</p>
+                      <AlertTriangle className="text-destructive size-4" />
+                    </div>
+                    <p className="mt-2 text-2xl font-bold">
+                      {statsLoading ? "—" : invoiceStats.overdue}
+                    </p>
+                  </Link>
+                  <Link href="/dashboard/invoices?status=draft" className="rounded-lg border p-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">{t("dashboard.common.drafts")}</p>
+                      <Clock className="size-4 text-yellow-600" />
+                    </div>
+                    <p className="mt-2 text-2xl font-bold">
+                      {statsLoading ? "—" : invoiceStats.draft}
+                    </p>
+                  </Link>
+                  <Link href="/dashboard/invoices" className="rounded-lg border p-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">{t("dashboard.common.total")}</p>
+                      <FileText className="text-muted-foreground size-4" />
+                    </div>
+                    <p className="mt-2 text-2xl font-bold">
+                      {statsLoading ? "—" : invoiceStats.total}
+                    </p>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+        </>
+      ) : null}
 
       {/* ────── Quick Actions + Account Summary ────── */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -445,42 +513,54 @@ const DashboardPage = () => {
             <CardDescription>{t("dashboard.common.commonTasks")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            <Button variant="outline" className="w-full justify-start" asChild>
-              <Link href="/dashboard/sales/create">
-                <ShoppingCart className="mr-2 size-4" />
-                {t("dashboard.common.recordSale")}
-              </Link>
-            </Button>
-            <Button variant="outline" className="w-full justify-start" asChild>
-              <Link href="/dashboard/invoices/create">
-                <Plus className="mr-2 size-4" />
-                {t("dashboard.common.createInvoice")}
-              </Link>
-            </Button>
-            <Button variant="outline" className="w-full justify-start" asChild>
-              <Link href="/dashboard/clients">
-                <Users className="mr-2 size-4" />
-                {t("dashboard.common.manageClients")}
-              </Link>
-            </Button>
-            <Button variant="outline" className="w-full justify-start" asChild>
-              <Link href="/dashboard/loans">
-                <Users className="mr-2 size-4" />
-                {t("dashboard.common.manageLoans")}
-              </Link>
-            </Button>
-            <Button variant="outline" className="w-full justify-start" asChild>
-              <Link href="/dashboard/invoices">
-                <FileText className="mr-2 size-4" />
-                {t("dashboard.common.allInvoices")}
-              </Link>
-            </Button>
-            <Button variant="outline" className="w-full justify-start" asChild>
-              <Link href="/dashboard/quotations">
-                <Quote className="mr-2 size-4" />
-                {t("dashboard.common.quotations")}
-              </Link>
-            </Button>
+            {permissions.can("sales", "create") ? (
+              <Button variant="outline" className="w-full justify-start" asChild>
+                <Link href="/dashboard/sales/create">
+                  <ShoppingCart className="mr-2 size-4" />
+                  {t("dashboard.common.recordSale")}
+                </Link>
+              </Button>
+            ) : null}
+            {permissions.can("invoices", "create") ? (
+              <Button variant="outline" className="w-full justify-start" asChild>
+                <Link href="/dashboard/invoices/create">
+                  <Plus className="mr-2 size-4" />
+                  {t("dashboard.common.createInvoice")}
+                </Link>
+              </Button>
+            ) : null}
+            {permissions.can("clients", "view") ? (
+              <Button variant="outline" className="w-full justify-start" asChild>
+                <Link href="/dashboard/clients">
+                  <Users className="mr-2 size-4" />
+                  {t("dashboard.common.manageClients")}
+                </Link>
+              </Button>
+            ) : null}
+            {permissions.can("loans", "view") ? (
+              <Button variant="outline" className="w-full justify-start" asChild>
+                <Link href="/dashboard/loans">
+                  <Users className="mr-2 size-4" />
+                  {t("dashboard.common.manageLoans")}
+                </Link>
+              </Button>
+            ) : null}
+            {permissions.can("invoices", "view") ? (
+              <Button variant="outline" className="w-full justify-start" asChild>
+                <Link href="/dashboard/invoices">
+                  <FileText className="mr-2 size-4" />
+                  {t("dashboard.common.allInvoices")}
+                </Link>
+              </Button>
+            ) : null}
+            {permissions.can("quotations", "view") ? (
+              <Button variant="outline" className="w-full justify-start" asChild>
+                <Link href="/dashboard/quotations">
+                  <Quote className="mr-2 size-4" />
+                  {t("dashboard.common.quotations")}
+                </Link>
+              </Button>
+            ) : null}
             <Separator className="my-2" />
             <Button variant="outline" className="w-full justify-start" asChild>
               <Link href="/dashboard/settings">
@@ -498,7 +578,9 @@ const DashboardPage = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-sm">{t("dashboard.common.phoneVerified")}</span>
+              <span className="text-muted-foreground text-sm">
+                {t("dashboard.common.phoneVerified")}
+              </span>
               <span className="text-sm font-medium">
                 {profile?.phone ? (
                   <span className="flex items-center gap-1 text-green-600">
@@ -513,7 +595,9 @@ const DashboardPage = () => {
             </div>
             <Separator />
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-sm">{t("dashboard.common.profileComplete")}</span>
+              <span className="text-muted-foreground text-sm">
+                {t("dashboard.common.profileComplete")}
+              </span>
               <span className="text-sm font-medium">
                 {isProfileComplete ? (
                   <span className="flex items-center gap-1 text-green-600">
@@ -528,7 +612,9 @@ const DashboardPage = () => {
             </div>
             <Separator />
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-sm">{t("dashboard.common.memberSince")}</span>
+              <span className="text-muted-foreground text-sm">
+                {t("dashboard.common.memberSince")}
+              </span>
               <span className="text-sm font-medium">
                 {profile?.created_at
                   ? new Date(profile.created_at).toLocaleDateString("en-US", {

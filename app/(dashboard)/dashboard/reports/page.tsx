@@ -4,8 +4,7 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { Package } from "lucide-react";
 import { useBusinesses } from "@/hooks/use-businesses";
-import { useCurrentSubscription } from "@/hooks/use-current-subscription";
-import { useUser } from "@/hooks/use-user";
+import { useEffectiveSubscription } from "@/hooks/use-effective-subscription";
 import { getPlanTier } from "@/hooks/use-subscription-plans";
 import { useCurrentBusinessId } from "@/lib/stores/business-store";
 import { useTranslation } from "@/hooks/use-translation";
@@ -29,13 +28,15 @@ const REPORT_HUB_ICONS = {
 
 const ReportsHubPage = () => {
   const { t } = useTranslation();
-  const { user } = useUser();
   const { businesses, loading: businessesLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
-  const { data: subscription, isLoading: subscriptionLoading } = useCurrentSubscription(user?.id);
+  const {
+    data: subscription,
+    isLoading: subscriptionLoading,
+    planInheritedFromBusiness,
+    activeBusiness,
+  } = useEffectiveSubscription();
 
-  const activeBusiness =
-    businesses.find((business) => business.id === currentBusinessId) ?? businesses[0] ?? null;
   const planTier = getPlanTier(subscription?.planSlug);
   const hasReportAccess = planTier !== "free";
   const accessLoading = subscriptionLoading;
@@ -131,11 +132,17 @@ const ReportsHubPage = () => {
                   {t("dashboard.reports.upgrade.description")}
                 </p>
               </div>
-              <Button asChild>
-                <Link href={getSubscribeUrlForPlanLimit("PLAN_LIMIT:product_sales_reports")}>
-                  {t("dashboard.common.viewPlans")}
-                </Link>
-              </Button>
+              {planInheritedFromBusiness ? (
+                <p className="text-muted-foreground max-w-md text-sm">
+                  {t("dashboard.common.staffPlanUpgradeHint")}
+                </p>
+              ) : (
+                <Button asChild>
+                  <Link href={getSubscribeUrlForPlanLimit("PLAN_LIMIT:product_sales_reports")}>
+                    {t("dashboard.common.viewPlans")}
+                  </Link>
+                </Button>
+              )}
             </div>
           )}
         </CardContent>

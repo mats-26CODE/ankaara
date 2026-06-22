@@ -17,6 +17,7 @@ import {
   ShoppingCart,
   User,
   Users,
+  UserCog,
   Wallet,
   XCircle,
 } from "lucide-react";
@@ -115,6 +116,12 @@ export const DASHBOARD_NAV_GROUPS: DashboardNavGroup[] = [
         href: "/dashboard/invoices?status=sent",
         Icon: Send,
         isActive: (pathname, status) => pathname === "/dashboard/invoices" && status === "sent",
+      },
+      {
+        labelKey: "dashboard.status.viewed",
+        href: "/dashboard/invoices?status=viewed",
+        Icon: Eye,
+        isActive: (pathname, status) => pathname === "/dashboard/invoices" && status === "viewed",
       },
       {
         labelKey: "dashboard.status.paid",
@@ -255,6 +262,12 @@ export const DASHBOARD_SIDEBAR_MAIN_ITEMS: DashboardNavItem[] = [
     Icon: Wallet,
     isActive: (pathname) => pathname.startsWith("/dashboard/expenses"),
   },
+  {
+    labelKey: "dashboard.nav.staff",
+    href: "/dashboard/staff",
+    Icon: UserCog,
+    isActive: (pathname) => pathname.startsWith("/dashboard/staff"),
+  },
 ];
 
 export const DASHBOARD_SIDEBAR_INVOICE_SUB_ITEMS: DashboardNavItem[] = [
@@ -281,6 +294,12 @@ export const DASHBOARD_SIDEBAR_INVOICE_SUB_ITEMS: DashboardNavItem[] = [
     href: "/dashboard/invoices?status=sent",
     Icon: Send,
     isActive: (pathname, status) => pathname === "/dashboard/invoices" && status === "sent",
+  },
+  {
+    labelKey: "dashboard.status.viewed",
+    href: "/dashboard/invoices?status=viewed",
+    Icon: Eye,
+    isActive: (pathname, status) => pathname === "/dashboard/invoices" && status === "viewed",
   },
   {
     labelKey: "dashboard.status.paid",

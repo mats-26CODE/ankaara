@@ -79,6 +79,125 @@ export type Database = {
           },
         ]
       }
+      staff_categories: {
+        Row: {
+          business_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_system: boolean
+          name: string
+          permissions: Json
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          business_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_system?: boolean
+          name: string
+          permissions: Json
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_system?: boolean
+          name?: string
+          permissions?: Json
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_categories_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_categories_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_staff: {
+        Row: {
+          business_id: string
+          id: string
+          invited_at: string
+          invited_by: string
+          joined_at: string | null
+          removed_at: string | null
+          staff_category_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          business_id: string
+          id?: string
+          invited_at?: string
+          invited_by: string
+          joined_at?: string | null
+          removed_at?: string | null
+          staff_category_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          business_id?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string
+          joined_at?: string | null
+          removed_at?: string | null
+          staff_category_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_staff_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_staff_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_staff_staff_category_id_fkey"
+            columns: ["staff_category_id"]
+            isOneToOne: false
+            referencedRelation: "staff_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_staff_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           address: string | null
@@ -988,15 +1107,18 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_type: Database["public"]["Enums"]["account_type"]
           auth_type: Database["public"]["Enums"]["auth_type"] | null
           avatar_url: string | null
           created_at: string
           email: string | null
+          first_name: string | null
           full_name: string | null
           id: string
           image_url: Json | null
           is_active: boolean
           is_deleted: boolean
+          last_name: string | null
           notification_token: string | null
           onboarding_completed: boolean
           phone: string | null
@@ -1005,15 +1127,18 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          account_type?: Database["public"]["Enums"]["account_type"]
           auth_type?: Database["public"]["Enums"]["auth_type"] | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
+          first_name?: string | null
           full_name?: string | null
           id?: string
           image_url?: Json | null
           is_active?: boolean
           is_deleted?: boolean
+          last_name?: string | null
           notification_token?: string | null
           onboarding_completed?: boolean
           phone?: string | null
@@ -1022,15 +1147,18 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          account_type?: Database["public"]["Enums"]["account_type"]
           auth_type?: Database["public"]["Enums"]["auth_type"] | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
+          first_name?: string | null
           full_name?: string | null
           id?: string
           image_url?: Json | null
           is_active?: boolean
           is_deleted?: boolean
+          last_name?: string | null
           notification_token?: string | null
           onboarding_completed?: boolean
           phone?: string | null
@@ -1618,6 +1746,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accessible_business_ids: { Args: never; Returns: string[] }
+      activate_pending_staff_membership: { Args: never; Returns: undefined }
       accept_quotation: { Args: { p_quotation_id: string }; Returns: boolean }
       adjust_product_stock: {
         Args: {
@@ -1660,6 +1790,32 @@ export type Database = {
       check_subscription_expiry: {
         Args: { p_user_id: string }
         Returns: boolean
+      }
+      get_effective_subscription: {
+        Args: { p_business_id?: string | null }
+        Returns: {
+          plan_slug: string
+          end_date: string | null
+        }[]
+      }
+      resolve_subscription_user_id: {
+        Args: { p_business_id?: string | null; p_user_id: string }
+        Returns: string
+      }
+      create_business_for_account: {
+        Args: {
+          p_context_business_id: string | null
+          p_name: string
+          p_currency: string
+          p_address?: string | null
+          p_tax_number?: string | null
+          p_capacity?: string | null
+          p_logo_url?: string | null
+          p_logo_text?: string | null
+          p_brand_color?: string | null
+          p_is_primary?: boolean
+        }
+        Returns: Tables<"businesses">
       }
       clear_loan_to_sale: {
         Args: { p_loan_id: string; p_sale_date?: string }
@@ -1844,6 +2000,7 @@ export type Database = {
         }
       }
       expire_stale_documents: { Args: never; Returns: undefined }
+      get_effective_permissions: { Args: { p_business_id: string }; Returns: Json }
       get_product_sales_performance: {
         Args: {
           p_business_id: string
@@ -1913,11 +2070,16 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      is_business_owner: { Args: { p_business_id: string }; Returns: boolean }
       redeem_subscription_activation_code: {
         Args: { p_code: string; p_plan_slug?: string }
         Returns: Json
       }
       resolve_sale_short_link: { Args: { p_slug: string }; Returns: string }
+      staff_can: {
+        Args: { p_action: string; p_business_id: string; p_resource: string }
+        Returns: boolean
+      }
       set_confirmation: {
         Args: { code: string; phone_number: string }
         Returns: string
@@ -1928,6 +2090,7 @@ export type Database = {
       }
     }
     Enums: {
+      account_type: "owner" | "staff"
       auth_type: "Google" | "Phone" | "Email"
       period_status: "OPEN" | "CLOSED"
       sales_channel: "CASH" | "MOBILE" | "BANK"

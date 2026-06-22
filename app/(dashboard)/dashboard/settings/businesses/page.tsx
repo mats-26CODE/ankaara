@@ -12,6 +12,7 @@ import {
 } from "@/hooks/use-businesses";
 import { useCurrentBusinessId } from "@/lib/stores/business-store";
 import { useCurrencies } from "@/hooks/use-currencies";
+import { useStaffPermissions } from "@/hooks/use-staff-permissions";
 import { uploadBusinessLogo, validateBusinessLogoFile } from "@/lib/storage/business-logo";
 import { ToastAlert } from "@/config/toast";
 import { Button } from "@/components/ui/button";
@@ -77,6 +78,12 @@ const BusinessesSettingsPage = () => {
   const createBusiness = useCreateBusiness();
   const updateBusiness = useUpdateBusiness();
   const deleteBusiness = useDeleteBusiness();
+  const permissions = useStaffPermissions();
+  const canCreateBusiness =
+    permissions.isOwner || permissions.can("business_settings", "create");
+  const canEditBusiness =
+    permissions.isOwner || permissions.can("business_settings", "edit");
+  const canDeleteBusiness = permissions.isOwner;
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -227,10 +234,12 @@ const BusinessesSettingsPage = () => {
               {t("dashboard.settings.businesses.list.description")}
             </CardDescription>
           </div>
-          <Button size="sm" onClick={openCreate} className="w-full sm:w-auto">
-            <Plus className="mr-1 size-4" />
-            {t("dashboard.settings.businesses.list.addBusiness")}
-          </Button>
+          {canCreateBusiness ? (
+            <Button size="sm" onClick={openCreate} className="w-full sm:w-auto">
+              <Plus className="mr-1 size-4" />
+              {t("dashboard.settings.businesses.list.addBusiness")}
+            </Button>
+          ) : null}
         </CardHeader>
         <CardContent>
           {businesses.length === 0 ? (
@@ -283,7 +292,7 @@ const BusinessesSettingsPage = () => {
                       </div>
                     </div>
                     <div className="flex shrink-0 flex-wrap items-center justify-end gap-1 border-t pt-3 sm:ml-2 sm:border-t-0 sm:pt-0">
-                      {!biz.is_primary && (
+                      {!biz.is_primary && canEditBusiness ? (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -293,12 +302,15 @@ const BusinessesSettingsPage = () => {
                         >
                           {t("dashboard.settings.businesses.list.makePrimary")}
                         </Button>
-                      )}
-                      <Button variant="ghost" size="icon" asChild title={t("dashboard.settings.businesses.list.editTooltip")}>
-                        <Link href={`/dashboard/settings/businesses/edit/${biz.id}`}>
-                          <Pencil className="size-4" />
-                        </Link>
-                      </Button>
+                      ) : null}
+                      {canEditBusiness ? (
+                        <Button variant="ghost" size="icon" asChild title={t("dashboard.settings.businesses.list.editTooltip")}>
+                          <Link href={`/dashboard/settings/businesses/edit/${biz.id}`}>
+                            <Pencil className="size-4" />
+                          </Link>
+                        </Button>
+                      ) : null}
+                      {canDeleteBusiness ? (
                       <Button
                         variant="ghost"
                         size="icon"
@@ -312,6 +324,7 @@ const BusinessesSettingsPage = () => {
                       >
                         <Trash2 className="size-4" />
                       </Button>
+                      ) : null}
                     </div>
                   </div>
                 );

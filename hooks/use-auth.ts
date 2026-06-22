@@ -10,6 +10,7 @@ import {
   type AuthError,
 } from "@supabase/supabase-js";
 import { addCountryCode } from "@/helpers/helpers";
+import { activatePendingStaffMembership } from "@/hooks/use-staff";
 
 export const AUTH_PHONE_ERROR_CODES = {
   ACCOUNT_NOT_FOUND: "ACCOUNT_NOT_FOUND",
@@ -126,11 +127,16 @@ export const useVerifyOtp = (options?: { redirect?: string }) => {
       });
 
       if (error) throw error;
+
+      if (data.user && data.session) {
+        await activatePendingStaffMembership();
+      }
+
       return data;
     },
     onSuccess: async (data, _variables, _onMutateResult, context) => {
       if (data.user && data.session) {
-        router.push(redirectTo ?? "/dashboard");
+        router.replace(redirectTo ?? "/dashboard");
         toastMutationSuccess(context, "Phone verified successfully! 🎉");
       }
     },

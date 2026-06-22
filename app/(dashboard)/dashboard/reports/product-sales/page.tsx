@@ -13,10 +13,9 @@ import {
   X,
 } from "lucide-react";
 import { useBusinesses } from "@/hooks/use-businesses";
-import { useCurrentSubscription } from "@/hooks/use-current-subscription";
+import { useEffectiveSubscription } from "@/hooks/use-effective-subscription";
 import { useFormatAmount } from "@/hooks/use-format-amount";
 import { useProductSalesReport } from "@/hooks/use-product-sales-report";
-import { useUser } from "@/hooks/use-user";
 import { getPlanTier } from "@/hooks/use-subscription-plans";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useCurrentBusinessId } from "@/lib/stores/business-store";
@@ -50,11 +49,15 @@ const SORT_OPTIONS: ProductSalesSortKey[] = ["units", "revenue", "profit"];
 
 const ProductSalesReportPage = () => {
   const { t } = useTranslation();
-  const { user } = useUser();
   const { format: formatAmount } = useFormatAmount();
   const { businesses, loading: businessesLoading } = useBusinesses();
   const { currentBusinessId, setCurrentBusiness } = useCurrentBusinessId();
-  const { data: subscription, isLoading: subscriptionLoading } = useCurrentSubscription(user?.id);
+  const {
+    data: subscription,
+    isLoading: subscriptionLoading,
+    planInheritedFromBusiness,
+    activeBusiness,
+  } = useEffectiveSubscription();
 
   const [periodPreset, setPeriodPreset] = useState<ReportPeriodPreset>("weekly");
   const [fromDate, setFromDate] = useState("");
@@ -65,9 +68,6 @@ const ProductSalesReportPage = () => {
 
   const planTier = getPlanTier(subscription?.planSlug);
   const hasReportAccess = planTier !== "free";
-
-  const activeBusiness =
-    businesses.find((business) => business.id === currentBusinessId) ?? businesses[0] ?? null;
 
   const periodOptions = useMemo(
     () =>
@@ -224,11 +224,17 @@ const ProductSalesReportPage = () => {
                 {t("dashboard.reports.upgrade.description")}
               </p>
             </div>
-            <Button asChild>
-              <Link href={getSubscribeUrlForPlanLimit("PLAN_LIMIT:product_sales_reports")}>
-                {t("dashboard.common.viewPlans")}
-              </Link>
-            </Button>
+            {planInheritedFromBusiness ? (
+              <p className="text-muted-foreground max-w-md text-sm">
+                {t("dashboard.common.staffPlanUpgradeHint")}
+              </p>
+            ) : (
+              <Button asChild>
+                <Link href={getSubscribeUrlForPlanLimit("PLAN_LIMIT:product_sales_reports")}>
+                  {t("dashboard.common.viewPlans")}
+                </Link>
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>

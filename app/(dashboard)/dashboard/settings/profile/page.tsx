@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { useProfile, useUpdateProfile } from "@/hooks/use-profile";
+import { useIsStaffUser } from "@/hooks/use-staff-permissions";
 import { useUser } from "@/hooks/use-user";
 import { createClient } from "@/lib/supabase/client";
 import { useCurrencies } from "@/hooks/use-currencies";
@@ -39,9 +40,12 @@ import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTranslation } from "@/hooks/use-translation";
+import { useRouter } from "next/navigation";
 
 const ProfileSettingsPage = () => {
+  const router = useRouter();
   const { t } = useTranslation();
+  const isStaff = useIsStaffUser();
   const { user } = useUser();
   const { profile, loading: profileLoading, refetch } = useProfile();
   const { currencies, loading: currenciesLoading } = useCurrencies();
@@ -67,6 +71,12 @@ const ProfileSettingsPage = () => {
   const [otpCode, setOtpCode] = useState("");
   const [otpError, setOtpError] = useState<string | null>(null);
   const [pendingPhone, setPendingPhone] = useState("");
+
+  useEffect(() => {
+    if (isStaff) {
+      router.replace("/dashboard");
+    }
+  }, [isStaff, router]);
 
   useEffect(() => {
     if (prefilled || !profile) return;
@@ -167,6 +177,14 @@ const ProfileSettingsPage = () => {
     sendOtp.mutate({ phone: pendingPhone }, { onSuccess: () => startCountdown() });
   };
 
+  if (isStaff) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Spinner className="size-6" />
+      </div>
+    );
+  }
+
   if (profileLoading || currenciesLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -195,7 +213,10 @@ const ProfileSettingsPage = () => {
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
             <Avatar className="size-16">
-              <AvatarImage src={form.avatar_url || undefined} alt={t("dashboard.settings.profile.avatarAlt")} />
+              <AvatarImage
+                src={form.avatar_url || undefined}
+                alt={t("dashboard.settings.profile.avatarAlt")}
+              />
               <AvatarFallback className="text-lg">{initials}</AvatarFallback>
             </Avatar>
             <div className="flex-1 space-y-1">
@@ -274,7 +295,9 @@ const ProfileSettingsPage = () => {
       <Card>
         <CardHeader>
           <CardTitle>{t("dashboard.settings.profile.preferencesTitle")}</CardTitle>
-          <CardDescription>{t("dashboard.settings.profile.preferencesDescription")}</CardDescription>
+          <CardDescription>
+            {t("dashboard.settings.profile.preferencesDescription")}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -285,7 +308,9 @@ const ProfileSettingsPage = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="light">{t("dashboard.settings.profile.themeLight")}</SelectItem>
+                  <SelectItem value="light">
+                    {t("dashboard.settings.profile.themeLight")}
+                  </SelectItem>
                   <SelectItem value="dark">{t("dashboard.settings.profile.themeDark")}</SelectItem>
                 </SelectContent>
               </Select>
@@ -385,7 +410,9 @@ const ProfileSettingsPage = () => {
                 </button>
               ) : (
                 <span>
-                  {t("dashboard.settings.profile.otpResendCountdown", { countdown: String(countdown) })}
+                  {t("dashboard.settings.profile.otpResendCountdown", {
+                    countdown: String(countdown),
+                  })}
                 </span>
               )}
             </p>

@@ -91,6 +91,49 @@ const getUserIdByPhone = async (phone_number: string): Promise<string | null> =>
   return rows.length > 0 ? rows[0].id : null;
 };
 
+/** Keep JWT app_metadata aligned with staff profile / membership (repairs invited existing users). */
+const ensureAuthMetadataMatchesStaff = async (userId: string): Promise<void> => {
+  const { data: profile, error: profileError } = await serviceClient
+    .from("profiles")
+    .select("account_type")
+    .eq("id", userId)
+    .maybeSingle();
+  if (profileError) throw profileError;
+
+  const { count: staffMemberships, error: membershipError } = await serviceClient
+    .from("business_staff")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .in("status", ["pending", "active"]);
+  if (membershipError) throw membershipError;
+
+  const shouldBeStaff = profile?.account_type === "staff" || (staffMemberships ?? 0) > 0;
+  if (!shouldBeStaff) return;
+
+  if (profile?.account_type !== "staff") {
+    const { error: profileUpdateError } = await serviceClient
+      .from("profiles")
+      .update({ account_type: "staff", onboarding_completed: true })
+      .eq("id", userId);
+    if (profileUpdateError) throw profileUpdateError;
+  }
+
+  const { data: authUser, error: authUserError } = await serviceClient.auth.admin.getUserById(userId);
+  if (authUserError) throw authUserError;
+  if (!authUser.user) return;
+
+  if (authUser.user.app_metadata?.account_type === "staff") return;
+
+  const { error: updateError } = await serviceClient.auth.admin.updateUserById(userId, {
+    app_metadata: {
+      ...authUser.user.app_metadata,
+      account_type: "staff",
+      provider: authUser.user.app_metadata?.provider ?? "phone",
+    },
+  });
+  if (updateError) throw updateError;
+};
+
 const sendOtpForUser = async (phone_number: string, userId: string) => {
   let code = "";
 
@@ -123,6 +166,7 @@ const login = async ({ phone_number }: PhonePayload) => {
     throw err;
   }
 
+  await ensureAuthMetadataMatchesStaff(userId);
   await sendOtpForUser(phone_number, userId);
 };
 
@@ -141,6 +185,7 @@ const signup = async ({ phone_number }: PhonePayload) => {
   const { data: newUser, error: userCreateError } = await serviceClient.auth.admin.createUser({
     phone: phone_number,
     user_metadata: { user_type: "user", phone: phone_number },
+    app_metadata: { account_type: "owner" },
   });
   if (userCreateError) throw userCreateError;
 
@@ -164,6 +209,7 @@ const resend = async ({ phone_number }: PhonePayload) => {
   }
   userId = existingUser[0].id;
 
+  await ensureAuthMetadataMatchesStaff(userId);
   await sendOtpForUser(phone_number, userId);
 };
 

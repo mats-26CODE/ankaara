@@ -9,6 +9,7 @@ import { toastMutationSuccess } from "@/lib/mutation-toast";
 import { usePreferencesStore } from "@/lib/stores/preferences-store";
 import { isPlanLimitError, getSubscribeUrlForPlanLimit } from "@/lib/subscription-limits";
 import { useBusinessStore } from "@/lib/stores/business-store";
+import { resolveDefaultBusinessId } from "@/lib/business-selection";
 import type { Tables, TablesInsert, TablesUpdate } from "@/database.types";
 
 export type Business = Tables<"businesses">;
@@ -40,20 +41,51 @@ export const useBusinesses = () => {
 
     if (error) {
       setBusinesses([]);
-    } else {
-      const rows = data ?? [];
-      const currentBusinessId = useBusinessStore.getState().currentBusinessId;
-      const hasSelectedBusiness = rows.some((business) => business.id === currentBusinessId);
-
-      if (rows.length === 0) {
-        useBusinessStore.getState().setCurrentBusiness(null);
-      } else if (!currentBusinessId || !hasSelectedBusiness) {
-        const primaryBusiness = rows.find((business) => business.is_primary);
-        useBusinessStore.getState().setCurrentBusiness(primaryBusiness?.id ?? rows[0].id);
-      }
-
-      setBusinesses(rows);
+      setLoading(false);
+      return;
     }
+
+    const ownedBusinesses = data ?? [];
+
+    const { data: staffLinks, error: staffError } = await supabase
+      .from("business_staff")
+      .select("business_id, invited_at, businesses(*)")
+      .eq("user_id", user.id)
+      .in("status", ["pending", "active"]);
+
+    if (staffError) {
+      setBusinesses([]);
+      setLoading(false);
+      return;
+    }
+
+    const staffBusinesses = (staffLinks ?? [])
+      .map((row) => row.businesses as Business | null)
+      .filter((business): business is Business => business != null);
+
+    const merged = new Map<string, Business>();
+    for (const business of [...ownedBusinesses, ...staffBusinesses]) {
+      merged.set(business.id, business);
+    }
+    const rows = Array.from(merged.values());
+    const currentBusinessId = useBusinessStore.getState().currentBusinessId;
+    const nextBusinessId = resolveDefaultBusinessId(
+      rows,
+      ownedBusinesses,
+      (staffLinks ?? []).map((link) => ({
+        business_id: link.business_id,
+        invited_at: link.invited_at,
+      })),
+      currentBusinessId,
+    );
+
+    if (rows.length === 0) {
+      useBusinessStore.getState().setCurrentBusiness(null);
+    } else if (nextBusinessId && nextBusinessId !== currentBusinessId) {
+      useBusinessStore.getState().setCurrentBusiness(nextBusinessId);
+    }
+
+    setBusinesses(rows);
     setLoading(false);
   }, []);
 
@@ -74,25 +106,25 @@ export const useCreateBusiness = () => {
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const { data, error } = await supabase
-        .from("businesses")
-        .insert({
-          owner_id: user.id,
-          name: payload.name,
-          currency: payload.currency,
-          address: payload.address?.trim() || null,
-          tax_number: payload.tax_number?.trim() || null,
-          capacity: payload.capacity?.trim() || null,
-          logo_url: payload.logo_url || null,
-          logo_text: payload.logo_text?.trim() || null,
-          brand_color: payload.brand_color || null,
-          is_primary: payload.is_primary ?? false,
-        })
-        .select()
-        .single();
+      const contextBusinessId = useBusinessStore.getState().currentBusinessId;
+
+      if (!payload.name?.trim()) throw new Error("Business name is required");
+
+      const { data, error } = await supabase.rpc("create_business_for_account", {
+        p_context_business_id: contextBusinessId,
+        p_name: payload.name.trim(),
+        p_currency: payload.currency ?? "TZS",
+        p_address: payload.address?.trim() || null,
+        p_tax_number: payload.tax_number?.trim() || null,
+        p_capacity: payload.capacity?.trim() || null,
+        p_logo_url: payload.logo_url || null,
+        p_logo_text: payload.logo_text?.trim() || null,
+        p_brand_color: payload.brand_color || null,
+        p_is_primary: payload.is_primary ?? false,
+      });
 
       if (error) throw error;
-      return data;
+      return data as Business;
     },
     onSuccess: (data, _variables, _onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });

@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useUser } from "@/hooks/use-user";
-import { useProfile } from "@/hooks/use-profile";
+import { useProfile, isProfileComplete, isStaffAccount } from "@/hooks/use-profile";
 import { useTranslation } from "@/hooks/use-translation";
 import { Spinner } from "@/components/ui/spinner";
 import { addCountryCode, clampPhoneDigitInput, formatPhoneForDisplay } from "@/helpers/helpers";
@@ -24,15 +24,9 @@ import { useCurrencies } from "@/hooks/use-currencies";
 import { useCompleteOnboarding } from "@/hooks/use-onboarding";
 import { isGoogleUser, isPhoneUser } from "@/helpers/auth-provider";
 import { setOnboardingPendingCookie } from "@/helpers/onboarding-pending-cookie";
-import type { Profile } from "@/hooks/use-profile";
 import { createClient } from "@/lib/supabase/client";
 
 const ONBOARDING_PENDING_KEY = "onboarding_pending";
-
-const isProfileActuallyComplete = (profile: Profile | null): boolean => {
-  if (!profile) return false;
-  return !!profile.full_name?.trim();
-};
 
 const OnboardingPage = () => {
   const { t } = useTranslation();
@@ -80,7 +74,7 @@ const OnboardingPage = () => {
   const updateUserEmailMutation = useUpdateUserEmail();
   const completeOnboarding = useCompleteOnboarding();
 
-  const profileComplete = isProfileActuallyComplete(profile);
+  const profileComplete = isProfileComplete(profile, { user });
 
   useEffect(() => {
     if (userLoading || profileLoading) return;
@@ -88,10 +82,14 @@ const OnboardingPage = () => {
       router.replace("/login");
       return;
     }
+    if (isStaffAccount(profile, user)) {
+      router.replace("/dashboard");
+      return;
+    }
     if (profileComplete) {
       router.replace("/dashboard");
     }
-  }, [user, userLoading, profileComplete, profileLoading, router]);
+  }, [user, userLoading, profileComplete, profileLoading, profile, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

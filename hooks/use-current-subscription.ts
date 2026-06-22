@@ -12,13 +12,20 @@ export type CurrentSubscription = {
   endDate: string | null;
 };
 
+const normalizePlanSlug = (slug: string | undefined): SubscriptionPlanSlug => {
+  const valid = slug && VALID_PLAN_SLUGS.includes(slug);
+  if (!valid) return "free";
+  if (slug === "pro") return "pro-monthly";
+  if (slug === "business") return "business-monthly";
+  return slug as SubscriptionPlanSlug;
+};
+
 const fetchCurrentSubscription = async (
   userId: string | undefined,
 ): Promise<CurrentSubscription | null> => {
   if (!userId) return null;
 
   const supabase = createClient();
-  // Reconcile expiry on each fetch: if subscription end_date passed, reset to free (call on login / when subscription is read)
   await supabase.rpc("check_subscription_expiry", { p_user_id: userId });
 
   const { data, error } = await supabase
@@ -28,17 +35,38 @@ const fetchCurrentSubscription = async (
     .maybeSingle();
 
   if (error) throw error;
-  const slug = data?.plan as string | undefined;
-  const valid = slug && VALID_PLAN_SLUGS.includes(slug);
-  const normalizedSlug: SubscriptionPlanSlug = valid
-    ? slug === "pro"
-      ? "pro-monthly"
-      : slug === "business"
-        ? "business-monthly"
-        : (slug as SubscriptionPlanSlug)
-    : "free";
-  return { planSlug: normalizedSlug, endDate: data?.end_date ?? null };
+  return { planSlug: normalizePlanSlug(data?.plan as string | undefined), endDate: data?.end_date ?? null };
 };
+
+export const fetchEffectiveSubscription = async (
+  businessId: string | null | undefined,
+): Promise<CurrentSubscription | null> => {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("get_effective_subscription", {
+    p_business_id: businessId ?? null,
+  });
+
+  if (error) throw error;
+
+  const row = (Array.isArray(data) ? data[0] : data) as
+    | { plan_slug?: string | null; end_date?: string | null }
+    | null
+    | undefined;
+
+  return {
+    planSlug: normalizePlanSlug(row?.plan_slug ?? undefined),
+    endDate: row?.end_date ?? null,
+  };
+};
+
+const EFFECTIVE_SUBSCRIPTION_QUERY_KEY = ["effective-subscription"] as const;
+
+export const useEffectiveSubscriptionQuery = (businessId: string | null | undefined) =>
+  useQuery({
+    queryKey: [...EFFECTIVE_SUBSCRIPTION_QUERY_KEY, businessId ?? "none"],
+    queryFn: () => fetchEffectiveSubscription(businessId),
+    staleTime: 2 * 60 * 1000,
+  });
 
 export const useCurrentSubscription = (userId: string | undefined) => {
   return useQuery({
