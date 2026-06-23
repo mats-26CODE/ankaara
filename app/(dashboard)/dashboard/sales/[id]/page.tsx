@@ -157,12 +157,16 @@ const SaleDetailPage = () => {
                 <TableHead>{t("dashboard.common.type")}</TableHead>
                 <TableHead>{t("dashboard.common.quantity")}</TableHead>
                 <TableHead>{t("dashboard.common.price")}</TableHead>
+                <TableHead>{t("dashboard.common.discount")}</TableHead>
                 <TableHead>{t("dashboard.common.total")}</TableHead>
                 <TableHead>{t("dashboard.common.profit")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(sale.items ?? []).map((item) => (
+              {(sale.items ?? []).map((item) => {
+                const discount = Number(item.discount) || 0;
+
+                return (
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.description}</TableCell>
                   <TableCell>
@@ -174,10 +178,14 @@ const SaleDetailPage = () => {
                   </TableCell>
                   <TableCell>{Number(item.quantity).toLocaleString()}</TableCell>
                   <TableCell>{Number(item.unit_price).toLocaleString()}</TableCell>
+                  <TableCell className={discount > 0 ? "tabular-nums" : "text-muted-foreground"}>
+                    {discount > 0 ? discount.toLocaleString() : "—"}
+                  </TableCell>
                   <TableCell>{Number(item.total).toLocaleString()}</TableCell>
                   <TableCell>{Number(item.profit).toLocaleString()}</TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>
