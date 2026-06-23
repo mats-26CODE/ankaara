@@ -43,7 +43,7 @@ export const fetchEffectiveSubscription = async (
 ): Promise<CurrentSubscription | null> => {
   const supabase = createClient();
   const { data, error } = await supabase.rpc("get_effective_subscription", {
-    p_business_id: businessId ?? null,
+    p_business_id: businessId ?? undefined,
   });
 
   if (error) throw error;

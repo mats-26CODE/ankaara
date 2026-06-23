@@ -114,12 +114,12 @@ export const useCreateBusiness = () => {
         p_context_business_id: contextBusinessId,
         p_name: payload.name.trim(),
         p_currency: payload.currency ?? "TZS",
-        p_address: payload.address?.trim() || null,
-        p_tax_number: payload.tax_number?.trim() || null,
-        p_capacity: payload.capacity?.trim() || null,
-        p_logo_url: payload.logo_url || null,
-        p_logo_text: payload.logo_text?.trim() || null,
-        p_brand_color: payload.brand_color || null,
+        p_address: payload.address?.trim() || undefined,
+        p_tax_number: payload.tax_number?.trim() || undefined,
+        p_capacity: payload.capacity?.trim() || undefined,
+        p_logo_url: payload.logo_url || undefined,
+        p_logo_text: payload.logo_text?.trim() || undefined,
+        p_brand_color: payload.brand_color || undefined,
         p_is_primary: payload.is_primary ?? false,
       });
 
