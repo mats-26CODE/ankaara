@@ -79,8 +79,8 @@ const SaleDetailPage = () => {
               </Badge>
             </div>
             <p className="text-muted-foreground text-sm">
-              {t("dashboard.sales.detail.soldOn")}{" "}
-              {dayjs(sale.sale_date).format("MMMM D, YYYY")} · {t("dashboard.sales.detail.recorded")}{" "}
+              {t("dashboard.sales.detail.soldOn")} {dayjs(sale.sale_date).format("MMMM D, YYYY")} ·{" "}
+              {t("dashboard.sales.detail.recorded")}{" "}
               {dayjs(sale.recorded_at).format("MMMM D, YYYY h:mm A")}
             </p>
           </div>
@@ -167,23 +167,23 @@ const SaleDetailPage = () => {
                 const discount = Number(item.discount) || 0;
 
                 return (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.description}</TableCell>
-                  <TableCell>
-                    <Badge variant={item.item_type === "service" ? "secondary" : "default"}>
-                      {item.item_type === "service"
-                        ? t("dashboard.common.service")
-                        : t("dashboard.common.product")}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{Number(item.quantity).toLocaleString()}</TableCell>
-                  <TableCell>{Number(item.unit_price).toLocaleString()}</TableCell>
-                  <TableCell className={discount > 0 ? "tabular-nums" : "text-muted-foreground"}>
-                    {discount > 0 ? discount.toLocaleString() : "—"}
-                  </TableCell>
-                  <TableCell>{Number(item.total).toLocaleString()}</TableCell>
-                  <TableCell>{Number(item.profit).toLocaleString()}</TableCell>
-                </TableRow>
+                  <TableRow key={item.id}>
+                    <TableCell className="font-medium">{item.description}</TableCell>
+                    <TableCell>
+                      <Badge variant={item.item_type === "service" ? "secondary" : "default"}>
+                        {item.item_type === "service"
+                          ? t("dashboard.common.service")
+                          : t("dashboard.common.product")}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{Number(item.quantity).toLocaleString()}</TableCell>
+                    <TableCell>{Number(item.unit_price).toLocaleString()}</TableCell>
+                    <TableCell className={discount > 0 ? "tabular-nums" : "text-muted-foreground"}>
+                      {discount > 0 ? discount.toLocaleString() : "0"}
+                    </TableCell>
+                    <TableCell>{Number(item.total).toLocaleString()}</TableCell>
+                    <TableCell>{Number(item.profit).toLocaleString()}</TableCell>
+                  </TableRow>
                 );
               })}
             </TableBody>
