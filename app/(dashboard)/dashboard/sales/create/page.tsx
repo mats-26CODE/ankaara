@@ -113,7 +113,6 @@ const CreateSalePage = () => {
 
   const addItemFromProduct = (product: ProductLinePayload) => {
     setItems((prev) => [
-      ...prev,
       {
         product_id: product.id,
         description: product.name,
@@ -124,6 +123,7 @@ const CreateSalePage = () => {
         unit_price: product.unit_price,
         discount: 0,
       },
+      ...prev,
     ]);
     setProductPickerOpen(false);
   };
