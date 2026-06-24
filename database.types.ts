@@ -1283,6 +1283,78 @@ export type Database = {
           },
         ]
       }
+      sale_item_returns: {
+        Row: {
+          authorized_by: string
+          business_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          product_id: string | null
+          quantity: number
+          sale_id: string
+          sale_item_id: string
+        }
+        Insert: {
+          authorized_by: string
+          business_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          product_id?: string | null
+          quantity: number
+          sale_id: string
+          sale_item_id: string
+        }
+        Update: {
+          authorized_by?: string
+          business_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          product_id?: string | null
+          quantity?: number
+          sale_id?: string
+          sale_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_item_returns_authorized_by_fkey"
+            columns: ["authorized_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_item_returns_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_item_returns_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_item_returns_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_item_returns_sale_item_id_fkey"
+            columns: ["sale_item_id"]
+            isOneToOne: false
+            referencedRelation: "sale_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sale_items: {
         Row: {
           base_price: number
@@ -1294,6 +1366,8 @@ export type Database = {
           product_id: string | null
           profit: number
           quantity: number
+          returned_at: string | null
+          returned_quantity: number
           sale_id: string
           total: number
           unit_price: number
@@ -1308,6 +1382,8 @@ export type Database = {
           product_id?: string | null
           profit?: number
           quantity?: number
+          returned_at?: string | null
+          returned_quantity?: number
           sale_id: string
           total?: number
           unit_price?: number
@@ -1322,6 +1398,8 @@ export type Database = {
           product_id?: string | null
           profit?: number
           quantity?: number
+          returned_at?: string | null
+          returned_quantity?: number
           sale_id?: string
           total?: number
           unit_price?: number
@@ -1895,6 +1973,74 @@ export type Database = {
           p_items?: Json
           p_notes?: string
           p_sale_date?: string
+        }
+        Returns: {
+          business_id: string
+          client_id: string | null
+          created_at: string
+          currency: string
+          id: string
+          invoice_id: string | null
+          loan_id: string | null
+          notes: string | null
+          profit: number
+          recorded_at: string
+          sale_date: string
+          sale_number: string
+          source: string
+          subtotal: number
+          tax: number
+          total: number
+          total_cost: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "sales"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      return_sale_item: {
+        Args: {
+          p_notes?: string
+          p_quantity: number
+          p_sale_item_id: string
+        }
+        Returns: {
+          business_id: string
+          client_id: string | null
+          created_at: string
+          currency: string
+          id: string
+          invoice_id: string | null
+          loan_id: string | null
+          notes: string | null
+          profit: number
+          recorded_at: string
+          sale_date: string
+          sale_number: string
+          source: string
+          subtotal: number
+          tax: number
+          total: number
+          total_cost: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "sales"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      update_direct_sale: {
+        Args: {
+          p_client_id?: string
+          p_items?: Json
+          p_notes?: string
+          p_sale_date?: string
+          p_sale_id: string
         }
         Returns: {
           business_id: string

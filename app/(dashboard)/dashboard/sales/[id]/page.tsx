@@ -3,9 +3,16 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
-import { useSale } from "@/hooks/use-sales";
+import { useState } from "react";
+import {
+  isSaleItemReturnable,
+  saleItemRemainingQuantity,
+  useSale,
+} from "@/hooks/use-sales";
+import { useCanManageSales } from "@/hooks/use-staff-permissions";
 import { useTranslation } from "@/hooks/use-translation";
 import { useFormatAmount } from "@/hooks/use-format-amount";
+import { ReturnSaleItemDialog } from "@/components/sales/return-sale-item-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,16 +31,20 @@ import {
   CircleDollarSign,
   FileText,
   Package,
+  Pencil,
   TrendingUp,
   UserRound,
 } from "lucide-react";
+import type { SaleItem } from "@/hooks/use-sales";
 
 const SaleDetailPage = () => {
   const { t } = useTranslation();
   const id = useRouteUuidParam("id");
   const router = useRouter();
-  const { sale, loading } = useSale(id);
+  const { sale, loading, refetch } = useSale(id);
   const { format: formatAmount } = useFormatAmount();
+  const canManageSales = useCanManageSales();
+  const [returnItem, setReturnItem] = useState<SaleItem | null>(null);
 
   if (!id) {
     return (
@@ -62,6 +73,9 @@ const SaleDetailPage = () => {
     );
   }
 
+  const canEditSale = canManageSales && sale.source === "direct";
+  const showReturnColumn = canManageSales;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -85,14 +99,24 @@ const SaleDetailPage = () => {
             </p>
           </div>
         </div>
-        {sale.invoice_id && (
-          <Button variant="outline" asChild>
-            <Link href={`/dashboard/invoices/${sale.invoice_id}`}>
-              <FileText className="mr-2 size-4" />
-              {t("dashboard.common.viewInvoice")}
-            </Link>
-          </Button>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {canEditSale ? (
+            <Button variant="outline" asChild>
+              <Link href={`/dashboard/sales/${sale.id}/edit`}>
+                <Pencil className="mr-2 size-4" />
+                {t("dashboard.common.edit")}
+              </Link>
+            </Button>
+          ) : null}
+          {sale.invoice_id ? (
+            <Button variant="outline" asChild>
+              <Link href={`/dashboard/invoices/${sale.invoice_id}`}>
+                <FileText className="mr-2 size-4" />
+                {t("dashboard.common.viewInvoice")}
+              </Link>
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       <Card>
@@ -160,15 +184,34 @@ const SaleDetailPage = () => {
                 <TableHead>{t("dashboard.common.discount")}</TableHead>
                 <TableHead>{t("dashboard.common.total")}</TableHead>
                 <TableHead>{t("dashboard.common.profit")}</TableHead>
+                {showReturnColumn ? (
+                  <TableHead className="text-right">{t("dashboard.sales.detail.actions")}</TableHead>
+                ) : null}
               </TableRow>
             </TableHeader>
             <TableBody>
               {(sale.items ?? []).map((item) => {
                 const discount = Number(item.discount) || 0;
+                const returnedQty = Number(item.returned_quantity) || 0;
+                const remainingQty = saleItemRemainingQuantity(item);
+                const isFullyReturned = returnedQty > 0 && remainingQty <= 0;
 
                 return (
                   <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.description}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="space-y-1">
+                        <span>{item.description}</span>
+                        {returnedQty > 0 ? (
+                          <Badge variant={isFullyReturned ? "secondary" : "outline"}>
+                            {isFullyReturned
+                              ? t("dashboard.sales.detail.fullyReturned")
+                              : t("dashboard.sales.detail.returned", {
+                                  qty: returnedQty.toLocaleString(),
+                                })}
+                          </Badge>
+                        ) : null}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Badge variant={item.item_type === "service" ? "secondary" : "default"}>
                         {item.item_type === "service"
@@ -183,6 +226,19 @@ const SaleDetailPage = () => {
                     </TableCell>
                     <TableCell>{Number(item.total).toLocaleString()}</TableCell>
                     <TableCell>{Number(item.profit).toLocaleString()}</TableCell>
+                    {showReturnColumn ? (
+                      <TableCell className="text-right">
+                        {isSaleItemReturnable(item) ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setReturnItem(item)}
+                          >
+                            {t("dashboard.sales.return.action")}
+                          </Button>
+                        ) : null}
+                      </TableCell>
+                    ) : null}
                   </TableRow>
                 );
               })}
@@ -190,6 +246,16 @@ const SaleDetailPage = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <ReturnSaleItemDialog
+        open={returnItem !== null}
+        onOpenChange={(open) => {
+          if (!open) setReturnItem(null);
+        }}
+        item={returnItem}
+        saleId={sale.id}
+        onSuccess={() => void refetch()}
+      />
     </div>
   );
 };

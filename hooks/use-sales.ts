@@ -35,6 +35,10 @@ export type DirectSaleItemInput = {
   discount?: number;
 };
 
+export type UpdateDirectSaleItemInput = DirectSaleItemInput & {
+  id?: string;
+};
+
 export type CreateDirectSalePayload = {
   business_id: string;
   client_id?: string | null;
@@ -42,6 +46,20 @@ export type CreateDirectSalePayload = {
   currency: string;
   notes?: string | null;
   items: DirectSaleItemInput[];
+};
+
+export type UpdateDirectSalePayload = {
+  sale_id: string;
+  client_id?: string | null;
+  sale_date: string;
+  notes?: string | null;
+  items: UpdateDirectSaleItemInput[];
+};
+
+export type ReturnSaleItemPayload = {
+  sale_item_id: string;
+  quantity: number;
+  notes?: string | null;
 };
 
 export type ConvertInvoiceToSalePayload = {
@@ -61,8 +79,40 @@ const getSalesErrorMessage = (message: string) => {
   if (message.includes("INVOICE_STATUS_NOT_ELIGIBLE_FOR_SALE_CONVERSION")) {
     return "Only sent, viewed, or paid invoices can be converted to a sale.";
   }
+  if (message.includes("SALE_NOT_EDITABLE")) {
+    return "Only direct sales can be edited.";
+  }
+  if (message.includes("SERVICE_NOT_RETURNABLE")) {
+    return "Services cannot be returned.";
+  }
+  if (message.includes("RETURN_QUANTITY_EXCEEDS_REMAINING")) {
+    const remaining = message.split(":").at(-1);
+    return remaining
+      ? `Return quantity exceeds remaining (${remaining}).`
+      : "Return quantity exceeds remaining.";
+  }
+  if (message.includes("FORBIDDEN")) {
+    return "You do not have permission to perform this action.";
+  }
+  if (message.includes("CANNOT_REMOVE_RETURNED_LINE")) {
+    return "Cannot remove a line that has returns. Adjust quantity instead.";
+  }
+  if (message.includes("QUANTITY_BELOW_RETURNED")) {
+    const returned = message.split(":").at(-1);
+    return returned
+      ? `Quantity cannot be less than returned amount (${returned}).`
+      : "Quantity cannot be less than returned amount.";
+  }
   return message;
 };
+
+export const saleItemRemainingQuantity = (item: Pick<SaleItem, "quantity" | "returned_quantity">) =>
+  Math.max(Number(item.quantity) - Number(item.returned_quantity ?? 0), 0);
+
+export const isSaleItemReturnable = (item: SaleItem) =>
+  item.item_type === "product" &&
+  item.product_id != null &&
+  saleItemRemainingQuantity(item) > 0;
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -406,6 +456,69 @@ export const useConvertInvoiceToSale = () => {
         return;
       }
       ToastAlert.error(getSalesErrorMessage(error.message) || "Failed to convert invoice");
+    },
+  });
+};
+
+export const useReturnSaleItem = (saleId?: string | null) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: ReturnSaleItemPayload) => {
+      const supabase = createClient();
+      const { data, error } = await supabase.rpc("return_sale_item", {
+        p_sale_item_id: payload.sale_item_id,
+        p_quantity: payload.quantity,
+        p_notes: payload.notes?.trim() || undefined,
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SALES_QUERY_KEY });
+      if (saleId) {
+        queryClient.invalidateQueries({ queryKey: [...["sale"], saleId] });
+      }
+      queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      ToastAlert.success(usePreferencesStore.getState().t("dashboard.toast.saleItemReturned"));
+    },
+    onError: (error: Error) => {
+      ToastAlert.error(getSalesErrorMessage(error.message) || "Failed to return item");
+    },
+  });
+};
+
+export const useUpdateDirectSale = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: UpdateDirectSalePayload): Promise<SupabaseRowId> => {
+      const supabase = createClient();
+      const { data, error } = await supabase.rpc("update_direct_sale", {
+        p_sale_id: payload.sale_id,
+        p_client_id: payload.client_id ?? undefined,
+        p_sale_date: payload.sale_date,
+        p_notes: payload.notes?.trim() || undefined,
+        p_items: payload.items as unknown as Json,
+      });
+
+      if (error) throw error;
+      const raw = data as unknown;
+      const row = Array.isArray(raw) ? raw[0] : raw;
+      if (!row || typeof row !== "object") {
+        throw new Error("Invalid response from update_direct_sale");
+      }
+      return { id: ensureRowId(row as { id?: unknown }, "update_direct_sale") };
+    },
+    onSuccess: (_data, variables, _onMutateResult, context) => {
+      queryClient.invalidateQueries({ queryKey: SALES_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ["sale", variables.sale_id] });
+      queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toastMutationSuccess(context, usePreferencesStore.getState().t("dashboard.toast.saleUpdated"));
+    },
+    onError: (error: Error) => {
+      ToastAlert.error(getSalesErrorMessage(error.message) || "Failed to update sale");
     },
   });
 };

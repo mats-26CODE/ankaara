@@ -84,6 +84,12 @@ export const resolveStaffPermissions = (
   };
 };
 
+/** Owner or manager staff category — for sale edit and item returns. */
+export const canManageSales = (
+  permissions: Pick<ResolvedStaffPermissions, "isOwner">,
+  staffCategorySlug?: string | null,
+): boolean => permissions.isOwner || staffCategorySlug === "manager";
+
 export const DASHBOARD_ROUTE_PERMISSIONS: Partial<
   Record<string, { resource: StaffPermissionResource; action: StaffPermissionActions[StaffPermissionResource] }>
 > = {

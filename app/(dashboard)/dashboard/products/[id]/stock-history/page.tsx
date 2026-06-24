@@ -9,6 +9,7 @@ import {
   useInventoryMovements,
   useAdjustProductStock,
   useDeleteProduct,
+  type InventoryMovement,
 } from "@/hooks/use-products";
 import { useBusinesses } from "@/hooks/use-businesses";
 import { useRouteUuidParam } from "@/hooks/use-route-uuid-param";
@@ -52,6 +53,47 @@ const emptyStockForm: StockFormState = {
 const MOVEMENTS_PAGE_SIZE = 20;
 
 const movementTypeKey = (type: string) => `dashboard.status.${type}` as const;
+
+const SALE_MOVEMENT_REASON_PREFIXES = [
+  "Direct sale ",
+  "Return from sale ",
+  "Line removed from sale ",
+  "Sale edit ",
+] as const;
+
+const MovementReason = ({ movement }: { movement: InventoryMovement }) => {
+  const reason = movement.reason?.trim();
+  if (!reason) return <>—</>;
+
+  if (!movement.sale_id) {
+    return <>{reason}</>;
+  }
+
+  const prefix = SALE_MOVEMENT_REASON_PREFIXES.find((p) => reason.startsWith(p));
+  if (prefix) {
+    const saleNumber = reason.slice(prefix.length);
+    return (
+      <>
+        {prefix}
+        <Link
+          href={`/dashboard/sales/${movement.sale_id}`}
+          className="text-primary font-medium hover:underline"
+        >
+          {saleNumber}
+        </Link>
+      </>
+    );
+  }
+
+  return (
+    <Link
+      href={`/dashboard/sales/${movement.sale_id}`}
+      className="text-primary font-medium hover:underline"
+    >
+      {reason}
+    </Link>
+  );
+};
 
 const ProductStockHistoryPage = () => {
   const { t } = useTranslation();
@@ -346,7 +388,7 @@ const ProductStockHistoryPage = () => {
                           {Number(movement.quantity_after).toLocaleString()}
                         </td>
                         <td className="text-muted-foreground px-3 py-2">
-                          {movement.reason?.trim() || "—"}
+                          <MovementReason movement={movement} />
                         </td>
                       </tr>
                     ))}
@@ -377,7 +419,12 @@ const ProductStockHistoryPage = () => {
                     <p className="text-muted-foreground mt-0.5 text-xs">
                       {Number(movement.quantity_before).toLocaleString()} →{" "}
                       {Number(movement.quantity_after).toLocaleString()}
-                      {movement.reason ? ` · ${movement.reason}` : ""}
+                      {movement.reason ? (
+                        <>
+                          {" · "}
+                          <MovementReason movement={movement} />
+                        </>
+                      ) : null}
                     </p>
                   </div>
                 ))}

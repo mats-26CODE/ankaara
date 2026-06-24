@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { SubscriptionPlanBadge } from "@/components/shared/subscription-plan-badge";
 import { ProfileAvatar } from "@/components/shared/profile-avatar";
 import { useProfile } from "@/hooks/use-profile";
@@ -53,6 +54,25 @@ import {
   Package,
   Wallet,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const DashboardStatSkeleton = ({
+  className,
+  size = "default",
+}: {
+  className?: string;
+  size?: "default" | "lg" | "count";
+}) => (
+  <Skeleton
+    className={cn(
+      "bg-muted",
+      size === "lg" && "h-7 w-14 rounded-sm",
+      size === "count" && "h-5 w-10 rounded-sm",
+      size === "default" && "h-5 w-24 rounded-sm",
+      className,
+    )}
+  />
+);
 
 /**
  * Check whether the profile has the essential fields filled in.
@@ -285,39 +305,49 @@ const DashboardPage = () => {
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6">
               <div className="min-w-0 space-y-1">
                 <p className="text-muted-foreground text-sm">{t("dashboard.common.totalSales")}</p>
-                <p className="text-lg font-bold wrap-break-word tabular-nums">
-                  {statsLoading
-                    ? "—"
-                    : formatAmount(salesStats.totalSales, {
-                        decimalDigits: 0,
-                      })}
-                </p>
+                {statsLoading ? (
+                  <DashboardStatSkeleton />
+                ) : (
+                  <p className="text-lg font-bold wrap-break-word tabular-nums">
+                    {formatAmount(salesStats.totalSales, {
+                      decimalDigits: 0,
+                    })}
+                  </p>
+                )}
               </div>
               {showProfits ? (
                 <div className="min-w-0 space-y-1">
                   <p className="text-muted-foreground text-sm">
                     {t("dashboard.common.totalProfit")}
                   </p>
-                  <p className="text-lg font-bold wrap-break-word tabular-nums">
-                    {statsLoading
-                      ? "—"
-                      : formatAmount(salesStats.totalProfit, { decimalDigits: 0 })}
-                  </p>
+                  {statsLoading ? (
+                    <DashboardStatSkeleton />
+                  ) : (
+                    <p className="text-lg font-bold wrap-break-word tabular-nums">
+                      {formatAmount(salesStats.totalProfit, { decimalDigits: 0 })}
+                    </p>
+                  )}
                 </div>
               ) : null}
               <div className="min-w-0 space-y-1">
                 <p className="text-muted-foreground text-sm">
                   {t("dashboard.common.totalProducts")}
                 </p>
-                <p className="text-lg font-bold tabular-nums">
-                  {statsLoading ? "—" : productCount}
-                </p>
+                {statsLoading ? (
+                  <DashboardStatSkeleton size="count" />
+                ) : (
+                  <p className="text-lg font-bold tabular-nums">{productCount}</p>
+                )}
               </div>
               <div className="min-w-0 space-y-1">
                 <p className="text-muted-foreground text-sm">
                   {t("dashboard.common.totalClients")}
                 </p>
-                <p className="text-lg font-bold tabular-nums">{statsLoading ? "—" : clientCount}</p>
+                {statsLoading ? (
+                  <DashboardStatSkeleton size="count" />
+                ) : (
+                  <p className="text-lg font-bold tabular-nums">{clientCount}</p>
+                )}
               </div>
               {showInvoices ? (
                 <>
@@ -325,17 +355,21 @@ const DashboardPage = () => {
                     <p className="text-muted-foreground text-sm">
                       {t("dashboard.common.totalInvoices")}
                     </p>
-                    <p className="text-lg font-bold tabular-nums">
-                      {statsLoading ? "—" : invoiceStats.total}
-                    </p>
+                    {statsLoading ? (
+                      <DashboardStatSkeleton size="count" />
+                    ) : (
+                      <p className="text-lg font-bold tabular-nums">{invoiceStats.total}</p>
+                    )}
                   </div>
                   <div className="min-w-0 space-y-1">
                     <p className="text-muted-foreground text-sm">
                       {t("dashboard.common.totalQuotations")}
                     </p>
-                    <p className="text-lg font-bold tabular-nums">
-                      {statsLoading ? "—" : quotationCount}
-                    </p>
+                    {statsLoading ? (
+                      <DashboardStatSkeleton size="count" />
+                    ) : (
+                      <p className="text-lg font-bold tabular-nums">{quotationCount}</p>
+                    )}
                   </div>
                 </>
               ) : null}
@@ -356,9 +390,13 @@ const DashboardPage = () => {
                 <ShoppingCart className="size-4 text-blue-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-xl font-bold">
-                  {statsLoading ? "—" : formatAmount(salesStats.todaySales, { decimalDigits: 0 })}
-                </div>
+                {statsLoading ? (
+                  <DashboardStatSkeleton className="h-6 w-28" />
+                ) : (
+                  <div className="text-xl font-bold">
+                    {formatAmount(salesStats.todaySales, { decimalDigits: 0 })}
+                  </div>
+                )}
                 <p className="text-muted-foreground mt-1 text-xs">
                   {t("dashboard.common.salesDatedToday")}
                 </p>
@@ -379,11 +417,13 @@ const DashboardPage = () => {
                   <TrendingUp className="size-4 text-green-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-xl font-bold">
-                    {statsLoading
-                      ? "—"
-                      : formatAmount(salesStats.todayProfit, { decimalDigits: 0 })}
-                  </div>
+                  {statsLoading ? (
+                    <DashboardStatSkeleton className="h-6 w-28" />
+                  ) : (
+                    <div className="text-xl font-bold">
+                      {formatAmount(salesStats.todayProfit, { decimalDigits: 0 })}
+                    </div>
+                  )}
                   <p className="text-muted-foreground mt-1 text-xs">
                     {t("dashboard.common.profitDatedToday")}
                   </p>
@@ -404,11 +444,13 @@ const DashboardPage = () => {
                 <Wallet className="size-4 text-amber-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-xl font-bold">
-                  {statsLoading
-                    ? "—"
-                    : formatAmount(salesStats.todayExpenses, { decimalDigits: 0 })}
-                </div>
+                {statsLoading ? (
+                  <DashboardStatSkeleton className="h-6 w-28" />
+                ) : (
+                  <div className="text-xl font-bold">
+                    {formatAmount(salesStats.todayExpenses, { decimalDigits: 0 })}
+                  </div>
+                )}
                 <p className="text-muted-foreground mt-1 text-xs">
                   {t("dashboard.common.expensesDatedToday")}
                 </p>
@@ -428,11 +470,13 @@ const DashboardPage = () => {
                 <Package className="size-4 text-violet-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-xl font-bold">
-                  {statsLoading
-                    ? "—"
-                    : formatAmount(inventoryStats.inventoryValue, { decimalDigits: 0 })}
-                </div>
+                {statsLoading ? (
+                  <DashboardStatSkeleton className="h-6 w-28" />
+                ) : (
+                  <div className="text-xl font-bold">
+                    {formatAmount(inventoryStats.inventoryValue, { decimalDigits: 0 })}
+                  </div>
+                )}
                 <p className="text-muted-foreground mt-1 text-xs">
                   {t("dashboard.common.stockAtBasePrice")}
                 </p>
@@ -458,45 +502,55 @@ const DashboardPage = () => {
                       <p className="text-sm font-medium">{t("dashboard.status.paid")}</p>
                       <CheckCircle2 className="size-4 text-green-600" />
                     </div>
-                    <p className="mt-2 text-2xl font-bold">
-                      {statsLoading ? "—" : invoiceStats.paid}
-                    </p>
+                    {statsLoading ? (
+                      <DashboardStatSkeleton size="lg" className="mt-2" />
+                    ) : (
+                      <p className="mt-2 text-2xl font-bold">{invoiceStats.paid}</p>
+                    )}
                   </Link>
                   <Link href="/dashboard/invoices?status=sent" className="rounded-lg border p-4">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium">{t("dashboard.status.sent")}</p>
                       <Send className="size-4 text-blue-600" />
                     </div>
-                    <p className="mt-2 text-2xl font-bold">
-                      {statsLoading ? "—" : invoiceStats.sent}
-                    </p>
+                    {statsLoading ? (
+                      <DashboardStatSkeleton size="lg" className="mt-2" />
+                    ) : (
+                      <p className="mt-2 text-2xl font-bold">{invoiceStats.sent}</p>
+                    )}
                   </Link>
                   <Link href="/dashboard/invoices?status=overdue" className="rounded-lg border p-4">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium">{t("dashboard.status.overdue")}</p>
                       <AlertTriangle className="text-destructive size-4" />
                     </div>
-                    <p className="mt-2 text-2xl font-bold">
-                      {statsLoading ? "—" : invoiceStats.overdue}
-                    </p>
+                    {statsLoading ? (
+                      <DashboardStatSkeleton size="lg" className="mt-2" />
+                    ) : (
+                      <p className="mt-2 text-2xl font-bold">{invoiceStats.overdue}</p>
+                    )}
                   </Link>
                   <Link href="/dashboard/invoices?status=draft" className="rounded-lg border p-4">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium">{t("dashboard.common.drafts")}</p>
                       <Clock className="size-4 text-yellow-600" />
                     </div>
-                    <p className="mt-2 text-2xl font-bold">
-                      {statsLoading ? "—" : invoiceStats.draft}
-                    </p>
+                    {statsLoading ? (
+                      <DashboardStatSkeleton size="lg" className="mt-2" />
+                    ) : (
+                      <p className="mt-2 text-2xl font-bold">{invoiceStats.draft}</p>
+                    )}
                   </Link>
                   <Link href="/dashboard/invoices" className="rounded-lg border p-4">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium">{t("dashboard.common.total")}</p>
                       <FileText className="text-muted-foreground size-4" />
                     </div>
-                    <p className="mt-2 text-2xl font-bold">
-                      {statsLoading ? "—" : invoiceStats.total}
-                    </p>
+                    {statsLoading ? (
+                      <DashboardStatSkeleton size="lg" className="mt-2" />
+                    ) : (
+                      <p className="mt-2 text-2xl font-bold">{invoiceStats.total}</p>
+                    )}
                   </Link>
                 </div>
               </CardContent>

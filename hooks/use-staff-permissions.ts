@@ -9,7 +9,7 @@ import {
   useStaffMembership,
 } from "@/hooks/use-staff";
 import { useBusinessStore } from "@/lib/stores/business-store";
-import { resolveStaffPermissions, type ResolvedStaffPermissions } from "@/lib/staff-permissions";
+import { resolveStaffPermissions, canManageSales, type ResolvedStaffPermissions } from "@/lib/staff-permissions";
 import { useUser } from "@/hooks/use-user";
 
 export const useStaffPermissions = (): ResolvedStaffPermissions => {
@@ -33,6 +33,18 @@ export const useStaffPermissions = (): ResolvedStaffPermissions => {
     const document = isOwner ? null : getMembershipPermissions(membership);
     return resolveStaffPermissions(isOwner, document);
   }, [currentBusinessId, membership]);
+};
+
+export const useCanManageSales = (): boolean => {
+  const permissions = useStaffPermissions();
+  const { user } = useUser();
+  const currentBusinessId = useBusinessStore((s) => s.currentBusinessId);
+  const { data: membership } = useStaffMembership(user?.id, currentBusinessId);
+
+  return useMemo(
+    () => canManageSales(permissions, membership?.staff_categories?.slug),
+    [membership?.staff_categories?.slug, permissions],
+  );
 };
 
 export const useIsStaffUser = (): boolean => {
