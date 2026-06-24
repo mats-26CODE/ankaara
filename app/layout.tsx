@@ -5,6 +5,7 @@ import "./globals.css";
 import Providers from "@/providers/providers";
 import { AuthHashHandler } from "@/components/auth/auth-hash-handler";
 import { APP_NAME } from "@/constants/values";
+import { Analytics } from "@vercel/analytics/next";
 
 const figtree = Figtree({
   variable: "--font-figtree",
@@ -71,6 +72,7 @@ export default function RootLayout({
             {children}
           </Providers>
         </Suspense>
+        <Analytics />
       </body>
     </html>
   );
