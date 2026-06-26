@@ -158,6 +158,18 @@ const handleInvoiceViewInsert = async (
     return { skipped: true, reason: "invoice_not_found" };
   }
 
+  // Atomically claim the first view: only the open that flips viewed_at from
+  // NULL sends a push. Concurrent / repeat opens get no row back and skip.
+  const { data: claimed } = await supabase
+    .from("invoices")
+    .update({ viewed_at: new Date().toISOString() })
+    .eq("id", invoiceId)
+    .is("viewed_at", null)
+    .select("id")
+    .maybeSingle();
+
+  if (!claimed) return { skipped: true, reason: "already_viewed" };
+
   const { data: business } = await supabase
     .from("businesses")
     .select("owner_id")

@@ -617,6 +617,7 @@ export type Database = {
           template_id: string
           total: number
           updated_at: string
+          viewed_at: string | null
         }
         Insert: {
           accent_color?: string | null
@@ -639,6 +640,7 @@ export type Database = {
           template_id?: string
           total?: number
           updated_at?: string
+          viewed_at?: string | null
         }
         Update: {
           accent_color?: string | null
@@ -661,6 +663,7 @@ export type Database = {
           template_id?: string
           total?: number
           updated_at?: string
+          viewed_at?: string | null
         }
         Relationships: [
           {
