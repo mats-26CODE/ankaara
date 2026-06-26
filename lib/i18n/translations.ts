@@ -366,6 +366,22 @@ export const translations = {
         },
       },
       secondaryCta: "Jifunze Zaidi",
+      storeButtons: {
+        appStoreLabel: "Pakua kutoka",
+        appStoreName: "App Store",
+        googlePlayLabel: "Ipate kwenye",
+        googlePlayName: "Google Play",
+      },
+      mobileShowcase: {
+        badge: "Programu ya simu",
+        title: "Endesha biashara yako popote ulipo",
+        subtitle:
+          "Pakua programu ya Ankaara kwenye simu yako—rekodi mauzo, fuatilia stock, na uone faida halisi ukiwa njiani.",
+        pointOne: "Rekodi mauzo na matumizi kwa sekunde chache",
+        pointTwo: "Ona dashibodi ya faida wakati wowote, popote",
+        pointThree: "Inafanya kazi kwa Android na iOS",
+        imageAlt: "Programu ya Ankaara ikionyeshwa kwenye simu",
+      },
       simpleSection: {
         title: "Kila kitu unachohitaji kuendesha duka lako",
         recordSales: "Rekodi mauzo ya bidhaa au huduma kwa sekunde chache",
@@ -1047,6 +1063,22 @@ export const translations = {
         },
       },
       secondaryCta: "Learn more",
+      storeButtons: {
+        appStoreLabel: "Download on the",
+        appStoreName: "App Store",
+        googlePlayLabel: "Get it on",
+        googlePlayName: "Google Play",
+      },
+      mobileShowcase: {
+        badge: "Mobile app",
+        title: "Run your business from anywhere",
+        subtitle:
+          "Get the Ankaara app on your phone—record sales, track stock, and see real profit while you're on the move.",
+        pointOne: "Record sales and expenses in seconds",
+        pointTwo: "See your profit dashboard anytime, anywhere",
+        pointThree: "Works on both Android and iOS",
+        imageAlt: "Ankaara app shown on phones",
+      },
       simpleSection: {
         title: "Everything you need to run your shop",
         recordSales: "Record product or service sales in seconds",

@@ -3,6 +3,7 @@
 import Logo from "./logo";
 import { useTranslation } from "@/hooks/use-translation";
 import { SocialConnectButtons } from "@/components/shared/social-connect-buttons";
+import { StoreButtons } from "@/components/shared/store-buttons";
 
 export const Footer = () => {
   const { t } = useTranslation();
@@ -16,6 +17,7 @@ export const Footer = () => {
             <p className="text-muted-foreground line-clamp-3 w-2/3 text-sm">
               {t("footer.description")}
             </p>
+            <StoreButtons />
           </div>
 
           {/* Company */}

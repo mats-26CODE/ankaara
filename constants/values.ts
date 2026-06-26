@@ -13,6 +13,10 @@ export const CONTACT_US_ADDRESS = "Dar es Salaam, Tanzania";
 export const APP_NAME = "Ankaara";
 export const APP_URL = "https://ankaara.app";
 
+/** App store listings (set to `#` until the apps are published). */
+export const APP_STORE_URL = "#";
+export const GOOGLE_PLAY_URL = "#";
+
 /** Sidebar footer: `Copyright © 2026 Ankaara. All rights reserved.` */
 export const getCopyrightNotice = (year = new Date().getFullYear()) =>
   `Copyright © ${year} ${APP_NAME}. All rights reserved.`;
