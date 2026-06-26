@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { ToastAlert } from "@/config/toast";
-import { toastMutationSuccess } from "@/lib/mutation-toast";
+import { getAuthConflictMessage, toastMutationSuccess } from "@/lib/mutation-toast";
 import { createClient } from "@/lib/supabase/client";
 import {
   FunctionsFetchError,
@@ -384,7 +384,9 @@ export const useUpdateUserEmail = () => {
       toastMutationSuccess(context, "Check your email and click the confirmation link to complete setup.");
     },
     onError: (error: AuthError) => {
-      ToastAlert.error(error.message || "Failed to send confirmation email. Please try again.");
+      ToastAlert.error(
+        getAuthConflictMessage(error, "Failed to send confirmation email. Please try again."),
+      );
     },
   });
 };

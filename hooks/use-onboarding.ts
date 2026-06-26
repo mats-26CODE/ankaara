@@ -3,7 +3,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { ToastAlert } from "@/config/toast";
-import { toastMutationSuccess } from "@/lib/mutation-toast";
+import { getAuthConflictMessage, toastMutationSuccess } from "@/lib/mutation-toast";
 
 type CompleteOnboardingPayload = {
   userId: string;
@@ -89,13 +89,7 @@ export const useCompleteOnboarding = () => {
       toastMutationSuccess(context, "Profile setup complete!");
     },
     onError: (error: Error & { code?: string }) => {
-      const isDuplicatePhone =
-        error.code === "23505" ||
-        (error.message && error.message.includes("user_phone_number_key"));
-      const message = isDuplicatePhone
-        ? "This phone number is already registered to another account. Please use a different number."
-        : error.message || "Something went wrong. Please try again.";
-      ToastAlert.error(message);
+      ToastAlert.error(getAuthConflictMessage(error, "Something went wrong. Please try again."));
     },
   });
 };

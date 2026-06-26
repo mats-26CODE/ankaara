@@ -25,6 +25,7 @@ import { useCompleteOnboarding } from "@/hooks/use-onboarding";
 import { isGoogleUser, isPhoneUser } from "@/helpers/auth-provider";
 import { setOnboardingPendingCookie } from "@/helpers/onboarding-pending-cookie";
 import { createClient } from "@/lib/supabase/client";
+import { getAuthConflictMessage } from "@/lib/mutation-toast";
 
 const ONBOARDING_PENDING_KEY = "onboarding_pending";
 
@@ -177,7 +178,7 @@ const OnboardingPage = () => {
         });
         setEmailSent(true);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to send confirmation email");
+        setError(getAuthConflictMessage(err, "Failed to send confirmation email"));
         setSubmitting(false);
       }
       return;
@@ -204,7 +205,7 @@ const OnboardingPage = () => {
           router.replace("/dashboard");
         },
         onError: (err) => {
-          setError(err.message);
+          setError(getAuthConflictMessage(err, "Something went wrong. Please try again."));
           setSubmitting(false);
         },
       },
