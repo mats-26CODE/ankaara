@@ -5,8 +5,7 @@
       "namespace": "android_app",
       "package_name": "app.ankaara.ankaara_app",
       "sha256_cert_fingerprints": [
-        "REPLACE_WITH_EAS_BUILD_SHA256_FINGERPRINT",
-        "REPLACE_WITH_GOOGLE_PLAY_APP_SIGNING_SHA256_FINGERPRINT"
+        "62:67:93:6B:8C:A1:5E:C1:63:BD:52:2E:59:24:89:F7:9E:EC:A1:A4:3F:03:9F:8B:42:16:DD:59:56:73:F3:72"
       ]
     }
   }
