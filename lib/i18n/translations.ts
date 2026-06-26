@@ -198,6 +198,7 @@ export const translations = {
       helpCenter: "Kituo cha Msaada",
       termsOfService: "Vigezo vya Huduma",
       privacyPolicy: "Sera ya Faragha",
+      deleteAccount: "Futa Akaunti",
       connect: "Unganisha",
       socialWhatsApp: "WhatsApp",
       socialFacebook: "Facebook",
@@ -321,6 +322,33 @@ export const translations = {
       contactTitle: "Wasiliana nasi",
       contactDescription:
         "Ikiwa una maswali kuhusu sera hii ya faragha, tafadhali wasiliana nasi kwa barua pepe ya msaada.",
+    },
+    deleteAccount: {
+      title: "Futa Akaunti Yako",
+      lastUpdated: "Ilisasishwa mwisho: Juni 2026",
+      introduction:
+        "Unaweza kufuta kabisa akaunti yako ya " +
+        APP_NAME +
+        " pamoja na data yote wakati wowote, moja kwa moja kutoka kwenye programu ya simu. Ukurasa huu unaeleza jinsi ya kufanya hivyo, na ni data gani hasa inayofutwa.",
+      inAppTitle: "Futa akaunti yako kutoka kwenye programu",
+      step1: "Fungua programu ya " + APP_NAME + " na uingie kwenye akaunti yako.",
+      step2: "Nenda kwenye kichupo cha Wasifu (Profile).",
+      step3: 'Telezesha chini na ubonyeze "Futa akaunti".',
+      step4:
+        "Thibitisha onyo, kisha weka namba ya uthibitisho (OTP) iliyotumwa kwenye simu yako.",
+      step5: "Akaunti yako na data yote zitafutwa mara moja na utatolewa nje.",
+      deletedTitle: "Ni nini kinachofutwa",
+      deletedContent:
+        "Kufuta akaunti yako kunaondoa kabisa wasifu wako, biashara zote unazomiliki, na kila kitu ndani yake — bidhaa na stock, mauzo, wateja, invoisi, nukuu, mikopo, gharama, wafanyakazi, usajili, nembo za biashara zilizopakiwa, na arifa. Kitendo hiki hakiwezi kutenduliwa.",
+      retentionTitle: "Uhifadhi wa data",
+      retentionContent:
+        "Data yako huondolewa kwenye mifumo yetu ya moja kwa moja papo hapo. Nakala zilizobaki kwenye chelezo (backups) zilizosimbwa hufutwa ndani ya siku 30. Tunaweza kuhifadhi kumbukumbu chache pale tu inapohitajika kisheria.",
+      supportTitle: "Ungependa tukufutie?",
+      supportContent:
+        "Ikiwa huwezi kufikia programu, tutumie barua pepe kutoka anwani au namba ya simu iliyounganishwa na akaunti yako nasi tutashughulikia ombi lako. Jumuisha namba ya simu ya akaunti yako ili tuweze kuthibitisha utambulisho wako.",
+      contactTitle: "Wasiliana nasi",
+      contactDescription:
+        "Kwa maswali yoyote kuhusu kufuta akaunti, wasiliana na timu yetu ya msaada.",
     },
     landing: {
       tagline: `${APP_NAME} · POS mtandaoni rahisi kwa biashara zinazokua`,
@@ -894,6 +922,7 @@ export const translations = {
       helpCenter: "Help Center",
       termsOfService: "Terms of Service",
       privacyPolicy: "Privacy Policy",
+      deleteAccount: "Delete Account",
       connect: "Connect",
       socialWhatsApp: "WhatsApp",
       socialFacebook: "Facebook",
@@ -1018,6 +1047,33 @@ export const translations = {
       contactTitle: "Contact us",
       contactDescription:
         "If you have questions about this privacy policy, please contact us at our support email.",
+    },
+    deleteAccount: {
+      title: "Delete Your Account",
+      lastUpdated: "Last updated: June 2026",
+      introduction:
+        "You can permanently delete your " +
+        APP_NAME +
+        " account and all associated data at any time, directly from the mobile app. This page explains how, and exactly what data is removed.",
+      inAppTitle: "Delete your account from the app",
+      step1: "Open the " + APP_NAME + " app and sign in.",
+      step2: "Go to the Profile tab.",
+      step3: 'Scroll down and tap "Delete account".',
+      step4:
+        "Confirm the warning, then enter the one-time verification code (OTP) sent to your phone.",
+      step5: "Your account and all data are deleted immediately and you are signed out.",
+      deletedTitle: "What gets deleted",
+      deletedContent:
+        "Deleting your account permanently removes your profile, all businesses you own, and everything within them — products and inventory, sales, clients, invoices, quotations, loans, expenses, staff members, subscriptions, uploaded business logos, and notifications. This action cannot be undone.",
+      retentionTitle: "Data retention",
+      retentionContent:
+        "Your data is removed from our live systems immediately. Residual copies in encrypted backups are purged within 30 days. We may retain limited records only where required by law.",
+      supportTitle: "Prefer we delete it for you?",
+      supportContent:
+        "If you can't access the app, email us from the address or phone number linked to your account and we will process your deletion request. Include your account phone number so we can verify your identity.",
+      contactTitle: "Contact us",
+      contactDescription:
+        "For any questions about account deletion, contact our support team.",
     },
     landing: {
       tagline: `${APP_NAME} · Simple online POS for growing businesses`,

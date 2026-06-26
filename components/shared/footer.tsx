@@ -63,6 +63,14 @@ export const Footer = () => {
                   {t("footer.privacyPolicy")}
                 </a>
               </li>
+              <li>
+                <a
+                  href="/delete-account"
+                  className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+                >
+                  {t("footer.deleteAccount")}
+                </a>
+              </li>
             </ul>
           </div>
 

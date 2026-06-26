@@ -413,3 +413,7 @@ verify_jwt = false
 # Staff invite: requires owner JWT.
 [functions.invite-staff]
 verify_jwt = true
+
+# Account deletion: OTP-gated, identifies the user from their JWT.
+[functions.delete-account]
+verify_jwt = true

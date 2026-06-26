@@ -39,7 +39,8 @@ const NavBar = () => {
     pathname === "/about-us" ||
     pathname === "/support" ||
     pathname === "/terms" ||
-    pathname === "/privacy";
+    pathname === "/privacy" ||
+    pathname === "/delete-account";
 
   const navLinks = [
     { label: t("nav.features"), href: "/#features" },
