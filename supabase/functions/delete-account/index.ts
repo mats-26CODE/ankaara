@@ -206,11 +206,10 @@ const verifyAndDelete = async (
     .eq("id", row.id);
   if (markUsedError) throw new Error("Verification failed");
 
-  // 2. Best-effort storage cleanup (uses owner-prefixed paths still present).
-  await deleteUserStorage(supabase, userId);
-
-  // 3. Ordered DB cleanup (handles RESTRICT foreign keys).
-  const { error: rpcError } = await supabase.rpc("delete_user_account_data", {
+  // 2. Ordered DB cleanup (handles RESTRICT foreign keys). Returns every auth
+  //    user id whose profile was deleted: the owner + any orphaned staff that
+  //    belonged only to this owner's businesses.
+  const { data: deletedData, error: rpcError } = await supabase.rpc("delete_user_account_data", {
     p_user_id: userId,
   });
   if (rpcError) {
@@ -218,7 +217,26 @@ const verifyAndDelete = async (
     throw new Error("Failed to delete account data. Please try again or contact support.");
   }
 
-  // 4. Delete the auth user (cascades profiles + remaining references).
+  const deletedIds: string[] = Array.isArray(deletedData)
+    ? (deletedData.filter((id) => typeof id === "string") as string[])
+    : [];
+  if (!deletedIds.includes(userId)) deletedIds.push(userId);
+
+  // 3. Best-effort storage cleanup for the owner + any deleted staff (logos are
+  //    stored under the uploader's user id prefix).
+  for (const id of deletedIds) {
+    await deleteUserStorage(supabase, id);
+  }
+
+  // 4. Delete the auth users. Staff are best-effort; the owner must succeed.
+  for (const id of deletedIds) {
+    if (id === userId) continue;
+    const { error: staffError } = await supabase.auth.admin.deleteUser(id);
+    if (staffError) {
+      console.error("[delete-account] staff deleteUser error:", id, staffError);
+    }
+  }
+
   const { error: deleteUserError } = await supabase.auth.admin.deleteUser(userId);
   if (deleteUserError) {
     console.error("[delete-account] deleteUser error:", deleteUserError);
