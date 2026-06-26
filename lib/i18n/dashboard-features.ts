@@ -949,6 +949,19 @@ const featuresSw = {
       otpResendCode: "Tuma tena msimbo",
       otpResendCountdown: "Tuma tena baada ya {countdown}s",
       otpVerify: "Thibitisha",
+      dangerTitle: "Eneo la Hatari",
+      dangerDescription:
+        "Futa akaunti yako kabisa. Kitendo hiki hakiwezi kutenduliwa.",
+      deleteButton: "Futa akaunti",
+      deleteConfirmTitle: "Futa akaunti yako?",
+      deleteConfirmDescription:
+        "Hii itafuta kabisa akaunti yako na biashara zako zote, ikijumuisha bidhaa, mauzo, wateja, invoisi, nukuu, mikopo na gharama. Haiwezi kutenduliwa. Tutatuma msimbo wa uthibitisho kwenye simu yako ili kuendelea.",
+      deleteConfirmContinue: "Endelea",
+      deleteOtpTitle: "Thibitisha kufuta",
+      deleteOtpDescription:
+        "Ingiza msimbo wa tarakimu 6 tuliotuma kwa {phone} ili kufuta akaunti yako kabisa.",
+      deleteConfirmButton: "Futa akaunti kabisa",
+      deleteSuccess: "Akaunti yako imefutwa.",
     },
     businesses: {
       list: {
@@ -1639,6 +1652,19 @@ const featuresEn = {
       otpResendCode: "Resend code",
       otpResendCountdown: "Resend in {countdown}s",
       otpVerify: "Verify",
+      dangerTitle: "Danger Zone",
+      dangerDescription:
+        "Permanently delete your account. This action cannot be undone.",
+      deleteButton: "Delete account",
+      deleteConfirmTitle: "Delete your account?",
+      deleteConfirmDescription:
+        "This permanently deletes your account and all of your businesses, including products, sales, clients, invoices, quotations, loans and expenses. This cannot be undone. We will send a verification code to your phone to continue.",
+      deleteConfirmContinue: "Continue",
+      deleteOtpTitle: "Confirm deletion",
+      deleteOtpDescription:
+        "Enter the 6-digit code we sent to {phone} to permanently delete your account.",
+      deleteConfirmButton: "Delete account permanently",
+      deleteSuccess: "Your account has been deleted.",
     },
     businesses: {
       list: {

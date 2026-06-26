@@ -198,7 +198,7 @@ export const translations = {
       helpCenter: "Kituo cha Msaada",
       termsOfService: "Vigezo vya Huduma",
       privacyPolicy: "Sera ya Faragha",
-      deleteAccount: "Futa Akaunti",
+      deleteAccount: "Kufuta Akaunti",
       connect: "Unganisha",
       socialWhatsApp: "WhatsApp",
       socialFacebook: "Facebook",
@@ -324,18 +324,17 @@ export const translations = {
         "Ikiwa una maswali kuhusu sera hii ya faragha, tafadhali wasiliana nasi kwa barua pepe ya msaada.",
     },
     deleteAccount: {
-      title: "Futa Akaunti Yako",
+      title: "Kufuta Akaunti",
       lastUpdated: "Ilisasishwa mwisho: Juni 2026",
       introduction:
         "Unaweza kufuta kabisa akaunti yako ya " +
         APP_NAME +
         " pamoja na data yote wakati wowote, moja kwa moja kutoka kwenye programu ya simu. Ukurasa huu unaeleza jinsi ya kufanya hivyo, na ni data gani hasa inayofutwa.",
-      inAppTitle: "Futa akaunti yako kutoka kwenye programu",
+      inAppTitle: "Futa akaunti yako kutoka kwenye mobile app?",
       step1: "Fungua programu ya " + APP_NAME + " na uingie kwenye akaunti yako.",
       step2: "Nenda kwenye kichupo cha Wasifu (Profile).",
       step3: 'Telezesha chini na ubonyeze "Futa akaunti".',
-      step4:
-        "Thibitisha onyo, kisha weka namba ya uthibitisho (OTP) iliyotumwa kwenye simu yako.",
+      step4: "Thibitisha onyo, kisha weka namba ya uthibitisho (OTP) iliyotumwa kwenye simu yako.",
       step5: "Akaunti yako na data yote zitafutwa mara moja na utatolewa nje.",
       deletedTitle: "Ni nini kinachofutwa",
       deletedContent:
@@ -346,6 +345,13 @@ export const translations = {
       supportTitle: "Ungependa tukufutie?",
       supportContent:
         "Ikiwa huwezi kufikia programu, tutumie barua pepe kutoka anwani au namba ya simu iliyounganishwa na akaunti yako nasi tutashughulikia ombi lako. Jumuisha namba ya simu ya akaunti yako ili tuweze kuthibitisha utambulisho wako.",
+      webTitle: "Kufuta akaunti kwa njia ya web?",
+      webContent:
+        "Umeingia kwenye akaunti yako. Unaweza kufuta akaunti yako moja kwa moja kutoka kwenye mipangilio ya wasifu.",
+      webContentSignedOut:
+        "Ingia kwenye akaunti yako ili kufuta akaunti yako moja kwa moja kutoka kwenye mipangilio ya wasifu.",
+      ctaSignedIn: "Nenda kufuta akaunti",
+      ctaSignedOut: "Ingia ili kufuta akaunti",
       contactTitle: "Wasiliana nasi",
       contactDescription:
         "Kwa maswali yoyote kuhusu kufuta akaunti, wasiliana na timu yetu ya msaada.",
@@ -922,7 +928,7 @@ export const translations = {
       helpCenter: "Help Center",
       termsOfService: "Terms of Service",
       privacyPolicy: "Privacy Policy",
-      deleteAccount: "Delete Account",
+      deleteAccount: "Account Deletion",
       connect: "Connect",
       socialWhatsApp: "WhatsApp",
       socialFacebook: "Facebook",
@@ -1049,13 +1055,13 @@ export const translations = {
         "If you have questions about this privacy policy, please contact us at our support email.",
     },
     deleteAccount: {
-      title: "Delete Your Account",
+      title: "Account Deletion",
       lastUpdated: "Last updated: June 2026",
       introduction:
         "You can permanently delete your " +
         APP_NAME +
         " account and all associated data at any time, directly from the mobile app. This page explains how, and exactly what data is removed.",
-      inAppTitle: "Delete your account from the app",
+      inAppTitle: "Delete your account from the app?",
       step1: "Open the " + APP_NAME + " app and sign in.",
       step2: "Go to the Profile tab.",
       step3: 'Scroll down and tap "Delete account".',
@@ -1071,9 +1077,15 @@ export const translations = {
       supportTitle: "Prefer we delete it for you?",
       supportContent:
         "If you can't access the app, email us from the address or phone number linked to your account and we will process your deletion request. Include your account phone number so we can verify your identity.",
+      webTitle: "Deleting your account on the web?",
+      webContent:
+        "You're signed in. You can delete your account directly from your profile settings.",
+      webContentSignedOut:
+        "Sign in to your account to delete it directly from your profile settings.",
+      ctaSignedIn: "Go to account deletion",
+      ctaSignedOut: "Sign in to delete your account",
       contactTitle: "Contact us",
-      contactDescription:
-        "For any questions about account deletion, contact our support team.",
+      contactDescription: "For any questions about account deletion, contact our support team.",
     },
     landing: {
       tagline: `${APP_NAME} · Simple online POS for growing businesses`,

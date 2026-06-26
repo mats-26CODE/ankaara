@@ -390,6 +390,65 @@ export const useUpdateUserEmail = () => {
 };
 
 /**
+ * Request an OTP to authorize account deletion (sent to the user's phone).
+ * Uses the delete-account edge function.
+ */
+export const useRequestAccountDeletionOtp = () => {
+  return useMutation({
+    mutationFn: async () => {
+      const supabase = createClient();
+      const { data, error } = await supabase.functions.invoke("delete-account", {
+        body: { operation: "requestDeletionOtp" },
+      });
+      const errMessage = await parseEdgeFunctionError(error);
+      if (errMessage) throw new Error(errMessage);
+      const body = data as { success?: boolean; message?: string } | null;
+      if (body && body.success !== true) {
+        throw new Error(body.message ?? "Failed to send verification code.");
+      }
+      return data;
+    },
+    onError: (error: Error) => {
+      ToastAlert.error(error.message || "Failed to send verification code. Please try again.");
+    },
+  });
+};
+
+/**
+ * Verify OTP and permanently delete the account + all data, then sign out.
+ */
+export const useDeleteAccount = () => {
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: async (payload: { code: string }) => {
+      const supabase = createClient();
+      const { data, error } = await supabase.functions.invoke("delete-account", {
+        body: { operation: "verifyAndDelete", payload: { code: payload.code } },
+      });
+      const errMessage = await parseEdgeFunctionError(error);
+      if (errMessage) throw new Error(errMessage);
+      const body = data as { success?: boolean; message?: string } | null;
+      if (body && body.success !== true) {
+        throw new Error(body.message ?? "Failed to delete account.");
+      }
+      try {
+        await supabase.auth.signOut();
+      } catch {
+        // The auth user no longer exists; the session is already invalid.
+      }
+      return data;
+    },
+    onSuccess: () => {
+      router.replace("/");
+    },
+    onError: (error: Error) => {
+      ToastAlert.error(error.message || "Could not delete your account. Please try again.");
+    },
+  });
+};
+
+/**
  * Hook to login/signup with Google OAuth
  */
 export const useGoogleOAuth = () => {

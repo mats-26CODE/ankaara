@@ -1,6 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useTranslation } from "@/hooks/use-translation";
+import { useUser } from "@/hooks/use-user";
+import { useProfile, isStaffAccount } from "@/hooks/use-profile";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { SUPPORT_EMAIL } from "@/constants/values";
 import { motion } from "motion/react";
@@ -13,6 +17,13 @@ import {
 
 export const DeleteAccountPage = () => {
   const { t } = useTranslation();
+  const { user, loading: userLoading } = useUser();
+  const { profile, loading: profileLoading } = useProfile();
+
+  // Account deletion is owner-only — staff accounts cannot delete the business owner's account.
+  const isStaff = isStaffAccount(profile, user);
+  const ctaReady = !userLoading && (!user || !profileLoading);
+  const showCta = ctaReady && !isStaff;
 
   const steps = [
     "deleteAccount.step1",
@@ -54,6 +65,30 @@ export const DeleteAccountPage = () => {
       </motion.div>
 
       <div className="mx-auto w-full space-y-6 md:w-3xl">
+        {showCta && (
+          <ScrollReveal>
+            <Card className="border-primary/40 bg-primary/5 motion-safe:animate-none">
+              <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-foreground mb-1 text-lg font-semibold">
+                    {t("deleteAccount.webTitle")}
+                  </h2>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {user
+                      ? t("deleteAccount.webContent")
+                      : t("deleteAccount.webContentSignedOut")}
+                  </p>
+                </div>
+                <Button asChild variant={user ? "destructive" : "default"} className="shrink-0">
+                  <Link href={user ? "/dashboard/settings/profile" : "/login"}>
+                    {user ? t("deleteAccount.ctaSignedIn") : t("deleteAccount.ctaSignedOut")}
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </ScrollReveal>
+        )}
+
         <ScrollReveal>
           <Card className="border-border motion-safe:animate-none">
             <CardContent className="p-6">

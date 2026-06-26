@@ -8,7 +8,13 @@ import { useUser } from "@/hooks/use-user";
 import { createClient } from "@/lib/supabase/client";
 import { useCurrencies } from "@/hooks/use-currencies";
 import { useTheme, useLanguage } from "@/lib/stores/preferences-store";
-import { useSendOtpForPhoneChange, useVerifyPhoneChange } from "@/hooks/use-auth";
+import {
+  useDeleteAccount,
+  useRequestAccountDeletionOtp,
+  useSendOtpForPhoneChange,
+  useVerifyPhoneChange,
+} from "@/hooks/use-auth";
+import { ToastAlert } from "@/config/toast";
 import { useOtpCountdown } from "@/hooks/use-otp-countdown";
 import { addCountryCode, clampPhoneDigitInput, formatPhoneForDisplay } from "@/helpers/helpers";
 import { Button } from "@/components/ui/button";
@@ -55,6 +61,8 @@ const ProfileSettingsPage = () => {
 
   const sendOtp = useSendOtpForPhoneChange();
   const verifyPhoneChange = useVerifyPhoneChange();
+  const requestDeletionOtp = useRequestAccountDeletionOtp();
+  const deleteAccount = useDeleteAccount();
   const { countdown, canResend, startCountdown } = useOtpCountdown(60);
 
   const [form, setForm] = useState({
@@ -71,6 +79,11 @@ const ProfileSettingsPage = () => {
   const [otpCode, setOtpCode] = useState("");
   const [otpError, setOtpError] = useState<string | null>(null);
   const [pendingPhone, setPendingPhone] = useState("");
+
+  const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false);
+  const [deleteOtpDialogOpen, setDeleteOtpDialogOpen] = useState(false);
+  const [deleteOtpCode, setDeleteOtpCode] = useState("");
+  const [deleteOtpError, setDeleteOtpError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isStaff) {
@@ -175,6 +188,32 @@ const ProfileSettingsPage = () => {
     if (!canResend) return;
     setOtpError(null);
     sendOtp.mutate({ phone: pendingPhone }, { onSuccess: () => startCountdown() });
+  };
+
+  const handleConfirmStartDelete = () => {
+    requestDeletionOtp.mutate(undefined, {
+      onSuccess: () => {
+        setDeleteConfirmDialogOpen(false);
+        setDeleteOtpCode("");
+        setDeleteOtpError(null);
+        setDeleteOtpDialogOpen(true);
+      },
+    });
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteOtpCode.length < 6) return;
+    setDeleteOtpError(null);
+    deleteAccount.mutate(
+      { code: deleteOtpCode },
+      {
+        onSuccess: () => {
+          setDeleteOtpDialogOpen(false);
+          ToastAlert.success(t("dashboard.settings.profile.deleteSuccess"));
+        },
+        onError: (err) => setDeleteOtpError(err.message),
+      },
+    );
   };
 
   if (isStaff) {
@@ -337,6 +376,22 @@ const ProfileSettingsPage = () => {
         </CardContent>
       </Card>
 
+      <Card className="border-destructive/40">
+        <CardHeader>
+          <CardTitle className="text-destructive">
+            {t("dashboard.settings.profile.dangerTitle")}
+          </CardTitle>
+          <CardDescription>
+            {t("dashboard.settings.profile.dangerDescription")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="destructive" onClick={() => setDeleteConfirmDialogOpen(true)}>
+            {t("dashboard.settings.profile.deleteButton")}
+          </Button>
+        </CardContent>
+      </Card>
+
       <Dialog open={phoneConfirmDialogOpen} onOpenChange={setPhoneConfirmDialogOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
@@ -432,6 +487,88 @@ const ProfileSettingsPage = () => {
               isLoading={verifyPhoneChange.isPending}
             >
               {t("dashboard.settings.profile.otpVerify")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteConfirmDialogOpen} onOpenChange={setDeleteConfirmDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t("dashboard.settings.profile.deleteConfirmTitle")}</DialogTitle>
+            <DialogDescription>
+              {t("dashboard.settings.profile.deleteConfirmDescription")}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteConfirmDialogOpen(false)}
+              disabled={requestDeletionOtp.isPending}
+            >
+              {t("dashboard.common.cancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmStartDelete}
+              isLoading={requestDeletionOtp.isPending}
+            >
+              {t("dashboard.settings.profile.deleteConfirmContinue")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteOtpDialogOpen} onOpenChange={setDeleteOtpDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t("dashboard.settings.profile.deleteOtpTitle")}</DialogTitle>
+            <DialogDescription>
+              {t("dashboard.settings.profile.deleteOtpDescription", {
+                phone: formatPhoneForDisplay(profile?.phone || user?.phone || ""),
+              })}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col items-center gap-4 py-2">
+            <InputOTP
+              maxLength={6}
+              pattern={REGEXP_ONLY_DIGITS}
+              value={deleteOtpCode}
+              onChange={setDeleteOtpCode}
+              disabled={deleteAccount.isPending}
+            >
+              <InputOTPGroup>
+                <InputOTPSlot index={0} />
+                <InputOTPSlot index={1} />
+                <InputOTPSlot index={2} />
+              </InputOTPGroup>
+              <InputOTPSeparator />
+              <InputOTPGroup>
+                <InputOTPSlot index={3} />
+                <InputOTPSlot index={4} />
+                <InputOTPSlot index={5} />
+              </InputOTPGroup>
+            </InputOTP>
+
+            {deleteOtpError && <p className="text-destructive text-sm">{deleteOtpError}</p>}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteOtpDialogOpen(false)}
+              disabled={deleteAccount.isPending}
+            >
+              {t("dashboard.common.cancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={deleteOtpCode.length < 6}
+              isLoading={deleteAccount.isPending}
+            >
+              {t("dashboard.settings.profile.deleteConfirmButton")}
             </Button>
           </DialogFooter>
         </DialogContent>
