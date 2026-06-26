@@ -503,6 +503,7 @@ const ProfileSettingsPage = () => {
           <DialogFooter>
             <Button
               variant="outline"
+              className="w-full sm:flex-1"
               onClick={() => setDeleteConfirmDialogOpen(false)}
               disabled={requestDeletionOtp.isPending}
             >
@@ -510,6 +511,7 @@ const ProfileSettingsPage = () => {
             </Button>
             <Button
               variant="destructive"
+              className="w-full whitespace-nowrap sm:flex-1"
               onClick={handleConfirmStartDelete}
               isLoading={requestDeletionOtp.isPending}
             >
@@ -557,6 +559,7 @@ const ProfileSettingsPage = () => {
           <DialogFooter>
             <Button
               variant="outline"
+              className="w-full sm:flex-1"
               onClick={() => setDeleteOtpDialogOpen(false)}
               disabled={deleteAccount.isPending}
             >
@@ -564,6 +567,7 @@ const ProfileSettingsPage = () => {
             </Button>
             <Button
               variant="destructive"
+              className="w-full whitespace-nowrap sm:flex-1"
               onClick={handleConfirmDelete}
               disabled={deleteOtpCode.length < 6}
               isLoading={deleteAccount.isPending}
