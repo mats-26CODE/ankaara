@@ -54,6 +54,7 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/support") ||
     pathname.startsWith("/terms") ||
     pathname.startsWith("/privacy") ||
+    pathname.startsWith("/delete-account") ||
     pathname.startsWith("/subscribe") ||
     pathname.startsWith("/quotation");
 
